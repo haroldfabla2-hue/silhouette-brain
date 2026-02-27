@@ -1,4 +1,11 @@
 import os
+import sys
+# Añadir el directorio raíz al path para encontrar módulos internos
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path: sys.path.append(base_dir)
+core_dir = os.path.join(base_dir, "core")
+if core_dir not in sys.path: sys.path.append(core_dir)
+import os
 #!/usr/bin/env python3
 """
 One-shot cleanup utility to purge runtime operational noise from memory stores.
@@ -15,7 +22,7 @@ from typing import Dict, Iterable, List
 
 from memory_noise_filter import is_operational_runtime_noise
 
-DATA_DIR = Path(os.getenv("BRAIN_DATA_DIR", "./data"")
+DATA_DIR = Path(os.getenv("BRAIN_DATA_DIR", "./data")")
 DB_PATH = DATA_DIR / "memory_core.db"
 PRIORITY_PATH = DATA_DIR / "priority_memory.json"
 BACKUP_ROOT = DATA_DIR / "backups"

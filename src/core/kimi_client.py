@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+import os
+import sys
+# Añadir el directorio raíz al path para encontrar módulos internos
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path: sys.path.append(base_dir)
+core_dir = os.path.join(base_dir, "core")
+if core_dir not in sys.path: sys.path.append(core_dir)
 """
 Kimi k2.5 Integration for Agents
 Uses OpenClaw's configured Kimi API

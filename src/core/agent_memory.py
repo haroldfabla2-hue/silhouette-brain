@@ -1,10 +1,17 @@
+import os
+import sys
+# Añadir el directorio raíz al path para encontrar módulos internos
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path: sys.path.append(base_dir)
+core_dir = os.path.join(base_dir, "core")
+if core_dir not in sys.path: sys.path.append(core_dir)
 """
 Agente Memory Access - Para que los subagentes puedan acceder a la memoria de Silhouette
 """
 import sqlite3
 import os
 
-MEMORY_DB = os.getenv("BRAIN_DATA_DIR", "./data"/memory_core.db"
+MEMORY_DB = os.getenv("BRAIN_DATA_DIR", "./data")/memory_core.db"
 
 def get_memory_context(query: str, limit: int = 10):
     """Buscar en la memoria de Silhouette"""

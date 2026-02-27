@@ -366,6 +366,7 @@ class AdvancedMemoryDiscovery:
 # CLI
 if __name__ == "__main__":
     import sys
+sys.path.append(os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core'))
     
     amd = AdvancedMemoryDiscovery()
     

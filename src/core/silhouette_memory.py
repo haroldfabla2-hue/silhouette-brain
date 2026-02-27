@@ -1,4 +1,11 @@
 import os
+import sys
+# Añadir el directorio raíz al path para encontrar módulos internos
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path: sys.path.append(base_dir)
+core_dir = os.path.join(base_dir, "core")
+if core_dir not in sys.path: sys.path.append(core_dir)
+import os
 #!/usr/bin/env python3
 """
 Silhouette Memory System v3.0 - Full Implementation
@@ -41,7 +48,7 @@ NEO4J_PASSWORD = "silhouette2035"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 
-DB_PATH = os.getenv("BRAIN_DATA_DIR", "./data"/memory.db"
+DB_PATH = os.getenv("BRAIN_DATA_DIR", "./data")/memory.db"
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 MAX_WORKING = 50

@@ -1,3 +1,10 @@
+import os
+import sys
+# Añadir el directorio raíz al path para encontrar módulos internos
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path: sys.path.append(base_dir)
+core_dir = os.path.join(base_dir, "core")
+if core_dir not in sys.path: sys.path.append(core_dir)
 """
 Agente Memory Access - OPTIMIZED VERSION
 ========================================
@@ -19,7 +26,7 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-MEMORY_DB = os.getenv("BRAIN_DATA_DIR", "./data"/memory_core.db"
+MEMORY_DB = os.getenv("BRAIN_DATA_DIR", "./data")/memory_core.db"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 CACHE_TTL = 300  # 5 minutos
