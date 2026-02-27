@@ -57,3 +57,4 @@ Para sacar el máximo provecho de esta arquitectura, revisa nuestra documentaci�
 - [Motores Cognitivos (Dreamer, Janitor, Curiosity)](docs/COGNITIVE_ENGINES.md)
 - [Integración Estándar para Agentes](docs/AGENT_INTEGRATION.md)
 - **[Guía Especial: Integración con OpenClaw](docs/OPENCLAW_INTEGRATION.md)** - *¡Imprescindible si usas el ecosistema OpenClaw!*
+- **[Meta-Instrucciones para la IA (Auto-instalación)](docs/AGENT_SELF_INSTALLATION.md)** - *¡Dale este archivo a tu IA para que se integre sola!*
