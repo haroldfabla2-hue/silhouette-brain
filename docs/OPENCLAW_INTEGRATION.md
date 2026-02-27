@@ -45,6 +45,15 @@ Recomendamos configurar las siguientes tareas en tu `crontab` para ejecutar los 
 0 */2 * * * python3 /ruta/a/silhouette-brain/src/core/agent_reports_sync.py >> /var/log/brain_reports_sync.log 2>&1
 ```
 
+## 5. Arquitectura Desacoplada y Segura (Por qué no se romperá)
+El mayor miedo al integrar sistemas complejos es romper lo que ya funciona. Silhouette Brain soluciona esto usando una **Arquitectura Desacoplada**.
+
+En lugar de instalar el cerebro *dentro* de la carpeta de OpenClaw (lo que causaría que una actualización de OpenClaw borre tu memoria), el cerebro corre en su propio "universo" aislado mediante Docker:
+
+1. **Aislamiento Docker:** Al usar `docker-compose up`, Neo4j, Redis y la Brain API se levantan en contenedores sellados. No tocan ni modifican las dependencias de Node.js o el código fuente de OpenClaw.
+2. **Comunicación por Red (HTTP):** OpenClaw y Silhouette Brain **solo hablan a través de red** (`http://localhost:9876`). Si OpenClaw se actualiza, la red sigue existiendo. Si Silhouette Brain se actualiza, la API sigue respondiendo igual.
+3. **Resiliencia:** Si la Brain API se cae temporalmente, tus agentes de OpenClaw seguirán funcionando (solo perderán el acceso al contexto histórico hasta que el cerebro vuelva a encenderse). ¡Nada explotará!
+
 ## Resumen de la Simbiosis
 1. Los **Procesos Sync** "escuchan" todo lo que OpenClaw hace y lo envían a la API.
 2. Los **Motores Cognitivos** (Dreamer, Janitor) organizan esa basura durante la noche y la convierten en recuerdos estructurados en Neo4j.
