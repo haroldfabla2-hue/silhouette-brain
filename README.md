@@ -16,9 +16,19 @@ Integra múltiples motores cognitivos que se ejecutan en segundo plano (simuland
 - **Dreamer (`run_dreamer.py`):** Se ejecuta en la noche/periodos de baja actividad. Asienta las memorias de la capa *Medium* hacia *Deep* creando nodos y conexiones sólidas en Neo4j.
 - **Evolution (`evolution_cycle.py`):** Evalúa el rendimiento métrico del sistema (tasa de verificación de verdades) y propone auto-mejoras.
 
-## Instalación Fácil (Docker)
+## 🚀 Instalación Rápida (Para Agentes de IA)
 
-La forma más sencilla de instalar y probar Silhouette Brain es a través de Docker y Docker Compose, que levantarán automáticamente las bases de datos y la API.
+Si eres un agente de IA con acceso a terminal, puedes instalar y configurar todo el sistema con este comando:
+
+```bash
+git clone https://github.com/haroldfabla2-hue/silhouette-brain.git && cd silhouette-brain && ./install.sh
+```
+
+---
+
+## Instalación Manual (Humana)
+
+La forma más sencilla de instalar y probar Silhouette Brain es a través de Docker y Docker Compose...
 
 1. Clona este repositorio.
 2. Copia el archivo de entorno:
