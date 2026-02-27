@@ -52,12 +52,27 @@ Puedes consultar la memoria a través de solicitudes HTTP simples:
   ```
 ## 📚 Documentación Completa
 
-Para sacar el máximo provecho de esta arquitectura, revisa nuestra documentación detallada:
-- [Arquitectura de 4 Capas (4-Tier Memory)](docs/ARCHITECTURE.md)
-- [Motores Cognitivos (Dreamer, Janitor, Curiosity)](docs/COGNITIVE_ENGINES.md)
-- [Integración Estándar para Agentes](docs/AGENT_INTEGRATION.md)
-- **[Guía Especial: Integración con OpenClaw](docs/OPENCLAW_INTEGRATION.md)** - *¡Imprescindible si usas el ecosistema OpenClaw!*
-- **[Meta-Instrucciones para la IA (Auto-instalación)](docs/AGENT_SELF_INSTALLATION.md)** - *¡Dale este archivo a tu IA para que se integre sola!*
+Para sacar el máximo provecho de esta arquitectura, te recomendamos revisar nuestra documentación detallada en el siguiente orden:
+
+1. 🏛️ **[Arquitectura de 4 Capas (4-Tier Memory)](docs/ARCHITECTURE.md):** 
+   - *Qué es:* Una inmersión profunda en cómo el cerebro almacena la información.
+   - *Por qué leerlo:* Para entender la diferencia entre Redis (Memoria a corto plazo), SQLite (Mediano plazo) y Neo4j (Largo plazo/Grafos).
+
+2. 🧠 **[Motores Cognitivos (Dreamer, Janitor, Curiosity, Evolution)](docs/COGNITIVE_ENGINES.md):** 
+   - *Qué es:* El manual de los procesos que mantienen vivo el sistema.
+   - *Por qué leerlo:* Para comprender cómo la IA consolida sus recuerdos de noche, resuelve contradicciones y busca aprender cosas nuevas por sí sola.
+
+3. 🤖 **[Integración Estándar para Agentes](docs/AGENT_INTEGRATION.md):** 
+   - *Qué es:* La guía técnica genérica para conectar cualquier LLM o script al Cerebro.
+   - *Por qué leerlo:* Contiene la "Regla de Oro" que debes enseñarle a tu IA, junto con todos los Endpoints HTTP (GET/POST) disponibles en la API.
+
+4. 🐾 **[Guía Especial: Integración con OpenClaw](docs/OPENCLAW_INTEGRATION.md):** 
+   - *Qué es:* Un tutorial paso a paso exclusivo para usuarios del ecosistema OpenClaw.
+   - *Por qué leerlo:* Imprescindible. Te enseña cómo configurar el crontab para sincronizar tus sesiones y cómo inyectar memoria a tus agentes sin borrar sus personalidades, todo de forma segura mediante Docker.
+
+5. 🪄 **[Meta-Instrucciones para la IA (Auto-instalación)](docs/AGENT_SELF_INSTALLATION.md):** 
+   - *Qué es:* Un "Meta-Prompt". Un documento escrito no para humanos, sino para máquinas.
+   - *Por qué usarlo:* Si tienes un agente autónomo, puedes simplemente darle este archivo y decirle: *"Lee esto e instálate el cerebro tú mismo"*.
 
 ## 🪄 Autoinstalación con IA (Meta-Prompt)
 
