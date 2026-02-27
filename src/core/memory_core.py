@@ -189,7 +189,7 @@ class MemoryCore:
             
             cur.execute(
                 "INSERT OR REPLACE INTO embeddings (id, embedding, model, created_at) VALUES (?, ?, ?, ?)",
-                (text_hash, embedding_bytes, 'text-embedding-3-small', int(time.time()))
+                (text_hash, embedding_bytes, os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"), int(time.time()))
             )
             self.conn.commit()
             return embedding_bytes

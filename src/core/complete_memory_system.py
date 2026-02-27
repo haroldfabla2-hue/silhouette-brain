@@ -30,7 +30,7 @@ from datetime import datetime
 class SemanticSearch:
     """Búsqueda semántica con OpenAI"""
     
-    MODEL = "text-embedding-3-small"
+    MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
     API_KEY = os.getenv("OPENAI_API_KEY")
     
     @classmethod

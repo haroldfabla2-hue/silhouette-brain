@@ -15,7 +15,7 @@ import requests
 import json
 
 # OpenAI API
-EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
 EMBEDDING_DIMENSIONS = 1536
 
 def get_openai_embedding(text: str) -> list:

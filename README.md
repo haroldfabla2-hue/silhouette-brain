@@ -84,6 +84,18 @@ Para sacar el máximo provecho de esta arquitectura, te recomendamos revisar nue
    - *Qué es:* Un "Meta-Prompt". Un documento escrito no para humanos, sino para máquinas.
    - *Por qué usarlo:* Si tienes un agente autónomo, puedes simplemente darle este archivo y decirle: *"Lee esto e instálate el cerebro tú mismo"*.
 
+6. ⚙️ **[Gestión de Recursos y Modelos AI](docs/RESOURCES_AND_MODELS.md):**
+   - *Qué es:* Una guía sobre costos, consumo de RAM y cómo cambiar los modelos de OpenAI.
+   - *Por qué leerlo:* Para optimizar el rendimiento de tu servidor y controlar los gastos de la API.
+
+---
+
+## ⚠️ Advertencia de Consumo
+Aunque Silhouette Brain incluye optimizaciones avanzadas (como caché de vectores local), ten en cuenta que:
+- **Neo4j** requiere al menos 1GB de RAM dedicada.
+- Las búsquedas y el almacenamiento consumen créditos de tu **OpenAI API Key**.
+- Se recomienda monitorear el uso inicial para ajustar la frecuencia de los ciclos cognitivos.
+
 ## 🪄 Autoinstalación con IA (Meta-Prompt)
 
 Este repositorio incluye un [Meta-Prompt de Autoinstalación](docs/AGENT_SELF_INSTALLATION.md) y un script de **Auto-Configuración** (`src/core/agent_self_configure.py`). 
