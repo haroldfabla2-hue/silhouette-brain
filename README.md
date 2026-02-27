@@ -50,3 +50,10 @@ Puedes consultar la memoria a través de solicitudes HTTP simples:
     "tier": "WORKING"
   }
   ```
+## 📚 Documentación Completa
+
+Para sacar el máximo provecho de esta arquitectura, revisa nuestra documentación detallada:
+- [Arquitectura de 4 Capas (4-Tier Memory)](docs/ARCHITECTURE.md)
+- [Motores Cognitivos (Dreamer, Janitor, Curiosity)](docs/COGNITIVE_ENGINES.md)
+- [Integración Estándar para Agentes](docs/AGENT_INTEGRATION.md)
+- **[Guía Especial: Integración con OpenClaw](docs/OPENCLAW_INTEGRATION.md)** - *¡Imprescindible si usas el ecosistema OpenClaw!*
