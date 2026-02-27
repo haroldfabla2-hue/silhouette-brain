@@ -58,3 +58,13 @@ Para sacar el máximo provecho de esta arquitectura, revisa nuestra documentaci�
 - [Integración Estándar para Agentes](docs/AGENT_INTEGRATION.md)
 - **[Guía Especial: Integración con OpenClaw](docs/OPENCLAW_INTEGRATION.md)** - *¡Imprescindible si usas el ecosistema OpenClaw!*
 - **[Meta-Instrucciones para la IA (Auto-instalación)](docs/AGENT_SELF_INSTALLATION.md)** - *¡Dale este archivo a tu IA para que se integre sola!*
+
+## 🪄 Autoinstalación con IA (Meta-Prompt)
+
+Este repositorio incluye un [Meta-Prompt de Autoinstalación](docs/AGENT_SELF_INSTALLATION.md). Si tienes un agente con permisos de ejecución (como OpenClaw o un CLI AI), simplemente puedes pasarle ese archivo y pedirle: *"Lee estas instrucciones y autoinstálate en mi sistema"*. 
+
+La IA leerá el documento, entenderá cómo conectarse a la API, inyectará las reglas cognitivas en sus propios prompts base (sin borrar su personalidad) y configurará los procesos en segundo plano. Por seguridad, todos los comandos y modificaciones propuestos por la IA pueden ser revisados por el operador humano antes de su ejecución, dependiendo del nivel de autonomía que le hayas otorgado a tu agente.
+
+---
+
+*Diseñado y creado por **Alberto Farah**.*
