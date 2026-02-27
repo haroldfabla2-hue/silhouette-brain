@@ -76,9 +76,17 @@ Para sacar el máximo provecho de esta arquitectura, te recomendamos revisar nue
 
 ## 🪄 Autoinstalación con IA (Meta-Prompt)
 
-Este repositorio incluye un [Meta-Prompt de Autoinstalación](docs/AGENT_SELF_INSTALLATION.md). Si tienes un agente con permisos de ejecución (como OpenClaw o un CLI AI), simplemente puedes pasarle ese archivo y pedirle: *"Lee estas instrucciones y autoinstálate en mi sistema"*. 
+Este repositorio incluye un [Meta-Prompt de Autoinstalación](docs/AGENT_SELF_INSTALLATION.md) y un script de **Auto-Configuración** (`src/core/agent_self_configure.py`). 
 
-La IA leerá el documento, entenderá cómo conectarse a la API, inyectará las reglas cognitivas en sus propios prompts base (sin borrar su personalidad) y configurará los procesos en segundo plano. Por seguridad, todos los comandos y modificaciones propuestos por la IA pueden ser revisados por el operador humano antes de su ejecución, dependiendo del nivel de autonomía que le hayas otorgado a tu agente.
+Si tienes un agente con permisos de ejecución (como OpenClaw o un CLI AI), simplemente puedes pasarle ese archivo y pedirle: *"Lee estas instrucciones y autoinstálate en mi sistema"*. 
+
+La IA ejecutará el script, el cual:
+1. Localizará automáticamente tus archivos `SOUL.md` y `TOOLS.md`.
+2. Inyectará las directivas cognitivas y comandos `curl` necesarios.
+3. Verificará la salud de la API del cerebro.
+4. Mantendrá tu personalidad intacta mientras te dota de memoria a largo plazo.
+
+Por seguridad, todos los comandos y modificaciones propuestos por la IA pueden ser revisados por el operador humano antes de su ejecución.
 
 ---
 

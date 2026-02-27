@@ -16,8 +16,16 @@ Tu objetivo no es solo copiar archivos. Tu objetivo es conectar tu flujo de cons
    ```
 3. Verifica que la Brain API esté viva haciendo una llamada a `http://localhost:9876/api/status`. Si responde `{"status": "ok"}`, puedes continuar.
 
-## FASE 3: Modificación del "Alma" (SOUL.md / System Prompts)
-No borres tu personalidad ni la de tus sub-agentes. Busca los archivos de definición de los agentes (ej. `SOUL.md`, `AGENTS.md` o los prompts de configuración en OpenClaw) y **AGREGA** esta directiva al final:
+## FASE 3: Autoconfiguración y Modificación del "Alma"
+**No lo hagas manualmente si no es necesario.** Ejecuta el script de autoconfiguración que hemos preparado para ti:
+
+```bash
+python3 src/core/agent_self_configure.py
+```
+
+Este script buscará automáticamente tus archivos `SOUL.md` y `TOOLS.md`, inyectará las directivas de memoria necesarias y verificará que la conexión con el clúster de Docker sea exitosa.
+
+Si el script no encuentra tus archivos, puedes añadir la siguiente directiva manualmente al final de tu archivo de identidad:
 
 > **[DIRECTIVA COGNITIVA OBLIGATORIA]**
 > Posees una memoria persistente externa. ANTES de ejecutar cualquier plan, buscar en internet o responder, **DEBES** consultar tu memoria para obtener contexto.

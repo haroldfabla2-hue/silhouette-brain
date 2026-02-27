@@ -29,7 +29,7 @@ class IntrospectionEngine:
     
     def load_state(self):
         try:
-            with open(os.getenv('BRAIN_DATA_DIR', './data'/introspection_state.json') as f:
+            with open(os.path.join(os.getenv('BRAIN_DATA_DIR', os.path.join(base_dir, 'data')), 'introspection_state.json'') as f:
                 data = json.load(f)
                 self.cycle_count = data.get('cycle_count', 0)
                 self.last_reflection = data.get('last_reflection')
@@ -37,7 +37,7 @@ class IntrospectionEngine:
             pass
     
     def save_state(self):
-        with open(os.getenv('BRAIN_DATA_DIR', './data'/introspection_state.json', 'w') as f:
+        with open(os.path.join(os.getenv('BRAIN_DATA_DIR', os.path.join(base_dir, 'data')), 'introspection_state.json', 'w'') as f:
             json.dump({
                 'cycle_count': self.cycle_count,
                 'last_reflection': self.last_reflection,
@@ -50,7 +50,7 @@ class IntrospectionEngine:
         
         # Get memory directly, not via respond
         try:
-            with open(os.getenv('BRAIN_DATA_DIR', './data'/priority_memory.json') as f:
+            with open(os.path.join(os.getenv('BRAIN_DATA_DIR', os.path.join(base_dir, 'data')), 'priority_memory.json'') as f:
                 memory = json.load(f)
                 never_forget_count = len(memory.get('never_forget', []))
         except:
