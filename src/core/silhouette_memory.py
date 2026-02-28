@@ -1,11 +1,3 @@
-import os
-import sys
-# Añadir el directorio raíz al path para encontrar módulos internos
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if base_dir not in sys.path: sys.path.append(base_dir)
-core_dir = os.path.join(base_dir, "core")
-if core_dir not in sys.path: sys.path.append(core_dir)
-import os
 #!/usr/bin/env python3
 """
 Silhouette Memory System v3.0 - Full Implementation
@@ -17,6 +9,19 @@ Tiers:
 - LONG: SQLite (persistent)
 - DEEP: SQLite (semantic - with embeddings)
 """
+
+import os
+import sys
+
+# Añadir el directorio raíz al path para encontrar módulos internos
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path:
+    sys.path.append(base_dir)
+
+core_dir = os.path.join(base_dir, "core")
+if core_dir not in sys.path:
+    sys.path.append(core_dir)
+
 import json
 import time
 import uuid
@@ -27,6 +32,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from dataclasses import dataclass, asdict, field
 from enum import Enum
+import sqlite3
 import sqlite3
 
 try:
