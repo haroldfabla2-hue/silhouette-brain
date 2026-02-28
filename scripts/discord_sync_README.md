@@ -1,6 +1,15 @@
-# Discord Session Sync
+# Discord Session Sync - Producción
 
 Sincroniza conversaciones de Discord desde OpenClaw a memoria.
+
+## Características
+
+- ✅ Lee sesiones de TODOS los agentes
+- ✅ Backup automático a JSONL
+- ✅ Integración con Brain API (cuando esté disponible)
+- ✅ Modo fallback (sin Neo4j = solo JSONL)
+- ✅ Logging detallado
+- ✅ Manejo de errores robusto
 
 ## Uso
 
@@ -8,21 +17,21 @@ Sincroniza conversaciones de Discord desde OpenClaw a memoria.
 python3 scripts/discord_sync.py
 ```
 
-## Configuración
+## Configuración (variables de entorno)
 
-El script lee sesiones de TODOS los agentes en `/root/.openclaw/agents/`:
-- main, silhouette, rick, roger, cami, jack, rose, larry, flocky
-
-Guarda en: `/root/.openclaw/workspace/memory_discord/discord_messages.jsonl`
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| OPENCLAW_AGENTS_DIR | /root/.openclaw/agents | Directorio de agentes |
+| MEMORY_OUTPUT_DIR | /root/.openclaw/workspace/memory_discord | Output JSONL |
+| BRAIN_API_URL | http://localhost:9876 | URL del Brain API |
 
 ## Cron (cada 15 min)
 
 ```bash
-*/15 * * * * cd /root/silhouette-brain && python3 scripts/discord_sync.py
+*/15 * * * * cd /root/silhouette-brain && python3 scripts/discord_sync.py >> /var/log/discord_sync.log 2>&1
 ```
 
 ## Requisitos
 
 - Python 3.8+
-- Acceso a `/root/.openclaw/agents/`
-# Discord Sync
+- requests (para Brain API)
