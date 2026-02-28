@@ -25,3 +25,4 @@ Guarda en: `/root/.openclaw/workspace/memory_discord/discord_messages.jsonl`
 
 - Python 3.8+
 - Acceso a `/root/.openclaw/agents/`
+# Discord Sync
