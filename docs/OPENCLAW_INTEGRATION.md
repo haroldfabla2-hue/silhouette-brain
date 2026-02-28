@@ -28,21 +28,23 @@ Para que el cerebro funcione en su totalidad, necesitarás definir en tu archivo
 - **OpenAI API Key (`OPENAI_API_KEY`):** Estrictamente necesaria para generar los *Embeddings Vectoriales* (convertir el texto en matemáticas para que la IA pueda buscar por significado y no solo por coincidencia de palabras).
 - **Notion / Trello (Opcional):** Si deseas usar los scripts de integración (`trello_monitor.py` o `larry_notion_check.py`), necesitarás las credenciales correspondientes. Si no los usas, puedes ignorar o desactivar esos cron jobs.
 
-## 4. El Latido del Corazón: Procesos de Sincronización (Sync)
-El cerebro no funciona si no se alimenta. Para que el sistema esté "vivo", debes programar tareas en segundo plano (Cron Jobs) que capturen constantemente lo que los agentes de OpenClaw están haciendo y lo inyecten en el Cerebro.
+## 4. El Latido del Corazón: Sincronización Global Ininterrumpida
+El cerebro no funciona si no se alimenta. Para que el sistema esté "vivo", se utiliza un **Daemon de Sincronización Global** que captura en tiempo real (cada 2 minutos) lo que los agentes de OpenClaw están haciendo en todos sus canales (Discord, Terminal, Web, etc) y lo inyecta en el Cerebro.
 
-Recomendamos configurar las siguientes tareas en tu `crontab` para ejecutar los scripts de la carpeta `src/core/`:
+A diferencia del pasado donde se dependía de tareas `cron`, ahora se usa un proceso gestionado por `pm2` que funciona de forma 100% desacoplada:
 
-| Script de Sincronización | Función | Frecuencia Sugerida |
-|-------------------------|---------|---------------------|
-| `smart_session_sync.py` | Lee el historial de chat (`.jsonl`) de todas las sesiones activas en OpenClaw y envía los nuevos mensajes a la Memoria Reciente. | Cada 30 minutos |
-| `agent_reports_sync.py` | Busca los reportes Markdown (`.md`) que los agentes generan en sus *workspaces* y los inyecta como recuerdos semánticos largos. | Cada 2 horas |
-| `memory_sync.py` | Proceso general de consolidación y limpieza inicial antes de que pase el *Janitor*. | Cada hora |
+1. **Autodescubrimiento:** Escanea dinámicamente `/root/.openclaw/workspace/` y `/root/.openclaw/agents/` buscando cualquier carpeta de canales o sesiones. Si el día de mañana agregas Slack o Telegram, el cerebro los leerá automáticamente sin tocar código.
+2. **Eficiencia:** Guarda un estado interno para recordar qué mensajes ya leyó, evitando consumo excesivo de disco y CPU.
 
-**Ejemplo de Crontab (`crontab -e`):**
+**Cómo verificar que el Daemon está corriendo:**
 ```bash
-*/30 * * * * python3 /ruta/a/silhouette-brain/src/core/smart_session_sync.py >> /var/log/brain_session_sync.log 2>&1
-0 */2 * * * python3 /ruta/a/silhouette-brain/src/core/agent_reports_sync.py >> /var/log/brain_reports_sync.log 2>&1
+pm2 status | grep silhouette-global-sync
+```
+
+**Si necesitas reiniciarlo o ver sus logs:**
+```bash
+pm2 restart silhouette-global-sync
+pm2 logs silhouette-global-sync
 ```
 
 ## 5. Arquitectura Desacoplada y Segura (Por qué no se romperá)
