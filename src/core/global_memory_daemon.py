@@ -181,7 +181,7 @@ def daemon_mode():
                 print(f"✅ [GLOBAL SYNC] Ciclo completado. {new_msgs} nuevos recuerdos integrados para el Grafo/Neo4j.")
                 
             # Esperar antes del siguiente ciclo
-            time.sleep(30)
+            time.sleep(120)
             
         except KeyboardInterrupt:
             print("
