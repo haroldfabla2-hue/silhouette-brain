@@ -41,10 +41,10 @@ except:
 
 # Rutas de archivos 4-tier
 TIER_FILES = {
-    'working': os.getenv('BRAIN_DATA_DIR', './data'/working.json',
-    'medium': os.getenv('BRAIN_DATA_DIR', './data'/medium.json',
-    'long': os.getenv('BRAIN_DATA_DIR', './data'/long.json',
-    'deep': os.getenv('BRAIN_DATA_DIR', './data'/deep.json'
+    'working': os.getenv('BRAIN_DATA_DIR', './data/working.json',
+    'medium': os.getenv('BRAIN_DATA_DIR', './data/medium.json',
+    'long': os.getenv('BRAIN_DATA_DIR', './data/long.json',
+    'deep': os.getenv('BRAIN_DATA_DIR', './data/deep.json')
 }
 
 class MemoryAPIHandler(BaseHTTPRequestHandler):
