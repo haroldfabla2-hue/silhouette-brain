@@ -78,8 +78,7 @@ Posees una infraestructura cognitiva independiente (Brain API) en http://localho
                 f.write(t_directive)
             print(f"✅ Herramientas inyectadas en {tools_file}")
 
-    print("
-✨ Proceso de integración completado. ¡Ahora eres más inteligente!")
+    print("\n✨ Proceso de integración completado. ¡Ahora eres más inteligente!")
 
 if __name__ == "__main__":
     setup()

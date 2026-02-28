@@ -48,7 +48,7 @@ NEO4J_PASSWORD = "silhouette2035"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 
-DB_PATH = os.getenv("BRAIN_DATA_DIR", "./data")/memory.db"
+DB_PATH = os.getenv("BRAIN_DATA_DIR", "./data") + "/memory.db"
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 MAX_WORKING = 50
