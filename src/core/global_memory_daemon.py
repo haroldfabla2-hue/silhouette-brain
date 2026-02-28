@@ -18,6 +18,10 @@ import os
 import sys
 import time
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv("/root/silhouette-brain/.env")
 
 # Inyectar path del cerebro para usar la memoria nativa
 BRAIN_SRC_DIR = os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core')
@@ -116,8 +120,7 @@ def run_sync_cycle(state):
         try:
             # Leer todas las líneas (se asume que son archivos rotativos manejables)
             content = file_path.read_text(encoding='utf-8')
-            lines = content.split('
-')
+            lines = content.split('\n')
             
             new_lines_count = 0
             
@@ -184,8 +187,7 @@ def daemon_mode():
             time.sleep(120)
             
         except KeyboardInterrupt:
-            print("
-🛑 [GLOBAL SYNC DAEMON] Detenido por el usuario.")
+            print("\n🛑 [GLOBAL SYNC DAEMON] Detenido por el usuario.")
             break
         except Exception as e:
             print(f"💥 [GLOBAL SYNC ERROR FATAL] {e}")
