@@ -34,7 +34,7 @@ def get_all_sessions():
     agents_path = Path(AGENTS_DIR)
     
     if not agents_path.exists():
-        logger.warning(f"Directorio de agentes no encontrado: {agents_path}")
+        logger.info(f"Directorio de agentes no encontrado: {agents_path}")
         return sessions
     
     for agent_dir in agents_path.iterdir():
@@ -84,8 +84,8 @@ def check_brain_api():
     """Verifica si Brain API está disponible"""
     try:
         import requests
-        response = requests.get(f"{BRAIN_API_URL}/health", timeout=5)
-        return response.status_code == 200
+        response = requests.get(f"{BRAIN_API_URL}/api/status", timeout=5)
+        return response.status_code in [200, 201]
     except:
         return False
 
@@ -93,14 +93,22 @@ def send_to_brain_api(messages):
     """Envía mensajes al Brain API"""
     try:
         import requests
-        response = requests.post(
-            f"{BRAIN_API_URL}/api/memory/batch",
-            json={"messages": messages},
-            timeout=30
-        )
-        return response.status_code == 200
+        for msg in messages:
+            response = requests.post(
+                f"{BRAIN_API_URL}/api/memory",
+                json={
+                    "text": msg.get("content", "")[:500],
+                    "importance": 0.7,
+                    "tier": "MEDIUM"
+                },
+                timeout=30
+            )
+            if response.status_code not in [200, 201]:
+                logger.debug(f"Error: {response.text}")
+                return False
+        return True
     except Exception as e:
-        logger.debug(f"Brain API no disponible: {e}")
+        logger.debug(f"Brain API error: {e}")
         return False
 
 def sync():
@@ -170,7 +178,7 @@ def sync():
         if send_to_brain_api(messages_to_brain):
             logger.info(f"✅ Enviados {len(messages_to_brain)} mensajes a Brain API")
         else:
-            logger.warning("❌ Error enviando a Brain API")
+            logger.info("❌ Error enviando a Brain API")
     
     return messages_saved
 

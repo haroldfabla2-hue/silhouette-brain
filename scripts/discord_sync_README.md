@@ -7,7 +7,7 @@ Sincroniza conversaciones de Discord desde OpenClaw a memoria.
 - ✅ Lee sesiones de TODOS los agentes
 - ✅ Backup automático a JSONL
 - ✅ Integración con Brain API (cuando esté disponible)
-- ✅ Modo fallback (sin Neo4j = solo JSONL)
+- ✅ Modo fallback (sin Brain API = solo JSONL)
 - ✅ Logging detallado
 - ✅ Manejo de errores robusto
 
