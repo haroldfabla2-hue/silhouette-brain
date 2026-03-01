@@ -43,14 +43,16 @@ La forma más sencilla de instalar y probar Silhouette Brain es a través de Doc
 
 El servidor "Brain API" estará disponible en: `http://localhost:9876`
 
-## Uso de la API (Brain API)
+## Uso de la API (Brain API v1.1.0)
 
-Puedes consultar la memoria a través de solicitudes HTTP simples:
+La API corre en `http://localhost:9876`. Puedes consultar la memoria a través de solicitudes HTTP:
 
 - **Estado del sistema:** `GET /api/status`
-- **Búsqueda semántica:** `GET /api/memory/semantic?query=tu_texto`
-- **Consulta de entidades (Janitor):** `GET /api/entities`
-- **Consulta del grafo:** `GET /api/graph?entity=nombre`
+- **Búsqueda semántica:** `GET /api/memory/semantic?query=tu_texto&min_score=0.35&filter_heartbeats=true`
+- **Contexto combinado (recomendado):** `GET /api/memory/context?query=tu_texto&sem_limit=5&rec_limit=3&hours=2`
+- **Conversaciones recientes:** `GET /api/memory/recent?hours=2&limit=5`
+- **Consulta de entidades:** `GET /api/memory/entities`
+- **Consulta del grafo:** `GET /api/memory/graph?entity=nombre`
 - **Ingesta de memoria:** `POST /api/memory`
   ```json
   {
@@ -60,6 +62,8 @@ Puedes consultar la memoria a través de solicitudes HTTP simples:
     "tier": "WORKING"
   }
   ```
+
+El endpoint `/api/memory/context` es el más eficiente para agentes — combina búsqueda semántica y contexto reciente en un solo round-trip HTTP.
 ## 📚 Documentación Completa
 
 Para sacar el máximo provecho de esta arquitectura, te recomendamos revisar nuestra documentación detallada en el siguiente orden:

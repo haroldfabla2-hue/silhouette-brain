@@ -26,7 +26,7 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-MEMORY_DB = os.getenv("BRAIN_DATA_DIR", "./data/memory_core.db")
+MEMORY_DB = os.path.join(os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data"), "memory_core.db")
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 CACHE_TTL = 300  # 5 minutos

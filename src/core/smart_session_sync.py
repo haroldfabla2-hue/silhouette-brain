@@ -19,7 +19,7 @@ from agent_memory_readonly import invalidate_cache
 from memory_noise_filter import should_skip_ingestion
 
 AGENTS_DIR = "/root/.openclaw/agents"
-STATE_FILE = os.getenv("BRAIN_DATA_DIR", "./data")/smart_sync_state.json"
+STATE_FILE = os.path.join(os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data"), "smart_sync_state.json")
 BATCH_SIZE = 20  # Grupo de 20 mensajes
 
 def load_state():

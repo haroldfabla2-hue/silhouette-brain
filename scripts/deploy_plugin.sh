@@ -50,6 +50,9 @@ fi
 PYTHON_FILES=(
   "api/enhanced_memory_api.py"
   "core/memory_noise_filter.py"
+  "core/agent_memory_readonly.py"
+  "core/sync_openclaw_sessions.py"
+  "core/smart_session_sync.py"
 )
 
 for rel in "${PYTHON_FILES[@]}"; do
@@ -66,6 +69,24 @@ for rel in "${PYTHON_FILES[@]}"; do
     warn "Source not found, skipping: $src"
   fi
 done
+
+# ── Ensure DB symlink points to canonical database ────────────────────────
+DATA_DST="/root/.openclaw/skills/silhouette-memory/data"
+CANONICAL_DB="/root/silhouette-brain/data/memory_core.db"
+SKILLS_DB="$DATA_DST/memory_core.db"
+if ! $DRY_RUN; then
+  if [[ -f "$CANONICAL_DB" ]]; then
+    if [[ ! -L "$SKILLS_DB" ]] || [[ "$(readlink "$SKILLS_DB")" != "$CANONICAL_DB" ]]; then
+      [[ -f "$SKILLS_DB" && ! -L "$SKILLS_DB" ]] && mv "$SKILLS_DB" "${SKILLS_DB}.bak.$(date +%Y%m%d-%H%M%S)"
+      ln -sf "$CANONICAL_DB" "$SKILLS_DB"
+      ok "DB symlink set → $CANONICAL_DB"
+    else
+      ok "DB symlink already correct"
+    fi
+  fi
+else
+  log "(dry) Would ensure DB symlink: $SKILLS_DB → $CANONICAL_DB"
+fi
 
 # ── Restart memory API ────────────────────────────────────────────────────
 if ! $DRY_RUN; then

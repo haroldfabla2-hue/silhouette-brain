@@ -1,11 +1,3 @@
-import os
-import sys
-# Añadir el directorio raíz al path para encontrar módulos internos
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if base_dir not in sys.path: sys.path.append(base_dir)
-core_dir = os.path.join(base_dir, "core")
-if core_dir not in sys.path: sys.path.append(core_dir)
-import os
 #!/usr/bin/env python3
 """
 Incrementally sync Silhouette OpenClaw session messages into memory_core.db.
@@ -31,7 +23,7 @@ from memory_core import get_memory_core  # noqa: E402
 
 
 SESSIONS_DIR = Path("/root/.openclaw/agents/silhouette/sessions")
-STATE_PATH = Path(os.getenv("BRAIN_DATA_DIR", "./data")/session_sync_state.json")
+STATE_PATH = Path(os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data")) / "session_sync_state.json"
 VALID_ROLES = {"user", "assistant"}
 
 
