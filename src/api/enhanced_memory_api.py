@@ -15,7 +15,7 @@ sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', os.path.dirname(os.path.abspath(__
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
-from memory_noise_filter import should_skip_ingestion
+from memory_noise_filter import should_skip_ingestion, is_agent_heartbeat_report
 
 # Importar todas las funciones de memoria
 from agent_memory_readonly import get_memory_context, get_entities, get_recent
@@ -33,18 +33,19 @@ except Exception as e:
 try:
     from neo4j import GraphDatabase
     NEO4J_AVAILABLE = True
-    NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:17687")
     NEO4J_USER = "neo4j"
     NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "neo4j_password")
 except:
     NEO4J_AVAILABLE = False
 
 # Rutas de archivos 4-tier
+_DATA_DIR = os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')
 TIER_FILES = {
-    'working': os.getenv('BRAIN_DATA_DIR', './data/working.json',
-    'medium': os.getenv('BRAIN_DATA_DIR', './data/medium.json',
-    'long': os.getenv('BRAIN_DATA_DIR', './data/long.json',
-    'deep': os.getenv('BRAIN_DATA_DIR', './data/deep.json')
+    'working': os.path.join(_DATA_DIR, 'working.json'),
+    'medium':  os.path.join(_DATA_DIR, 'medium.json'),
+    'long':    os.path.join(_DATA_DIR, 'long.json'),
+    'deep':    os.path.join(_DATA_DIR, 'deep.json'),
 }
 
 class MemoryAPIHandler(BaseHTTPRequestHandler):
@@ -122,9 +123,25 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         elif path in ['/api/memory/semantic', '/semantic', '/api/semantic']:
             q = query.get('query', [''])[0]
             limit = int(query.get('limit', [5])[0])
+            min_score = float(query.get('min_score', [0.0])[0])
+            filter_heartbeats = query.get('filter_heartbeats', ['false'])[0].lower() == 'true'
             if q and EMBEDDINGS:
                 try:
                     result = get_memory_core_embeddings(q, limit)
+                    # Apply min_score filter if requested
+                    if min_score > 0.0 and 'results' in result:
+                        result['results'] = [
+                            r for r in result['results']
+                            if r.get('similarity', 0.0) >= min_score
+                        ]
+                        result['found'] = len(result['results'])
+                    # Filter agent heartbeat reports from auto-recall context
+                    if filter_heartbeats and 'results' in result:
+                        result['results'] = [
+                            r for r in result['results']
+                            if not is_agent_heartbeat_report(r.get('message', ''))
+                        ]
+                        result['found'] = len(result['results'])
                     self.send_json(result)
                 except Exception as e:
                     self.send_json({"error": str(e)})
@@ -132,6 +149,45 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": "Embeddings not available"})
             else:
                 self.send_json({"error": "Missing query parameter"})
+
+        # 4b. Combined context endpoint: semantic + recent in one call
+        elif path in ['/api/memory/context', '/api/context']:
+            q = query.get('query', [''])[0]
+            sem_limit = int(query.get('sem_limit', [5])[0])
+            rec_limit = int(query.get('rec_limit', [3])[0])
+            rec_hours = int(query.get('hours', [2])[0])
+            min_score = float(query.get('min_score', [0.3])[0])
+            filter_heartbeats = query.get('filter_heartbeats', ['true'])[0].lower() != 'false'
+            semantic_results = []
+            recent_results = []
+            if q and EMBEDDINGS:
+                try:
+                    sem_data = get_memory_core_embeddings(q, sem_limit)
+                    raw = sem_data.get('results', [])
+                    for r in raw:
+                        if r.get('similarity', 0.0) < min_score:
+                            continue
+                        if filter_heartbeats and is_agent_heartbeat_report(r.get('message', '')):
+                            continue
+                        semantic_results.append(r)
+                except Exception:
+                    pass
+            try:
+                rec_data = get_recent(rec_hours, rec_limit)
+                raw_recent = rec_data.get('conversations', [])
+                for r in raw_recent:
+                    if filter_heartbeats and is_agent_heartbeat_report(r.get('message', '')):
+                        continue
+                    recent_results.append(r)
+            except Exception:
+                pass
+            self.send_json({
+                "query": q,
+                "semantic": semantic_results,
+                "recent": recent_results,
+                "semantic_count": len(semantic_results),
+                "recent_count": len(recent_results),
+            })
         
         # 5. Neo4j - Grafo de relaciones
         elif path in ['/api/memory/graph', '/graph', '/api/graph']:
@@ -183,11 +239,13 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         elif path in ['/api/status', '/status']:
             self.send_json({
                 "status": "ok",
+                "version": "1.1.0",
                 "endpoints": [
                     "/api/memory?query=xxx",
                     "/api/memory/entities",
-                    "/api/memory/recent",
-                    "/api/memory/semantic?query=xxx",
+                    "/api/memory/recent?hours=2&limit=5",
+                    "/api/memory/semantic?query=xxx&limit=5&min_score=0.35&filter_heartbeats=true",
+                    "/api/memory/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.3",
                     "/api/memory/graph?entity=xxx",
                     "/api/memory/tiers",
                     "/api/status"

@@ -36,6 +36,19 @@ RUNTIME_NOISE_SOFT_PATTERNS: Sequence[re.Pattern] = (
     re.compile(r"\bno puedo(?:\s+\w+){0,8}\s+(?:ejecutar|usar)\s+comandos\b", re.IGNORECASE),
 )
 
+# Patterns for automated agent heartbeat/scouting reports.
+# These are legitimate data but dilute semantic search relevance when used
+# as context injection. Filter them from auto-recall, NOT from ingestion.
+AGENT_HEARTBEAT_PATTERNS: Sequence[re.Pattern] = (
+    re.compile(r"\bHEARTBEAT_OK\b", re.IGNORECASE),
+    re.compile(r"Scout\s+completado\s*[-–]\s*Ciclo\s+\d+", re.IGNORECASE),
+    re.compile(r"\[AGENT:[A-Z]+\].*Ciclo\s+\d+", re.IGNORECASE),
+    re.compile(r"\|\s*(?:Oportunidades|High Priority|Medium Priority)\s*\|.*\|", re.IGNORECASE),
+    re.compile(r"Ciclo\s+\d+\s*\(\d{2}:\d{2}\s*UTC\)", re.IGNORECASE),
+    re.compile(r"\bstandup\b.*\d{4}-\d{2}-\d{2}", re.IGNORECASE),
+    re.compile(r"Senior\s+\w+\s+(?:Engineer|Developer).*\$[\d,k+]+", re.IGNORECASE),
+)
+
 RUNTIME_DIAGNOSTIC_QUERY_PATTERNS: Sequence[re.Pattern] = (
     re.compile(r"\bsandbox\b", re.IGNORECASE),
     re.compile(r"\btools\.exec\.host\b", re.IGNORECASE),
@@ -82,6 +95,20 @@ def is_operational_runtime_noise(text: str) -> bool:
 
 def should_skip_ingestion(text: str) -> bool:
     return is_operational_runtime_noise(text)
+
+
+def is_agent_heartbeat_report(text: str) -> bool:
+    """Return True if text looks like an automated agent heartbeat/scouting report.
+
+    These messages are valid data and SHOULD be stored in memory, but they
+    dilute semantic search quality when injected as context for unrelated
+    queries.  Use this only to filter auto-recall context injection, not
+    for ingestion filtering.
+    """
+    content = _as_text(text)
+    if len(content.strip()) < 10:
+        return False
+    return any(pattern.search(content) for pattern in AGENT_HEARTBEAT_PATTERNS)
 
 
 def should_filter_for_query(text: str, query: str) -> bool:
