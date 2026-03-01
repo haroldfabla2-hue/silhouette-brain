@@ -166,7 +166,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
             sem_limit = int(query.get('sem_limit', [5])[0])
             rec_limit = int(query.get('rec_limit', [3])[0])
             rec_hours = int(query.get('hours', [2])[0])
-            min_score = float(query.get('min_score', [0.3])[0])
+            min_score = float(query.get('min_score', [0.15])[0])
             filter_heartbeats = query.get('filter_heartbeats', ['true'])[0].lower() != 'false'
             semantic_results = []
             recent_results = []
@@ -205,7 +205,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
             sem_limit     = int(query.get('sem_limit',   [5])[0])
             rec_limit     = int(query.get('rec_limit',   [3])[0])
             rec_hours     = int(query.get('hours',       [2])[0])
-            min_score     = float(query.get('min_score', [0.3])[0])
+            min_score     = float(query.get('min_score', [0.15])[0])
             inc_graph     = query.get('graph',     ['false'])[0].lower() == 'true'
             inc_tiers     = query.get('tiers',     ['false'])[0].lower() == 'true'
             synthesize    = query.get('synthesize',['false'])[0].lower() == 'true'
@@ -293,12 +293,12 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                 "status": "ok",
                 "version": "2.0.0",
                 "endpoints": [
-                    "/api/reasoning/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.3&graph=true&tiers=false&synthesize=false",
+                    "/api/reasoning/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.15&graph=true&tiers=false&synthesize=false",
                     "/api/memory?query=xxx",
                     "/api/memory/entities",
                     "/api/memory/recent?hours=2&limit=5",
-                    "/api/memory/semantic?query=xxx&limit=5&min_score=0.35&filter_heartbeats=true",
-                    "/api/memory/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.3",
+                    "/api/memory/semantic?query=xxx&limit=5&min_score=0.15&filter_heartbeats=true",
+                    "/api/memory/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.15",
                     "/api/memory/graph?entity=xxx",
                     "/api/memory/tiers",
                     "/api/status"
@@ -307,7 +307,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     "embeddings":       EMBEDDINGS,
                     "embedding_model":  "hf:paraphrase-multilingual-MiniLM-L12-v2 (384 dims)",
                     "reasoning":        REASONING_AVAILABLE,
-                    "reasoning_model":  "zhipu:glm-4.5-air (synthesis)",
+                    "reasoning_model":  "minimax:MiniMax-M2.5 (synthesis)",
                     "neo4j":            NEO4J_AVAILABLE,
                     "4_tier":           True,
                 }
