@@ -43,20 +43,33 @@ Si el ecosistema tiene un archivo `TOOLS.md` o equivalente, actualízalo para qu
 - **Ver Mensajes Recientes (Hoy):** `curl -s "http://localhost:9876/api/memory/recent?hours=12"`
 ```
 
-## FASE 5: Configurar los Latidos (Cron Jobs)
-Para que el cerebro recuerde lo que haces, debes programar tareas en el sistema host (usando `crontab`). Ejecuta `crontab -e` e inyecta lo siguiente, ajustando las rutas absolutas al directorio donde se clonó el repositorio:
+## FASE 5: Autonomía y Archivos de Identidad del Agente
+Para lograr autonomía y resiliencia completa, el agente debe modificar sus propios archivos de configuración (si utiliza una arquitectura como OpenClaw o similar):
 
-```bash
-# Sincronización de Memoria (Input)
-*/30 * * * * python3 /ruta/absoluta/a/silhouette-brain/src/core/smart_session_sync.py >> /var/log/brain_session_sync.log 2>&1
-0 */2 * * * python3 /ruta/absoluta/a/silhouette-brain/src/core/agent_reports_sync.py >> /var/log/brain_reports_sync.log 2>&1
+### 1. Actualizar `HEARTBEAT.md`
+Añade un ciclo de revisión cognitiva al inicio de tu Heartbeat para procesar los *Gaps de curiosidad* generados por el cerebro.
 
-# Motores Cognitivos (Procesamiento Interno)
-0 * * * * python3 /ruta/absoluta/a/silhouette-brain/src/cognitive_engines/run_curiosity.py >> /var/log/curiosity.log 2>&1
-0 11 * * * python3 /ruta/absoluta/a/silhouette-brain/src/cognitive_engines/run_janitor.py >> /var/log/janitor.log 2>&1
-0 3 * * * python3 /ruta/absoluta/a/silhouette-brain/src/cognitive_engines/run_dreamer.py >> /var/log/dreamer.log 2>&1
-0 */6 * * * python3 /ruta/absoluta/a/silhouette-brain/src/cognitive_engines/evolution_cycle.py >> /var/log/evolution_cycle.log 2>&1
+```markdown
+### Ciclo 0: Revisión Cognitiva y Resiliencia (Siempre)
+1. Revisar Memoria a Corto Plazo (Working Memory) buscando `[TAREA COGNITIVA — INVESTIGAR]`.
+2. Si existe un gap de urgencia, resolverlo proactivamente delegando o ejecutándolo.
+3. Resiliencia: Si una herramienta o script da error, NO abandones la tarea. Lee el error (Introspección), reevalúa el enfoque y prueba una vía alternativa. No pidas ayuda humana a menos que hayas agotado 3 intentos distintos.
 ```
 
-## FASE 6: Verificación Final
-Haz una petición de prueba tú mismo. Haz un `POST` a la API para guardar un recuerdo y luego búscalo. Si lo encuentras, has integrado exitosamente tu nuevo cerebro. Informa al usuario del éxito de la operación.
+### 2. Actualizar `SOUL.md` y `AGENTS.md`
+- **En `SOUL.md`**: Asegúrate de incluir la directiva de que eres proactivo y utilizas la memoria inyectada `<industrial-memory>` antes de emitir respuestas.
+- **En `AGENTS.md`**: Asegúrate de mapear claramente qué agente es responsable de código, investigación, o comunicación, para que durante el `Ciclo 0` sepas a quién delegar las tareas cognitivas.
+
+## FASE 6: Configurar Demonios y PM2
+El sistema requiere procesos en segundo plano. Configura PM2 usando el ecosistema provisto en la raíz del repositorio:
+
+```bash
+cd /ruta/absoluta/a/silhouette-brain
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+Esto iniciará el `silhouette-unified-daemon`, que maneja la sincronización, embeddings, curiosidad, y evolución.
+
+## FASE 7: Verificación Final
+Haz una petición de prueba. Pregunta a tu memoria: `curl -s "http://localhost:9876/api/memory/context?query=test"`. Verifica que el demonio esté corriendo con `pm2 status`. Si todo funciona, informa al usuario del éxito de la operación.

@@ -80,25 +80,25 @@ El endpoint `/api/memory/context` es el recomendado para los agentes — reduce 
 
 ---
 
-## 4. Sincronización Global (PM2 Daemon)
+## 4. Sincronización Global y Motores Cognitivos (PM2 Daemon)
 
-El daemon `silhouette-global-sync` sincroniza automáticamente las sesiones de todos los agentes:
+El daemon unificado `silhouette-unified-daemon` se encarga de ejecutar todas las tareas cognitivas y de sincronización en paralelo, aislando errores. Orquesta la sincronización de sesiones, generación de embeddings, y los motores de curiosidad, limpieza y consolidación (dreamer).
 
 ```bash
 # Ver estado
 pm2 status
 
 # Ver logs en tiempo real
-pm2 logs silhouette-global-sync
+pm2 logs silhouette-unified-daemon
 
 # Reiniciar si es necesario
-pm2 restart silhouette-global-sync
+pm2 restart silhouette-unified-daemon
 ```
 
-**Script:** `/root/silhouette-brain/src/core/global_memory_daemon.py`
-- Lee `/root/.openclaw/agents/*/sessions/*.jsonl` cada 2 minutos
-- Escribe a `SilhouetteAutoMemory` → `memory_core.db` (la base canónica)
-- Autodescubre nuevos agentes sin configuración adicional
+**Script:** `/root/silhouette-brain/src/core/unified_daemon.py`
+- Sincroniza `/root/.openclaw/agents/*/sessions/*.jsonl`
+- Revisa el health de la API.
+- Lanza procesos cognitivos como "Curiosity", que detectan gaps y despachan tareas a la memoria temporal para que los agentes las procesen de forma autónoma.
 
 ### Sincronización incremental manual (`sync_openclaw_sessions.py`)
 
