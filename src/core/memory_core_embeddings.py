@@ -101,14 +101,18 @@ class MemoryCore:
         try:
             vec1 = np.frombuffer(emb1, dtype=np.float32)
             vec2 = np.frombuffer(emb2, dtype=np.float32)
-            
+
+            # Incompatible dimensions (e.g. OpenAI 1536-dim vs HF 384-dim): skip
+            if vec1.shape != vec2.shape:
+                return 0.0
+
             dot = np.dot(vec1, vec2)
             norm1 = np.linalg.norm(vec1)
             norm2 = np.linalg.norm(vec2)
-            
+
             if norm1 == 0 or norm2 == 0:
                 return 0
-            
+
             return float(dot / (norm1 * norm2))
         except:
             return 0

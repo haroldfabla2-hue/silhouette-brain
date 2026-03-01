@@ -2,14 +2,14 @@
 """
 ZhipuAI Embeddings + Reasoning
 ================================
-- Embeddings: HuggingFace Inference API (paraphrase-multilingual-MiniLM-L12-v2, 384 dims)
-  Gratuito, sin API key, multilingüe (español + inglés).
-  Fallback: TF-IDF numpy cuando HF no responde.
+- Embeddings: fastembed local (paraphrase-multilingual-MiniLM-L12-v2, 384 dims)
+  ONNX optimizado, multilingüe (español + inglés), sin API key, sin rate limits.
+  Fallback: TF-IDF numpy si fastembed no está instalado.
 
-- Síntesis/Razonamiento: GLM-4.7 de z.ai/ZhipuAI (bigmodel.cn)
+- Síntesis/Razonamiento: GLM-4.5-air de z.ai/ZhipuAI (bigmodel.cn)
 
 Modelos disponibles confirmados en la cuenta z.ai:
-  glm-4.5, glm-4.5-air, glm-4.6, glm-4.7, glm-5
+  glm-4.5, glm-4.5-air, glm-4.6, glm-4.7, glm-5 (NO tienen sufijo -flash)
 """
 import os
 import re
@@ -28,70 +28,58 @@ ZHIPU_API_BASE   = os.getenv("ZHIPU_API_BASE", "https://open.bigmodel.cn/api/paa
 ZHIPU_API_KEY    = os.getenv("ZHIPU_API_KEY", "")
 REASONING_MODEL  = os.getenv("ZHIPU_REASONING_MODEL", "glm-4.5-air")  # rápido, sin chain-of-thought
 
-# Embeddings — HuggingFace Inference API (sin autenticación para modelos públicos)
-HF_EMBEDDING_URL = os.getenv(
-    "HF_EMBEDDING_URL",
-    "https://api-inference.huggingface.co/pipeline/feature-extraction/"
-    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-)
-HF_API_KEY       = os.getenv("HF_API_KEY", "")   # Opcional (aumenta rate limit)
+# Embeddings — fastembed local (ONNX, sin API)
+FASTEMBED_MODEL  = os.getenv("FASTEMBED_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 EMBEDDING_DIMS   = 384    # paraphrase-multilingual-MiniLM-L12-v2 → 384 dims
 
-REQUEST_TIMEOUT  = 20    # segundos
+REQUEST_TIMEOUT  = 20    # segundos para llamadas a z.ai
 
 
 # ============================================================================
-# EMBEDDINGS — HuggingFace Inference API + fallback TF-IDF numpy
+# EMBEDDINGS — fastembed local (ONNX) + fallback TF-IDF numpy
 # ============================================================================
+
+# Singleton del modelo fastembed (se carga una vez en memoria)
+_fastembed_model = None
+
+def _get_fastembed_model():
+    global _fastembed_model
+    if _fastembed_model is None:
+        from fastembed import TextEmbedding
+        _fastembed_model = TextEmbedding(FASTEMBED_MODEL)
+    return _fastembed_model
+
 
 def get_embedding(text: str) -> list:
     """
     Obtiene vector de embedding para un texto.
-    Primario: HuggingFace paraphrase-multilingual-MiniLM-L12-v2 (384 dims, multilingüe).
-    Fallback:  TF-IDF numpy básico (mismo número de dims aproximado).
+    Primario: fastembed local ONNX (384 dims, multilingüe, sin API, sin rate limits).
+    Fallback:  TF-IDF numpy si fastembed no está disponible.
     """
     text = text.strip()[:1024]
     try:
-        return _hf_embedding(text)
-    except Exception as e:
-        # Silencioso — el logger del llamante ya maneja esto
+        model = _get_fastembed_model()
+        vectors = list(model.embed([text]))
+        return vectors[0].tolist()
+    except Exception:
         return _tfidf_embedding(text)
+
+
+def get_embedding_batch(texts: list) -> list:
+    """
+    Embedding en batch — mucho más eficiente que llamadas individuales.
+    Devuelve lista de vectores (uno por texto).
+    """
+    texts = [t.strip()[:1024] for t in texts]
+    try:
+        model = _get_fastembed_model()
+        return [v.tolist() for v in model.embed(texts)]
+    except Exception:
+        return [_tfidf_embedding(t) for t in texts]
 
 
 # Alias para compatibilidad con código que usa openai_embeddings
 get_openai_embedding = get_embedding
-
-
-def _hf_embedding(text: str) -> list:
-    """Llama a HuggingFace Inference API para embedding."""
-    headers = {"Content-Type": "application/json"}
-    if HF_API_KEY:
-        headers["Authorization"] = f"Bearer {HF_API_KEY}"
-
-    resp = requests.post(
-        HF_EMBEDDING_URL,
-        headers=headers,
-        json={"inputs": text, "options": {"wait_for_model": True}},
-        timeout=REQUEST_TIMEOUT,
-    )
-
-    if resp.status_code != 200:
-        raise RuntimeError(f"HF API {resp.status_code}: {resp.text[:100]}")
-
-    result = resp.json()
-
-    # HF feature-extraction puede devolver shape [1, dims] o [dims] dependiendo del modelo
-    if isinstance(result, list):
-        if result and isinstance(result[0], list):
-            # Pooling manual: mean de los token embeddings
-            arr = np.array(result[0], dtype=np.float32)
-            vec = arr.mean(axis=0).tolist() if arr.ndim == 2 else arr.tolist()
-        else:
-            vec = result
-    else:
-        raise RuntimeError(f"HF API respuesta inesperada: {type(result)}")
-
-    return vec
 
 
 # ── TF-IDF numpy (fallback sin dependencias externas) ─────────────────────
