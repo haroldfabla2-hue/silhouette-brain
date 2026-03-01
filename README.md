@@ -35,7 +35,9 @@ La forma más sencilla de instalar y probar Silhouette Brain es a través de Doc
    ```bash
    cp .env.example .env
    ```
-3. Edita `.env` con tu clave de OpenAI (requerido para los embeddings).
+3. Edita `.env` con tus claves API.
+   - **Embeddings:** 100% Locales (usando `fastembed`). ¡No requieren API Key!
+   - **Reasoning/Síntesis (Opcional):** Puedes configurar tu modelo preferido definiendo `REASONING_PROVIDER` (opciones: `minimax`, `openai`, `anthropic`, `zhipu`) y tu respectiva clave en `REASONING_API_KEY`.
 4. Levanta el ecosistema:
    ```bash
    docker-compose up -d
@@ -95,9 +97,10 @@ Para sacar el máximo provecho de esta arquitectura, te recomendamos revisar nue
 ---
 
 ## ⚠️ Advertencia de Consumo
-Aunque Silhouette Brain incluye optimizaciones avanzadas (como caché de vectores local), ten en cuenta que:
+Aunque Silhouette Brain incluye optimizaciones avanzadas (como embeddings locales y caché de vectores), ten en cuenta que:
 - **Neo4j** requiere al menos 1GB de RAM dedicada.
-- Las búsquedas y el almacenamiento consumen créditos de tu **OpenAI API Key**.
+- El cálculo de embeddings locales consume CPU, pero **0 créditos** de API.
+- La función de Síntesis/Razonamiento (si la activas) consumirá tokens de tu proveedor elegido (Minimax, OpenAI, Anthropic o Zhipu).
 - Se recomienda monitorear el uso inicial para ajustar la frecuencia de los ciclos cognitivos.
 
 ## 🪄 Autoinstalación con IA (Meta-Prompt)

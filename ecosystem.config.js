@@ -9,9 +9,12 @@ module.exports = {
         BRAIN_ROOT:          "/root/silhouette-brain",
         BRAIN_SRC_DIR:       "/root/silhouette-brain/src/core",
         BRAIN_DATA_DIR:      "/root/silhouette-brain/data",
-        MINIMAX_API_KEY:     "sk-cp-xncSehim5dGFqvsdPbo5IyTKNwNewWRCrf53Fd2uOPk0CKlBpa-20kvtX8yFB-P1tJlfrkuraIOFyMXw5iPhY6CPKU1kZQvmNG7SWLYHlYMFnXxNYs2-gPI",
+        // Multi-provider settings for reasoning (minimax, openai, anthropic, zhipu)
+        REASONING_PROVIDER:  "minimax",
+        REASONING_API_KEY:   "sk-cp-xncSehim5dGFqvsdPbo5IyTKNwNewWRCrf53Fd2uOPk0CKlBpa-20kvtX8yFB-P1tJlfrkuraIOFyMXw5iPhY6CPKU1kZQvmNG7SWLYHlYMFnXxNYs2-gPI",
+        REASONING_MODEL:     "MiniMax-M2.5",
+        // Local Embeddings
         FASTEMBED_MODEL:     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-        MINIMAX_REASONING_MODEL: "MiniMax-M2.5",
         PYTHONUNBUFFERED:    "1",
         PYTHONPATH:          "/root/silhouette-brain/src/core:/root/silhouette-brain/src/api",
       },

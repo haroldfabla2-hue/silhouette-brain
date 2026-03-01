@@ -18,15 +18,19 @@ import numpy as np
 # Configuración
 # ============================================================================
 
-# Reasoning (síntesis) — Minimax (vía capa Anthropic)
-MINIMAX_API_KEY  = os.getenv("MINIMAX_API_KEY", "sk-cp-xncSehim5dGFqvsdPbo5IyTKNwNewWRCrf53Fd2uOPk0CKlBpa-20kvtX8yFB-P1tJlfrkuraIOFyMXw5iPhY6CPKU1kZQvmNG7SWLYHlYMFnXxNYs2-gPI")
-REASONING_MODEL  = os.getenv("MINIMAX_REASONING_MODEL", "MiniMax-M2.5")
+# Reasoning (síntesis) — Multi-Provider Support
+# Providers soportados: 'minimax', 'openai', 'anthropic', 'zhipu'
+REASONING_PROVIDER = os.getenv("REASONING_PROVIDER", "minimax").lower()
+# API Key genérica o fallback a la antigua
+REASONING_API_KEY  = os.getenv("REASONING_API_KEY", os.getenv("MINIMAX_API_KEY", "sk-cp-xncSehim5dGFqvsdPbo5IyTKNwNewWRCrf53Fd2uOPk0CKlBpa-20kvtX8yFB-P1tJlfrkuraIOFyMXw5iPhY6CPKU1kZQvmNG7SWLYHlYMFnXxNYs2-gPI"))
+# Modelo a usar según el provider
+REASONING_MODEL    = os.getenv("REASONING_MODEL", "MiniMax-M2.5")
 
 # Embeddings — fastembed local (ONNX, sin API)
 FASTEMBED_MODEL  = os.getenv("FASTEMBED_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 EMBEDDING_DIMS   = 384    # paraphrase-multilingual-MiniLM-L12-v2 → 384 dims
 
-REQUEST_TIMEOUT  = 20    # segundos para llamadas a Minimax
+REQUEST_TIMEOUT  = 20    # segundos para llamadas HTTP
 
 
 # ============================================================================
@@ -190,7 +194,7 @@ def cosine_similarity(a: list, b: list) -> float:
 
 
 # ============================================================================
-# SÍNTESIS / RAZONAMIENTO — MiniMax
+# SÍNTESIS / RAZONAMIENTO — Multi-Provider
 # ============================================================================
 
 SYNTHESIS_SYSTEM_PROMPT = (
@@ -200,29 +204,9 @@ SYNTHESIS_SYSTEM_PROMPT = (
 )
 
 
-def _minimax_headers() -> dict:
-    key = MINIMAX_API_KEY
-    if not key:
-        raise RuntimeError(
-            "MINIMAX_API_KEY no configurada."
-        )
-    return {
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
-
-
 def synthesize_context(query: str, memory_fragments: list) -> str:
     """
-    Usa Minimax para sintetizar fragmentos de memoria en un resumen cohesionado.
-
-    Args:
-        query:            La consulta/pregunta del agente.
-        memory_fragments: Lista de strings con fragmentos recuperados.
-
-    Returns:
-        String con la síntesis en lenguaje natural.
+    Usa el LLM configurado para sintetizar fragmentos de memoria en un resumen cohesionado.
     """
     if not memory_fragments:
         return ""
@@ -234,30 +218,88 @@ def synthesize_context(query: str, memory_fragments: list) -> str:
         f"Sintetiza qué es más relevante para esta consulta."
     )
 
+    if not REASONING_API_KEY:
+        return "[Síntesis error: REASONING_API_KEY no configurada]"
+
     try:
-        url = "https://api.minimax.io/anthropic/v1/messages"
-        payload = {
-            "model": REASONING_MODEL,
-            "max_tokens": 512,
-            "system": SYNTHESIS_SYSTEM_PROMPT,
-            "messages": [
-                {"role": "user", "content": user_message}
-            ],
-            "temperature": 0.3
-        }
-        
-        resp = requests.post(url, headers=_minimax_headers(), json=payload, timeout=REQUEST_TIMEOUT)
-        
-        if resp.status_code == 200:
-            content_blocks = resp.json().get("content", [])
-            for block in content_blocks:
-                if block.get("type") == "text":
-                    return block.get("text", "").strip()
-            return "[Síntesis sin texto de respuesta]"
+        if REASONING_PROVIDER == "anthropic":
+            return _call_anthropic(user_message, is_minimax=False)
+        elif REASONING_PROVIDER == "minimax":
+            # Minimax usa la capa compatible con Anthropic en este script
+            return _call_anthropic(user_message, is_minimax=True)
+        elif REASONING_PROVIDER == "openai":
+            return _call_openai(user_message)
+        elif REASONING_PROVIDER == "zhipu":
+            return _call_zhipu(user_message)
         else:
-            return f"[Síntesis no disponible: HTTP {resp.status_code} - {resp.text}]"
+            return f"[Síntesis error: Provider '{REASONING_PROVIDER}' no soportado]"
     except Exception as e:
         return f"[Síntesis error: {e}]"
+
+
+def _call_anthropic(user_message: str, is_minimax: bool = False) -> str:
+    url = "https://api.minimax.io/anthropic/v1/messages" if is_minimax else "https://api.anthropic.com/v1/messages"
+    headers = {
+        "x-api-key": REASONING_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+    }
+    payload = {
+        "model": REASONING_MODEL,
+        "max_tokens": 512,
+        "system": SYNTHESIS_SYSTEM_PROMPT,
+        "messages": [{"role": "user", "content": user_message}],
+        "temperature": 0.3
+    }
+    resp = requests.post(url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT)
+    if resp.status_code == 200:
+        for block in resp.json().get("content", []):
+            if block.get("type") == "text":
+                return block.get("text", "").strip()
+        return "[Síntesis sin texto de respuesta]"
+    return f"[Síntesis no disponible: HTTP {resp.status_code} - {resp.text}]"
+
+
+def _call_openai(user_message: str) -> str:
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {REASONING_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": REASONING_MODEL,
+        "messages": [
+            {"role": "system", "content": SYNTHESIS_SYSTEM_PROMPT},
+            {"role": "user", "content": user_message}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 512
+    }
+    resp = requests.post(url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT)
+    if resp.status_code == 200:
+        return resp.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+    return f"[Síntesis no disponible: HTTP {resp.status_code} - {resp.text}]"
+
+
+def _call_zhipu(user_message: str) -> str:
+    url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {REASONING_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": REASONING_MODEL,
+        "messages": [
+            {"role": "system", "content": SYNTHESIS_SYSTEM_PROMPT},
+            {"role": "user", "content": user_message}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 512
+    }
+    resp = requests.post(url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT)
+    if resp.status_code == 200:
+        return resp.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+    return f"[Síntesis no disponible: HTTP {resp.status_code} - {resp.text}]"
 
 
 # ============================================================================
