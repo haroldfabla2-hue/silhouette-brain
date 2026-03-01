@@ -19,16 +19,21 @@ from memory_noise_filter import (
     should_skip_ingestion,
 )
 
-# Try to import OpenAI embeddings, fall back to simple if not available
+# Usar ZhipuAI embeddings (embedding-2, 1024 dims). Fallback a búsqueda simple.
 try:
-    from openai_embeddings import get_openai_embedding, cosine_similarity
+    from zhipu_embeddings import get_embedding as get_openai_embedding, cosine_similarity
     EMBEDDINGS_AVAILABLE = True
-    print("[EMBEDDINGS] OpenAI embeddings available")
-except ImportError:
-    EMBEDDINGS_AVAILABLE = False
-    print("[EMBEDDINGS] Using simple similarity (no OpenAI)")
+    print("[EMBEDDINGS] ZhipuAI embedding-2 available")
+except Exception as _zhipu_err:
+    try:
+        from openai_embeddings import get_openai_embedding, cosine_similarity
+        EMBEDDINGS_AVAILABLE = True
+        print("[EMBEDDINGS] OpenAI embeddings available (fallback)")
+    except ImportError:
+        EMBEDDINGS_AVAILABLE = False
+        print(f"[EMBEDDINGS] Using simple similarity (no ZhipuAI/OpenAI): {_zhipu_err}")
 
-DB_PATH = os.getenv('BRAIN_DATA_DIR', './data'/memory_core.db'
+DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'memory_core.db')
 
 class MemoryCore:
     def __init__(self):

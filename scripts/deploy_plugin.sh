@@ -53,6 +53,10 @@ PYTHON_FILES=(
   "core/agent_memory_readonly.py"
   "core/sync_openclaw_sessions.py"
   "core/smart_session_sync.py"
+  "core/zhipu_embeddings.py"
+  "core/reasoning_engine.py"
+  "core/embeddings_wrapper.py"
+  "core/memory_core_embeddings.py"
 )
 
 for rel in "${PYTHON_FILES[@]}"; do

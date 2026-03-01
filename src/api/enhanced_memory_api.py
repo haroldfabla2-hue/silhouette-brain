@@ -4,9 +4,10 @@ Enhanced Memory API - All Layers
 ================================
 API completa para que los agentes accedan a TODAS las capas de memoria:
 - Core (SQLite)
-- Embeddings (búsqueda semántica)
-- Neo4j (grafos)
+- Embeddings (ZhipuAI embedding-2, semántica real)
+- Neo4j (grafos de relaciones)
 - 4-Tier (JSON)
+- Reasoning Engine (motor unificado con síntesis GLM-4.7-flash)
 """
 import sys
 import json
@@ -19,6 +20,15 @@ from memory_noise_filter import should_skip_ingestion, is_agent_heartbeat_report
 
 # Importar todas las funciones de memoria
 from agent_memory_readonly import get_memory_context, get_entities, get_recent
+
+# Importar motor de razonamiento unificado
+try:
+    from reasoning_engine import get_reasoning_context
+    REASONING_AVAILABLE = True
+    print("[API] Reasoning Engine available")
+except Exception as e:
+    REASONING_AVAILABLE = False
+    print(f"[API] Reasoning Engine not available: {e}")
 
 # Intentar importar embeddings
 try:
@@ -189,6 +199,48 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                 "recent_count": len(recent_results),
             })
         
+        # 4c. Reasoning Engine — motor cognitivo unificado (semántica + reciente + grafo + tiers + síntesis)
+        elif path in ['/api/reasoning/context', '/api/reasoning']:
+            q             = query.get('query', [''])[0]
+            sem_limit     = int(query.get('sem_limit',   [5])[0])
+            rec_limit     = int(query.get('rec_limit',   [3])[0])
+            rec_hours     = int(query.get('hours',       [2])[0])
+            min_score     = float(query.get('min_score', [0.3])[0])
+            inc_graph     = query.get('graph',     ['false'])[0].lower() == 'true'
+            inc_tiers     = query.get('tiers',     ['false'])[0].lower() == 'true'
+            synthesize    = query.get('synthesize',['false'])[0].lower() == 'true'
+            filter_hb     = query.get('filter_heartbeats', ['true'])[0].lower() != 'false'
+            tier_filter   = query.get('tier_filter', [None])[0]
+
+            if not q:
+                self.send_json({"error": "Missing 'query' parameter"}, 400)
+                return
+
+            if not REASONING_AVAILABLE:
+                self.send_json({"error": "Reasoning Engine not available"}, 503)
+                return
+
+            try:
+                ctx = get_reasoning_context(
+                    query             = q,
+                    sem_limit         = sem_limit,
+                    rec_limit         = rec_limit,
+                    hours             = rec_hours,
+                    min_score         = min_score,
+                    include_graph     = inc_graph,
+                    include_tiers     = inc_tiers,
+                    synthesize        = synthesize,
+                    filter_heartbeats = filter_hb,
+                    tier_filter       = tier_filter,
+                )
+                # Añadir conteos para compatibilidad con cliente OpenClaw
+                ctx["semantic_count"] = len(ctx.get("semantic", []))
+                ctx["recent_count"]   = len(ctx.get("recent",   []))
+                ctx["graph_count"]    = len([r for r in ctx.get("graph", []) if "_error" not in r])
+                self.send_json(ctx)
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+
         # 5. Neo4j - Grafo de relaciones
         elif path in ['/api/memory/graph', '/graph', '/api/graph']:
             entity = query.get('entity', [None])[0]
@@ -239,8 +291,9 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         elif path in ['/api/status', '/status']:
             self.send_json({
                 "status": "ok",
-                "version": "1.1.0",
+                "version": "2.0.0",
                 "endpoints": [
+                    "/api/reasoning/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.3&graph=true&tiers=false&synthesize=false",
                     "/api/memory?query=xxx",
                     "/api/memory/entities",
                     "/api/memory/recent?hours=2&limit=5",
@@ -251,9 +304,12 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     "/api/status"
                 ],
                 "features": {
-                    "embeddings": EMBEDDINGS,
-                    "neo4j": NEO4J_AVAILABLE,
-                    "4_tier": True
+                    "embeddings":       EMBEDDINGS,
+                    "embedding_model":  "hf:paraphrase-multilingual-MiniLM-L12-v2 (384 dims)",
+                    "reasoning":        REASONING_AVAILABLE,
+                    "reasoning_model":  "zhipu:glm-4.5-air (synthesis)",
+                    "neo4j":            NEO4J_AVAILABLE,
+                    "4_tier":           True,
                 }
             })
         
