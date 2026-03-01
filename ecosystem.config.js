@@ -13,6 +13,10 @@ module.exports = {
         REASONING_PROVIDER:  "minimax",
         REASONING_API_KEY:   "sk-cp-xncSehim5dGFqvsdPbo5IyTKNwNewWRCrf53Fd2uOPk0CKlBpa-20kvtX8yFB-P1tJlfrkuraIOFyMXw5iPhY6CPKU1kZQvmNG7SWLYHlYMFnXxNYs2-gPI",
         REASONING_MODEL:     "MiniMax-M2.5",
+        // Neo4j Settings
+        NEO4J_URI:           "bolt://localhost:17687",
+        NEO4J_USER:          "neo4j",
+        NEO4J_PASSWORD:      "silhouette2035",
         // Local Embeddings
         FASTEMBED_MODEL:     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
         PYTHONUNBUFFERED:    "1",
