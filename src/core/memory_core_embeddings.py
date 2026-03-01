@@ -21,7 +21,7 @@ from memory_noise_filter import (
 
 # Usar ZhipuAI embeddings (embedding-2, 1024 dims). Fallback a búsqueda simple.
 try:
-    from zhipu_embeddings import get_embedding as get_openai_embedding, cosine_similarity
+    from local_embeddings import get_embedding as get_openai_embedding, cosine_similarity
     EMBEDDINGS_AVAILABLE = True
     print("[EMBEDDINGS] ZhipuAI embedding-2 available")
 except Exception as _zhipu_err:

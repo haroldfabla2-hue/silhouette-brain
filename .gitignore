@@ -46,4 +46,4 @@ data/*.log
 # Docker
 docker-data/
 neo4j_data/
-redis_data/
+redis_data/logs/

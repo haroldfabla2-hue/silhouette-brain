@@ -1,0 +1,31 @@
+2026-03-01 21:12:36: 2026-03-01 21:12:36 [unified] ============================================================
+2026-03-01 21:12:36: 2026-03-01 21:12:36 [unified]   Silhouette Unified Daemon v1.0
+2026-03-01 21:12:36: 2026-03-01 21:12:36 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-01 21:12:36: 2026-03-01 21:12:36 [unified] ============================================================
+2026-03-01 21:12:36: 2026-03-01 21:12:36 [unified] [session_sync] ▶ inicio
+2026-03-01 21:12:37: [MEMORY CORE] ✅ Neo4j connected for Vector Search
+2026-03-01 21:12:37: 
+2026-03-01 21:12:37: [MEMORY CORE] ✅ Initialized
+2026-03-01 21:12:37: 
+2026-03-01 21:12:37: [NEO4J] ❌ Couldn't connect to localhost:7687 (resolved to ('127.0.0.1:7687',)):
+2026-03-01 21:12:37: 
+2026-03-01 21:12:37: [REDIS] ✅ Connected
+2026-03-01 21:12:37: 
+2026-03-01 21:12:37: [SQLite] ✅ Connected
+2026-03-01 21:12:37: 
+2026-03-01 21:12:37: [MEMORY] Full system initialized
+2026-03-01 21:12:37: [AUTO MEMORY] ✅ Integrated
+2026-03-01 21:50:41: 2026-03-01 21:50:41 [unified] Señal 2 recibida — cerrando ordenadamente...
+2026-03-01 21:50:43: 2026-03-01 21:50:43 [unified] ============================================================
+2026-03-01 21:50:43: 2026-03-01 21:50:43 [unified]   Silhouette Unified Daemon v1.0
+2026-03-01 21:50:43: 2026-03-01 21:50:43 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-01 21:50:43: 2026-03-01 21:50:43 [unified] ============================================================
+2026-03-01 21:50:43: 2026-03-01 21:50:43 [unified] [session_sync] ▶ inicio
+2026-03-01 21:50:44: [MEMORY CORE] ✅ Neo4j connected for Vector Search
+2026-03-01 21:50:44: [MEMORY CORE] ✅ Initialized
+2026-03-01 21:50:44: [NEO4J] ❌ Couldn't connect to localhost:7687 (resolved to ('127.0.0.1:7687',)):
+2026-03-01 21:50:44: Failed to establish connection to ResolvedIPv4Address(('127.0.0.1', 7687)) (reason [Errno 111] Connection refused)
+2026-03-01 21:50:44: [REDIS] ✅ Connected
+2026-03-01 21:50:44: [SQLite] ✅ Connected
+2026-03-01 21:50:44: 
+2026-03-01 21:50:44: [AUTO MEMORY] ✅ Integrated

@@ -202,7 +202,7 @@ def _layer_synthesis(query: str, semantic: list, recent: list,
                      graph: list, tiers: dict) -> str:
     """Sintetiza todo el contexto en un párrafo usando GLM-4.7-flash."""
     try:
-        from zhipu_embeddings import synthesize_context
+        from local_embeddings import synthesize_context
 
         fragments = []
 

@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
 """
-ZhipuAI Embeddings + Reasoning
+Local Embeddings + Reasoning
 ================================
 - Embeddings: fastembed local (paraphrase-multilingual-MiniLM-L12-v2, 384 dims)
   ONNX optimizado, multilingüe (español + inglés), sin API key, sin rate limits.
   Fallback: TF-IDF numpy si fastembed no está instalado.
 
-- Síntesis/Razonamiento: GLM-4.5-air de z.ai/ZhipuAI (bigmodel.cn)
-
-Modelos disponibles confirmados en la cuenta z.ai:
-  glm-4.5, glm-4.5-air, glm-4.6, glm-4.7, glm-5 (NO tienen sufijo -flash)
+- Síntesis/Razonamiento: MiniMax-Text-01 (api.minimax.chat)
 """
 import os
 import re
 import math
-import json
-import hashlib
 import requests
 import numpy as np
 
@@ -23,16 +18,15 @@ import numpy as np
 # Configuración
 # ============================================================================
 
-# Reasoning (síntesis) — z.ai / ZhipuAI
-ZHIPU_API_BASE   = os.getenv("ZHIPU_API_BASE", "https://open.bigmodel.cn/api/paas/v4")
-ZHIPU_API_KEY    = os.getenv("ZHIPU_API_KEY", "")
-REASONING_MODEL  = os.getenv("ZHIPU_REASONING_MODEL", "glm-4.5-air")  # rápido, sin chain-of-thought
+# Reasoning (síntesis) — Minimax (vía capa Anthropic)
+MINIMAX_API_KEY  = os.getenv("MINIMAX_API_KEY", "sk-cp-xncSehim5dGFqvsdPbo5IyTKNwNewWRCrf53Fd2uOPk0CKlBpa-20kvtX8yFB-P1tJlfrkuraIOFyMXw5iPhY6CPKU1kZQvmNG7SWLYHlYMFnXxNYs2-gPI")
+REASONING_MODEL  = os.getenv("MINIMAX_REASONING_MODEL", "MiniMax-M2.5")
 
 # Embeddings — fastembed local (ONNX, sin API)
 FASTEMBED_MODEL  = os.getenv("FASTEMBED_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 EMBEDDING_DIMS   = 384    # paraphrase-multilingual-MiniLM-L12-v2 → 384 dims
 
-REQUEST_TIMEOUT  = 20    # segundos para llamadas a z.ai
+REQUEST_TIMEOUT  = 20    # segundos para llamadas a Minimax
 
 
 # ============================================================================
@@ -78,7 +72,7 @@ def get_embedding_batch(texts: list) -> list:
         return [_tfidf_embedding(t) for t in texts]
 
 
-# Alias para compatibilidad con código que usa openai_embeddings
+# Alias para compatibilidad con código antiguo
 get_openai_embedding = get_embedding
 
 
@@ -196,7 +190,7 @@ def cosine_similarity(a: list, b: list) -> float:
 
 
 # ============================================================================
-# SÍNTESIS / RAZONAMIENTO — GLM-4.7
+# SÍNTESIS / RAZONAMIENTO — MiniMax
 # ============================================================================
 
 SYNTHESIS_SYSTEM_PROMPT = (
@@ -206,19 +200,22 @@ SYNTHESIS_SYSTEM_PROMPT = (
 )
 
 
-def _zhipu_headers() -> dict:
-    key = ZHIPU_API_KEY
+def _minimax_headers() -> dict:
+    key = MINIMAX_API_KEY
     if not key:
         raise RuntimeError(
-            "ZHIPU_API_KEY no configurada. "
-            "Ejecuta: export ZHIPU_API_KEY=<tu_token>"
+            "MINIMAX_API_KEY no configurada."
         )
-    return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    return {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+    }
 
 
 def synthesize_context(query: str, memory_fragments: list) -> str:
     """
-    Usa GLM-4.7 para sintetizar fragmentos de memoria en un resumen cohesionado.
+    Usa Minimax para sintetizar fragmentos de memoria en un resumen cohesionado.
 
     Args:
         query:            La consulta/pregunta del agente.
@@ -230,43 +227,35 @@ def synthesize_context(query: str, memory_fragments: list) -> str:
     if not memory_fragments:
         return ""
 
-    fragments_text = "\n".join(f"- {str(f)[:200]}" for f in memory_fragments[:12])
+    fragments_text = "\\n".join(f"- {str(f)[:200]}" for f in memory_fragments[:12])
     user_message = (
-        f"Consulta del agente: {query}\n\n"
-        f"Fragmentos de memoria:\n{fragments_text}\n\n"
+        f"Consulta del agente: {query}\\n\\n"
+        f"Fragmentos de memoria:\\n{fragments_text}\\n\\n"
         f"Sintetiza qué es más relevante para esta consulta."
     )
 
     try:
-        resp = requests.post(
-            f"{ZHIPU_API_BASE}/chat/completions",
-            headers=_zhipu_headers(),
-            json={
-                "model":       REASONING_MODEL,
-                "messages": [
-                    {"role": "system", "content": SYNTHESIS_SYSTEM_PROMPT},
-                    {"role": "user",   "content": user_message},
-                ],
-                "temperature": 0.3,
-                "max_tokens":  512,
-                "stream":      False,
-            },
-            timeout=REQUEST_TIMEOUT,
-        )
+        url = "https://api.minimax.io/anthropic/v1/messages"
+        payload = {
+            "model": REASONING_MODEL,
+            "max_tokens": 512,
+            "system": SYNTHESIS_SYSTEM_PROMPT,
+            "messages": [
+                {"role": "user", "content": user_message}
+            ],
+            "temperature": 0.3
+        }
+        
+        resp = requests.post(url, headers=_minimax_headers(), json=payload, timeout=REQUEST_TIMEOUT)
+        
         if resp.status_code == 200:
-            msg = resp.json()["choices"][0]["message"]
-            # GLM reasoning models: "content" = respuesta final, "reasoning_content" = chain-of-thought
-            # Preferir content (respuesta final). Si está vacío, usar reasoning_content como fallback.
-            content = (msg.get("content") or "").strip()
-            if not content:
-                content = (msg.get("reasoning_content") or "").strip()
-                # Extraer solo el último párrafo coherente del chain-of-thought
-                if content and "\n\n" in content:
-                    paragraphs = [p.strip() for p in content.split("\n\n") if p.strip()]
-                    content = paragraphs[-1] if paragraphs else content
-            return content
+            content_blocks = resp.json().get("content", [])
+            for block in content_blocks:
+                if block.get("type") == "text":
+                    return block.get("text", "").strip()
+            return "[Síntesis sin texto de respuesta]"
         else:
-            return f"[Síntesis no disponible: HTTP {resp.status_code}]"
+            return f"[Síntesis no disponible: HTTP {resp.status_code} - {resp.text}]"
     except Exception as e:
         return f"[Síntesis error: {e}]"
 
@@ -295,7 +284,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"ERROR embedding: {e}", file=sys.stderr)
 
-    print("\n=== Test Síntesis GLM-4.7 ===")
+    print(f"\n=== Test Síntesis {REASONING_MODEL} ===")
     try:
         synthesis = synthesize_context(
             "¿En qué proyectos trabaja Alberto?",

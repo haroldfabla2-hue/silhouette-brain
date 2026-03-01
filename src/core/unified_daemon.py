@@ -197,7 +197,7 @@ def task_embedding_sync():
         return
 
     try:
-        from zhipu_embeddings import get_embedding_batch
+        from local_embeddings import get_embedding_batch
     except ImportError:
         return  # fastembed no instalado
 
