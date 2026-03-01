@@ -57,6 +57,7 @@ PYTHON_FILES=(
   "core/reasoning_engine.py"
   "core/embeddings_wrapper.py"
   "core/memory_core_embeddings.py"
+  "core/unified_daemon.py"
 )
 
 for rel in "${PYTHON_FILES[@]}"; do
