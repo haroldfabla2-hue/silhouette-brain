@@ -26,6 +26,9 @@ def run_janitor():
     
     print(f"Encontradas: {len(contradictions)}")
     
+    # Cargar entidades una sola vez y hacer lookup por nombre
+    entity_by_name = {e['name']: e for e in core.get_entities()}
+
     resolved = 0
     for c in contradictions:
         # Auto-resolve: majority wins
@@ -33,15 +36,12 @@ def run_janitor():
             truth = f"Verdad: mayoría positiva ({c['positive_count']} vs {c['negative_count']})"
         else:
             truth = f"Verdad: mayoría negativa ({c['negative_count']} vs {c['positive_count']})"
-        
-        # Update entity
-        entities = core.get_entities()
-        for e in entities:
-            if e['name'] == c['entity']:
-                core.verify_entity(e['id'], truth, "Janitor-Auto")
-                print(f"  ✅ {c['entity']}: {truth}")
-                resolved += 1
-                break
+
+        e = entity_by_name.get(c['entity'])
+        if e:
+            core.verify_entity(e['id'], truth, "Janitor-Auto")
+            print(f"  ✅ {c['entity']}: {truth}")
+            resolved += 1
     
     print(f"Resueltas: {resolved}")
 

@@ -88,7 +88,7 @@ class BiomimeticMemory:
         self.load_memory()
     
     def load_memory(self):
-        f = os.getenv('BRAIN_DATA_DIR', './data'/priority_memory.json'
+        f = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'priority_memory.json')
         try:
             with open(f) as fp:
                 d = json.load(fp)
@@ -99,7 +99,7 @@ class BiomimeticMemory:
             self.important = []
     
     def save_memory(self):
-        f = os.getenv('BRAIN_DATA_DIR', './data'/priority_memory.json'
+        f = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'priority_memory.json')
         with open(f, 'w') as fp:
             json.dump({
                 'never_forget': self.never_forget[-20:],

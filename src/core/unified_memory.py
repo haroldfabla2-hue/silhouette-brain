@@ -30,7 +30,7 @@ class UnifiedMemory:
             # Connect to Neo4j (already running on port 17687)
             self.neo4j_driver = GraphDatabase.driver(
                 "bolt://localhost:17687",
-                auth=("neo4j", "silhouette123")
+                auth=("neo4j", os.getenv("NEO4J_PASSWORD", "silhouette2035"))
             )
             self.neo4j_driver.verify_connectivity()
             print("[MEMORY] ✅ Neo4j connected")

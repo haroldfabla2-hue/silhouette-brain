@@ -70,22 +70,41 @@ log = logging.getLogger("unified")
 
 @dataclass
 class Task:
-    name:      str
-    interval:  int          # segundos entre ejecuciones
-    fn:        Callable
-    enabled:   bool = True
-    last_run:  float = 0.0  # epoch timestamp
-    run_count: int   = 0
-    err_count: int   = 0
+    name:          str
+    interval:      int          # segundos entre ejecuciones
+    fn:            Callable
+    enabled:       bool  = True
+    last_run:      float = 0.0  # epoch timestamp
+    run_count:     int   = 0
+    err_count:     int   = 0
+    in_subprocess: bool  = False   # aislar en proceso hijo para liberar RAM al terminar
+    timeout:       int   = 7200    # segundos máximos para subprocess (2h por defecto)
 
     def due(self, now: float) -> bool:
         return self.enabled and (now - self.last_run) >= self.interval
 
     def run(self):
+        import multiprocessing
         t0 = time.time()
-        log.info(f"[{self.name}] ▶ inicio")
+        modo = " [subprocess]" if self.in_subprocess else ""
+        log.info(f"[{self.name}] ▶ inicio{modo}")
         try:
-            self.fn()
+            if self.in_subprocess:
+                p = multiprocessing.Process(target=self.fn, name=f"sil-{self.name}", daemon=True)
+                p.start()
+                p.join(self.timeout)
+                if p.is_alive():
+                    log.warning(f"[{self.name}] Timeout ({self.timeout}s) — terminando proceso...")
+                    p.terminate()
+                    p.join(10)
+                    if p.is_alive():
+                        p.kill()
+                    raise TimeoutError(f"Timeout tras {self.timeout}s")
+                if p.exitcode not in (0, None):
+                    raise RuntimeError(f"Subprocess terminó con código {p.exitcode}")
+            else:
+                self.fn()
+
             self.last_run  = time.time()
             self.run_count += 1
             log.info(f"[{self.name}] ✓ completado en {time.time()-t0:.1f}s")
@@ -95,6 +114,143 @@ class Task:
             log.debug(traceback.format_exc())
             # Marcar last_run para no reintentar inmediatamente
             self.last_run = time.time()
+
+
+# ============================================================================
+# TAREA 0 — Heartbeat (estado del sistema, para auto-recall del agente)
+# ============================================================================
+
+# Referencia global al daemon para que task_heartbeat acceda a métricas de tareas
+_daemon_ref = None
+
+def task_heartbeat():
+    """
+    Escribe heartbeat_state.json con el estado real del sistema.
+    Los agentes lo leen en auto-recall para saber qué está pasando, qué investigar,
+    y qué tareas cognitivas están pendientes.
+    """
+    import sqlite3
+    state = {
+        "timestamp":    datetime.now().isoformat(),
+        "latido":       "ALIVE",
+        "servicios":    {},
+        "memoria":      {},
+        "cognitivo":    {},
+        "pendientes":   [],
+        "energia":      1.0,
+    }
+
+    # ── Estado de servicios ────────────────────────────────────────────────
+    try:
+        import urllib.request
+        urllib.request.urlopen("http://127.0.0.1:9876/api/status", timeout=4)
+        state["servicios"]["brain_api"] = "OK"
+    except Exception:
+        state["servicios"]["brain_api"] = "DOWN"
+
+    try:
+        from neo4j import GraphDatabase
+        drv = GraphDatabase.driver(
+            os.getenv("NEO4J_URI", "bolt://localhost:17687"),
+            auth=("neo4j", os.getenv("NEO4J_PASSWORD", "silhouette2035"))
+        )
+        drv.verify_connectivity()
+        drv.close()
+        state["servicios"]["neo4j"] = "OK"
+    except Exception:
+        state["servicios"]["neo4j"] = "DOWN"
+
+    try:
+        import redis as _redis
+        r = _redis.Redis(host="localhost", port=6379)
+        r.ping()
+        state["servicios"]["redis"] = "OK"
+    except Exception:
+        state["servicios"]["redis"] = "DOWN"
+
+    # ── Métricas de memoria ────────────────────────────────────────────────
+    db = BRAIN_DATA / "memory_core.db"
+    if db.exists():
+        try:
+            conn = sqlite3.connect(str(db))
+            total   = conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
+            con_emb = conn.execute("SELECT COUNT(*) FROM conversations WHERE embedding IS NOT NULL").fetchone()[0]
+            recents = conn.execute(
+                "SELECT speaker, message FROM conversations ORDER BY id DESC LIMIT 5"
+            ).fetchall()
+            conn.close()
+            state["memoria"]["conversaciones"]  = total
+            state["memoria"]["con_embedding"]   = con_emb
+            state["memoria"]["cobertura_emb"]   = f"{con_emb/max(total,1)*100:.0f}%"
+            state["memoria"]["recientes"]       = [
+                {"quien": r[0], "texto": r[1][:100]} for r in recents
+            ]
+        except Exception as e:
+            state["memoria"]["error"] = str(e)
+
+    # ── Estado cognitivo (tareas del daemon) ───────────────────────────────
+    if _daemon_ref is not None:
+        tareas = {}
+        pendientes = []
+        for t in _daemon_ref.tasks:
+            next_in = max(0, t.interval - (time.time() - t.last_run))
+            tareas[t.name] = {
+                "runs":    t.run_count,
+                "errores": t.err_count,
+                "next_in": f"{next_in/60:.0f}min",
+            }
+            if t.err_count > 0:
+                pendientes.append(f"⚠ Tarea '{t.name}' tiene {t.err_count} errores — revisar logs")
+        state["cognitivo"]["tareas"] = tareas
+        state["pendientes"] = pendientes
+
+    # ── Tareas cognitivas activas (investigaciones despachadas) ───────────
+    try:
+        working_file = BRAIN_DATA / "working.json"
+        if working_file.exists():
+            working = json.loads(working_file.read_text())
+            cognitive = [
+                item for item in (working if isinstance(working, list) else [])
+                if isinstance(item, dict) and "cognitive_task" in str(item.get("tags", []))
+            ]
+            if cognitive:
+                state["pendientes"] += [
+                    f"🔍 Investigar: {item.get('content','')[:80]}"
+                    for item in cognitive[:3]
+                ]
+    except Exception:
+        pass
+
+    # ── Energía del sistema (0.0-1.0) ─────────────────────────────────────
+    api_ok   = state["servicios"].get("brain_api") == "OK"
+    neo4j_ok = state["servicios"].get("neo4j")     == "OK"
+    total_errs = sum(
+        t.err_count for t in (_daemon_ref.tasks if _daemon_ref else [])
+    )
+    state["energia"] = round(
+        (1.0 if api_ok else 0.5)
+        * (1.0 if neo4j_ok else 0.8)
+        * max(0.3, 1.0 - total_errs * 0.03),
+        2
+    )
+
+    # ── Escribir archivos ──────────────────────────────────────────────────
+    BRAIN_DATA.mkdir(parents=True, exist_ok=True)
+    # 1. Brain data dir (para la API)
+    with open(BRAIN_DATA / "heartbeat_state.json", "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2, ensure_ascii=False)
+    # 2. OpenClaw workspace (para que los agentes lo lean directamente)
+    ws = Path("/root/.openclaw/workspace")
+    if ws.exists():
+        with open(ws / "heartbeat-state.json", "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+
+    svcs = ", ".join(f"{k}={v}" for k, v in state["servicios"].items())
+    log.info(
+        f"[heartbeat] energia={state['energia']} | {svcs} | "
+        f"mem={state['memoria'].get('conversaciones','?')} convs | "
+        f"pendientes={len(state['pendientes'])}"
+    )
 
 
 # ============================================================================
@@ -249,8 +405,13 @@ def _sync_db_embeddings(db_path, table, text_col, emb_col):
 # ============================================================================
 
 def task_api_health():
-    """Vigila la Brain API. La reinicia si no responde."""
+    """Vigila la Brain API. La reinicia si no responde Y el puerto está libre.
+
+    Verificar el puerto antes de spawn evita lanzar procesos duplicados cuando
+    la API está arrancando lentamente o cuando PM2 ya la está reiniciando.
+    """
     import subprocess
+    import socket
     import requests as req
 
     try:
@@ -260,8 +421,17 @@ def task_api_health():
     except Exception:
         pass
 
-    log.warning("[api_health] Brain API no responde — reiniciando...")
-    api_script  = BRAIN_ROOT / "src" / "api" / "enhanced_memory_api.py"
+    # Verificar si el puerto ya está ocupado (API iniciando o proceso duplicado)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(1)
+        port_in_use = s.connect_ex(('127.0.0.1', 9876)) == 0
+
+    if port_in_use:
+        log.info("[api_health] Puerto 9876 ocupado — API probablemente iniciando, sin acción")
+        return
+
+    log.warning("[api_health] Brain API no responde y puerto libre — reiniciando...")
+    api_script = BRAIN_ROOT / "src" / "api" / "enhanced_memory_api.py"
     if api_script.exists():
         subprocess.Popen(
             [sys.executable, str(api_script)],
@@ -453,16 +623,21 @@ class UnifiedDaemon:
     TICK_INTERVAL = 10   # segundos entre checks del scheduler
 
     def __init__(self):
+        global _daemon_ref
         self.running = True
         self.tasks: List[Task] = [
-            Task("session_sync",    interval=120,   fn=task_session_sync),
-            Task("embedding_sync",  interval=300,   fn=task_embedding_sync),
-            Task("api_health",      interval=180,   fn=task_api_health),
-            Task("curiosity",       interval=3600,  fn=task_curiosity),
-            Task("dreamer",         interval=21600, fn=task_dreamer),    # 6h
-            Task("janitor",         interval=43200, fn=task_janitor),    # 12h
-            Task("evolution",       interval=21600, fn=task_evolution),  # 6h
+            # Tareas ligeras — in-process, estado compartido
+            Task("heartbeat",      interval=600,   fn=task_heartbeat),   # 10min
+            Task("session_sync",   interval=120,   fn=task_session_sync),
+            Task("embedding_sync", interval=300,   fn=task_embedding_sync),
+            Task("api_health",     interval=180,   fn=task_api_health),
+            Task("curiosity",      interval=3600,  fn=task_curiosity),   # liviano tras fix A
+            # Tareas pesadas — subprocess: RAM liberada automáticamente al terminar
+            Task("dreamer",   interval=21600, fn=task_dreamer,   in_subprocess=True, timeout=7200),
+            Task("janitor",   interval=43200, fn=task_janitor,   in_subprocess=True, timeout=3600),
+            Task("evolution", interval=21600, fn=task_evolution, in_subprocess=True, timeout=7200),
         ]
+        _daemon_ref = self  # Heartbeat puede acceder a métricas de tareas
         self._load_state()
         signal.signal(signal.SIGTERM, self._handle_signal)
         signal.signal(signal.SIGINT,  self._handle_signal)
@@ -515,10 +690,10 @@ class UnifiedDaemon:
         log.info(f"  Tareas: {', '.join(t.name for t in self.tasks)}")
         log.info("=" * 60)
 
-        # Forzar session_sync y api_health en el primer tick
+        # Forzar heartbeat, session_sync y api_health en el primer tick
         now = time.time()
         for task in self.tasks:
-            if task.name in ("session_sync", "api_health"):
+            if task.name in ("heartbeat", "session_sync", "api_health"):
                 task.last_run = 0  # Correr inmediatamente
 
         while self.running:

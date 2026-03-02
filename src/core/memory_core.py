@@ -43,12 +43,14 @@ class MemoryCore:
         
         contradictions = []
         for entity in entities:
+            # Excluir embedding (blob innecesario) y limitar resultados
             cur.execute("""
-                SELECT * FROM conversations 
+                SELECT id, timestamp, speaker, message, context, tags FROM conversations
                 WHERE message LIKE ?
                 ORDER BY timestamp
+                LIMIT 200
             """, (f"%{entity['name']}%",))
-            
+
             messages = [dict(row) for row in cur.fetchall()]
             positive_words = ["good", "great", "love", "like", "best", "excelent", "bien", "mejor", "gusta", "feliz"]
             negative_words = ["bad", "terrible", "hate", "dislike", "worst", "mal", "peor", "odiar", "triste"]
@@ -456,12 +458,14 @@ if __name__ == "__main__":
         
         contradictions = []
         for entity in entities:
+            # Excluir embedding (blob innecesario) y limitar resultados
             cur.execute("""
-                SELECT * FROM conversations 
+                SELECT id, timestamp, speaker, message, context, tags FROM conversations
                 WHERE message LIKE ?
                 ORDER BY timestamp
+                LIMIT 200
             """, (f"%{entity['name']}%",))
-            
+
             messages = [dict(row) for row in cur.fetchall()]
             positive_words = ['good', 'great', 'love', 'like', 'best', 'excelent', 'bien', 'mejor', 'gusta', 'feliz']
             negative_words = ['bad', 'terrible', 'hate', 'dislike', 'worst', 'mal', 'peor', 'odiar', 'triste']
@@ -504,12 +508,14 @@ if __name__ == "__main__":
         
         contradictions = []
         for entity in entities:
+            # Excluir embedding (blob innecesario) y limitar resultados
             cur.execute("""
-                SELECT * FROM conversations 
+                SELECT id, timestamp, speaker, message, context, tags FROM conversations
                 WHERE message LIKE ?
                 ORDER BY timestamp
+                LIMIT 200
             """, (f"%{entity['name']}%",))
-            
+
             messages = [dict(row) for row in cur.fetchall()]
             positive_words = ['good', 'great', 'love', 'like', 'best', 'excelent', 'bien', 'mejor', 'gusta', 'feliz']
             negative_words = ['bad', 'terrible', 'hate', 'dislike', 'worst', 'mal', 'peor', 'odiar', 'triste']

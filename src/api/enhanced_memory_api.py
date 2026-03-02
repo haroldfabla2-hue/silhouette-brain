@@ -45,7 +45,7 @@ try:
     NEO4J_AVAILABLE = True
     NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:17687")
     NEO4J_USER = "neo4j"
-    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "neo4j_password")
+    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "silhouette2035")
 except:
     NEO4J_AVAILABLE = False
 
@@ -297,6 +297,43 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
             self.send_json({"tiers": result, "available_tiers": list(TIER_FILES.keys())})
         
         # 7. Estado de la API
+        elif path in ['/api/heartbeat']:
+            import pathlib
+            hb_paths = [
+                pathlib.Path(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')) / 'heartbeat_state.json',
+                pathlib.Path('/root/.openclaw/workspace/heartbeat-state.json'),
+            ]
+            for hb in hb_paths:
+                if hb.exists():
+                    try:
+                        self.send_json(json.loads(hb.read_text()))
+                        return
+                    except Exception:
+                        pass
+            self.send_json({"error": "heartbeat_state.json not found"}, 404)
+
+        elif path in ['/api/soul']:
+            import pathlib
+            soul_content = ""
+            for sp in [pathlib.Path('/root/.openclaw/workspace/SOUL.md'), pathlib.Path('/root/.openclaw/workspace/soul.md')]:
+                if sp.exists():
+                    soul_content = sp.read_text(encoding='utf-8')
+                    break
+            heartbeat = {}
+            for hb in [pathlib.Path(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')) / 'heartbeat_state.json',
+                       pathlib.Path('/root/.openclaw/workspace/heartbeat-state.json')]:
+                if hb.exists():
+                    try:
+                        heartbeat = json.loads(hb.read_text())
+                        break
+                    except Exception:
+                        pass
+            self.send_json({
+                "soul":      soul_content,
+                "heartbeat": heartbeat,
+                "timestamp": __import__('datetime').datetime.now().isoformat(),
+            })
+
         elif path in ['/api/status', '/status']:
             self.send_json({
                 "status": "ok",
@@ -310,6 +347,8 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     "/api/memory/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.15",
                     "/api/memory/graph?entity=xxx",
                     "/api/memory/tiers",
+                    "/api/heartbeat",
+                    "/api/soul",
                     "/api/status"
                 ],
                 "features": {
@@ -319,9 +358,11 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     "reasoning_model":  "minimax:MiniMax-M2.5 (synthesis)",
                     "neo4j":            NEO4J_AVAILABLE,
                     "4_tier":           True,
+                    "heartbeat":        True,
+                    "soul":             True,
                 }
             })
-        
+
         # 404
         else:
             self.send_json({"error": "Endpoint not found. Use /api/status to see available endpoints"}, 404)

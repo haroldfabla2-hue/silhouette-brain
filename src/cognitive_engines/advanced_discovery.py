@@ -169,30 +169,14 @@ class CuriosityDiscovery:
         self.memory = memory_system
         self.exploration_history = []
         
-    def calculate_entropy(self, entity_name: str) -> float:
-        """Calculate entropy (uncertainty) about an entity"""
-        from memory_core import get_memory_core
-        core = get_memory_core()
-        
-        # Get all mentions
-        mentions = core.search_context(entity_name)
-        
-        if not mentions:
-            return 1.0  # Maximum entropy = completely unknown
-        
-        # Calculate diversity of contexts
-        contexts = [m['message'] for m in mentions]
-        
-        if len(contexts) < 2:
-            return 0.5  # Some information
-        
-        # Simple entropy: variety of contexts
-        unique_words = set()
-        for ctx in contexts:
-            unique_words.update(ctx.lower().split())
-        
-        # More unique words = higher entropy = more to discover
-        return min(1.0, len(unique_words) / (len(contexts) * 10))
+    def calculate_entropy(self, mention_count: int) -> float:
+        """Estimate information entropy from mention count alone.
+
+        For gap detection purposes, entities with <3 mentions are high-entropy
+        by definition: low data = high uncertainty. No DB query needed.
+        Returns a value in (0, 1] inversely proportional to mention_count.
+        """
+        return 1.0 / (mention_count + 1)
     
     def find_information_gaps(self) -> List[Dict]:
         """Find topics with high potential for discovery"""
@@ -204,13 +188,13 @@ class CuriosityDiscovery:
         gaps = []
         for entity in entities:
             if entity['mention_count'] < 3:  # Low coverage
-                entropy = self.calculate_entropy(entity['name'])
+                entropy = self.calculate_entropy(entity['mention_count'])
                 gaps.append({
                     'entity': entity['name'],
                     'type': entity['type'],
                     'mentions': entity['mention_count'],
                     'entropy': entropy,
-                    'discovery_potential': entropy * (1.0 / (entity['mention_count'] + 1))
+                    'discovery_potential': entropy,  # ya es 1/(mentions+1)
                 })
         
         # Sort by discovery potential
@@ -246,12 +230,31 @@ class MemoryAssociation:
         self.load_associations()
     
     def load_associations(self):
-        """Load associations from storage"""
+        """Load associations from storage.
+
+        Primary source: dream_state.json (written by the dreamer task, contains
+        Hebbian associations built from real memory consolidation).
+        Fallback: associations.json (legacy, written by strengthen()).
+        """
+        data_dir = os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')
+        # Intentar dream_state.json primero (fuente real de asociaciones)
         try:
-            file_path = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'associations.json')
-            with open(file_path, 'r') as f:
+            with open(os.path.join(data_dir, 'dream_state.json'), 'r') as f:
+                data = json.load(f)
+            raw = data.get('associations', {})
+            if raw:
+                self.associations = defaultdict(
+                    lambda: defaultdict(float),
+                    {k: defaultdict(float, v) for k, v in raw.items()}
+                )
+                return
+        except Exception:
+            pass
+        # Fallback: associations.json legacy
+        try:
+            with open(os.path.join(data_dir, 'associations.json'), 'r') as f:
                 self.associations = defaultdict(lambda: defaultdict(float), json.load(f))
-        except:
+        except Exception:
             pass
     
     def save_associations(self):
@@ -368,8 +371,8 @@ class AdvancedMemoryDiscovery:
 # CLI
 if __name__ == "__main__":
     import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
-    
+    sys.path.append(os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core'))
+
     amd = AdvancedMemoryDiscovery()
     
     if len(sys.argv) < 2:
