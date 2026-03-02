@@ -12,7 +12,7 @@ sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', os.path.dirname(os.path.abspath(__
 from agent_memory_readonly import get_memory_context, get_entities, get_recent
 from datetime import datetime
 
-OUTPUT_FILE = "/root/.openclaw/workspace/agents/workspace-silhouette/memory/agent_memory_dump.json"
+OUTPUT_FILE = "/home/ubuntu/.openclaw/workspace/agents/workspace-silhouette/memory/agent_memory_dump.json"
 
 def generate_memory_dump():
     """Genera un dump completo de la memoria"""

@@ -11,7 +11,7 @@ sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', os.path.dirname(os.path.abspath(__
 
 from respond import save_assistant_response
 
-WORKSPACES = "/root/.openclaw/workspace/agents"
+WORKSPACES = "/home/ubuntu/.openclaw/workspace/agents"
 STATE_FILE = os.getenv("BRAIN_DATA_DIR", "./data")/reports_sync_state.json"
 
 def load_state():

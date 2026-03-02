@@ -33,7 +33,7 @@ except Exception as _zhipu_err:
         EMBEDDINGS_AVAILABLE = False
         print(f"[EMBEDDINGS] Using simple similarity (no ZhipuAI/OpenAI): {_zhipu_err}")
 
-DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'memory_core.db')
+DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'memory_core.db')
 
 class MemoryCore:
     def __init__(self):

@@ -1,7 +1,7 @@
 import os
 import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core'))
-sys.path.append(os.getenv('BRAIN_SRC_DIR_FALLBACK', '/root/silhouette-brain/src'))
+sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
+sys.path.append(os.getenv('BRAIN_SRC_DIR_FALLBACK', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src'))
 #!/usr/bin/env python3
 """
 Dreamer Algorithm - Memory Consolidation During "Sleep"
@@ -36,7 +36,7 @@ class Dreamer:
     def load_dream_state(self):
         """Load previous dream state"""
         try:
-            with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'dream_state.json'), 'r') as f:
+            with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'dream_state.json'), 'r') as f:
                 data = json.load(f)
                 self.associations = defaultdict(lambda: defaultdict(float), 
                     {k: defaultdict(float, v) for k, v in data.get('associations', {}).items()})
@@ -50,7 +50,7 @@ class Dreamer:
             'associations': dict(self.associations),
             'dream_log': self.dream_log[-100:]  # Keep last 100 dreams
         }
-        with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'dream_state.json'), 'w') as f:
+        with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'dream_state.json'), 'w') as f:
             json.dump(data, f)
     
     def activate_memories(self, memory_core):

@@ -18,8 +18,8 @@ from respond import respond_with_context, save_assistant_response
 from agent_memory_readonly import invalidate_cache
 from memory_noise_filter import should_skip_ingestion
 
-AGENTS_DIR = "/root/.openclaw/agents"
-STATE_FILE = os.path.join(os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data"), "smart_sync_state.json")
+AGENTS_DIR = "/home/ubuntu/.openclaw/agents"
+STATE_FILE = os.path.join(os.getenv("BRAIN_DATA_DIR", "/home/ubuntu/.openclaw/workspace/silhouette-brain/data"), "smart_sync_state.json")
 BATCH_SIZE = 20  # Grupo de 20 mensajes
 
 def load_state():

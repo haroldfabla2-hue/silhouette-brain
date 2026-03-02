@@ -31,7 +31,7 @@ except ImportError:
     print("[EMBEDDINGS] Using simple similarity (no OpenAI)")
 
 # Database setup
-DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'memory_core.db')
+DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'memory_core.db')
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 class MemoryCore:

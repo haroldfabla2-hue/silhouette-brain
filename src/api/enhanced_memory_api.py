@@ -50,7 +50,7 @@ except:
     NEO4J_AVAILABLE = False
 
 # Rutas de archivos 4-tier
-_DATA_DIR = os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')
+_DATA_DIR = os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data')
 TIER_FILES = {
     'working': os.path.join(_DATA_DIR, 'working.json'),
     'medium':  os.path.join(_DATA_DIR, 'medium.json'),

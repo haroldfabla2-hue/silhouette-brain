@@ -5,8 +5,8 @@ Automatic Memory Janitor
 Runs periodically to find and resolve contradictions
 """
 import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core'))
-sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src'))
+sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
+sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src'))
 
 from memory_core import get_memory_core
 from datetime import datetime

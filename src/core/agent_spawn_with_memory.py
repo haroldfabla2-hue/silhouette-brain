@@ -98,7 +98,7 @@ def spawn_with_memory(agent_id: str, task: str, model: str = None) -> dict:
 **IMPORTANTE:** 
 - El contexto de arriba es tu memoria. úsalo para mantener continuidad.
 - NO necesitas ejecutar Python - toda la info ya está aquí.
-- Si necesitas más contexto, está en: /root/.openclaw/workspace/agents/workspace-silhouette/memory/agent_memory_dump.json
+- Si necesitas más contexto, está en: /home/ubuntu/.openclaw/workspace/agents/workspace-silhouette/memory/agent_memory_dump.json
 """
 
 

@@ -248,14 +248,16 @@ class MemoryAssociation:
     def load_associations(self):
         """Load associations from storage"""
         try:
-            with open(os.getenv('BRAIN_DATA_DIR', './data'/associations.json', 'r') as f:
+            file_path = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'associations.json')
+            with open(file_path, 'r') as f:
                 self.associations = defaultdict(lambda: defaultdict(float), json.load(f))
         except:
             pass
     
     def save_associations(self):
         """Save associations to storage"""
-        with open(os.getenv('BRAIN_DATA_DIR', './data'/associations.json', 'w') as f:
+        file_path = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'associations.json')
+        with open(file_path, 'w') as f:
             json.dump(dict(self.associations), f)
     
     def strengthen(self, entity1: str, entity2: str, amount: float = 0.1):
@@ -366,7 +368,7 @@ class AdvancedMemoryDiscovery:
 # CLI
 if __name__ == "__main__":
     import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core'))
+sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
     
     amd = AdvancedMemoryDiscovery()
     

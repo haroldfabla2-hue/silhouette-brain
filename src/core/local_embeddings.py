@@ -96,7 +96,7 @@ def _build_tfidf_from_db():
     global _tfidf_vocab, _tfidf_idf, _tfidf_dims
 
     db_path = os.path.join(
-        os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data"),
+        os.getenv("BRAIN_DATA_DIR", "/home/ubuntu/.openclaw/workspace/silhouette-brain/data"),
         "memory_core.db",
     )
     if not os.path.exists(db_path):

@@ -46,7 +46,7 @@ class AgentQuerier:
     def get_latest_report(self, agent: str) -> str:
         """Obtiene el último reporte del agente"""
         import os
-        report_dir = f"/root/.openclaw/workspace/agents/workspace-{agent}/reports"
+        report_dir = f"/home/ubuntu/.openclaw/workspace/agents/workspace-{agent}/reports"
         
         if not os.path.exists(report_dir):
             return "No hay reportes"

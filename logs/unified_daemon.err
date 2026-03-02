@@ -1,0 +1,198 @@
+2026-03-01 22:41:53: Traceback (most recent call last):
+2026-03-01 22:41:53:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:41:53:     from dotenv import load_dotenv
+2026-03-01 22:41:53: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:41:58: Traceback (most recent call last):
+2026-03-01 22:41:58:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:41:58:     from dotenv import load_dotenv
+2026-03-01 22:41:58: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:03: Traceback (most recent call last):
+2026-03-01 22:42:03:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:03:     from dotenv import load_dotenv
+2026-03-01 22:42:03: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:08: Traceback (most recent call last):
+2026-03-01 22:42:08:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:08:     from dotenv import load_dotenv
+2026-03-01 22:42:08: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:13: Traceback (most recent call last):
+2026-03-01 22:42:13:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:13:     from dotenv import load_dotenv
+2026-03-01 22:42:13: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:18: Traceback (most recent call last):
+2026-03-01 22:42:18:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:18:     from dotenv import load_dotenv
+2026-03-01 22:42:18: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:24: Traceback (most recent call last):
+2026-03-01 22:42:24:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:24:     from dotenv import load_dotenv
+2026-03-01 22:42:24: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:29: Traceback (most recent call last):
+2026-03-01 22:42:29:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:29:     from dotenv import load_dotenv
+2026-03-01 22:42:29: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:34: Traceback (most recent call last):
+2026-03-01 22:42:34:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:34:     from dotenv import load_dotenv
+2026-03-01 22:42:34: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:42:39: Traceback (most recent call last):
+2026-03-01 22:42:39:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:42:39:     from dotenv import load_dotenv
+2026-03-01 22:42:39: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:45:19: Traceback (most recent call last):
+2026-03-01 22:45:19:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:19:     
+2026-03-01 22:45:19: from dotenv import load_dotenv
+2026-03-01 22:45:19: 
+2026-03-01 22:45:19: ModuleNotFoundError
+2026-03-01 22:45:19: : 
+2026-03-01 22:45:19: No module named 'dotenv'
+2026-03-01 22:45:19: 
+2026-03-01 22:45:24: Traceback (most recent call last):
+2026-03-01 22:45:24:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:24:     from dotenv import load_dotenv
+2026-03-01 22:45:24: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:45:30: Traceback (most recent call last):
+2026-03-01 22:45:30:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:30:     from dotenv import load_dotenv
+2026-03-01 22:45:30: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:45:35: Traceback (most recent call last):
+2026-03-01 22:45:35:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:35:     from dotenv import load_dotenv
+2026-03-01 22:45:35: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:45:40: Traceback (most recent call last):
+2026-03-01 22:45:40:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:40:     from dotenv import load_dotenv
+2026-03-01 22:45:40: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:45:45: Traceback (most recent call last):
+2026-03-01 22:45:45:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:45:     from dotenv import load_dotenv
+2026-03-01 22:45:45: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:45:50: Traceback (most recent call last):
+2026-03-01 22:45:50:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:50:     from dotenv import load_dotenv
+2026-03-01 22:45:50: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:45:55: Traceback (most recent call last):
+2026-03-01 22:45:55:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:45:55:     from dotenv import load_dotenv
+2026-03-01 22:45:55: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:46:00: Traceback (most recent call last):
+2026-03-01 22:46:00:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:46:00:     from dotenv import load_dotenv
+2026-03-01 22:46:00: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:46:05: Traceback (most recent call last):
+2026-03-01 22:46:05:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 49, in <module>
+2026-03-01 22:46:05:     from dotenv import load_dotenv
+2026-03-01 22:46:05: ModuleNotFoundError: No module named 'dotenv'
+2026-03-01 22:52:06: Traceback (most recent call last):
+2026-03-01 22:52:06:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:06:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:06:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:06:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:06:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:06:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:06:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:06:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:06:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:06: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:11: Traceback (most recent call last):
+2026-03-01 22:52:11:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:11:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:11:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:11:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:11:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:11:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:11:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:11:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:11:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:11: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:16: Traceback (most recent call last):
+2026-03-01 22:52:16:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:16:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:16:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:16:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:16:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:16:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:16:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:16:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:16:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:16: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:21: Traceback (most recent call last):
+2026-03-01 22:52:21:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:21:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:21:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:21:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:21:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:21:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:21:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:21:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:21:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:21: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:26: Traceback (most recent call last):
+2026-03-01 22:52:26:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:26:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:26:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:26:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:26:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:26:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:26:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:26:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:26:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:26: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:31: Traceback (most recent call last):
+2026-03-01 22:52:31:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:31:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:31:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:31:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:31:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:31:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:31:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:31:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:31: ^^^^^^^^^
+2026-03-01 22:52:31: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:36: Traceback (most recent call last):
+2026-03-01 22:52:36:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:36:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:36:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:36:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:36:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:36:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:36:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:36:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:36:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:36: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:41: Traceback (most recent call last):
+2026-03-01 22:52:41:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:41:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:41:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:41:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:41:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:41:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:41:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:41:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:41:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:41: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:46: Traceback (most recent call last):
+2026-03-01 22:52:46:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:46:     logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
+2026-03-01 22:52:46:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:46:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:46:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:46:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:46:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:46:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:46:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:46: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 22:52:52: Traceback (most recent call last):
+2026-03-01 22:52:52:   File "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/unified_daemon.py", line 59, in <module>
+2026-03-01 22:52:52: 
+2026-03-01 22:52:52:     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:52:   File "/usr/lib/python3.12/logging/__init__.py", line 1231, in __init__
+2026-03-01 22:52:52:     StreamHandler.__init__(self, self._open())
+2026-03-01 22:52:52:                                  ^^^^^^^^^^^^
+2026-03-01 22:52:52:   File "/usr/lib/python3.12/logging/__init__.py", line 1263, in _open
+2026-03-01 22:52:52:     return open_func(self.baseFilename, self.mode,
+2026-03-01 22:52:52:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-03-01 22:52:52: PermissionError: [Errno 13] Permission denied: '/var/log/silhouette_unified_daemon.log'
+2026-03-01 23:17:10: [0;93m2026-03-01 23:17:10.298472875 [W:onnxruntime:Default, device_discovery.cc:211 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:91 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"[m
+2026-03-01 23:17:10: /home/ubuntu/.openclaw/workspace/silhouette-brain/src/core/local_embeddings.py:47: UserWarning: The model sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 now uses mean pooling instead of CLS embedding. In order to preserve the previous behaviour, consider either pinning fastembed version to 0.5.1 or using `add_custom_model` functionality.
+2026-03-01 23:17:10:   _fastembed_model = TextEmbedding(FASTEMBED_MODEL)

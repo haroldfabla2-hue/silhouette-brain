@@ -21,10 +21,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv("/root/silhouette-brain/.env")
+load_dotenv("/home/ubuntu/.openclaw/workspace/silhouette-brain/.env")
 
 # Inyectar path del cerebro para usar la memoria nativa
-BRAIN_SRC_DIR = os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core')
+BRAIN_SRC_DIR = os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core')
 sys.path.insert(0, BRAIN_SRC_DIR)
 
 # Intentar importar la memoria automática de 4 capas
@@ -39,9 +39,9 @@ except Exception as e:
     memory_system = None
 
 # Rutas base a monitorizar
-OPENCLAW_WORKSPACE = Path("/root/.openclaw/workspace")
-OPENCLAW_AGENTS = Path("/root/.openclaw/agents")
-STATE_FILE = Path(os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data")) / "global_sync_state.json"
+OPENCLAW_WORKSPACE = Path("/home/ubuntu/.openclaw/workspace")
+OPENCLAW_AGENTS = Path("/home/ubuntu/.openclaw/agents")
+STATE_FILE = Path(os.getenv("BRAIN_DATA_DIR", "/home/ubuntu/.openclaw/workspace/silhouette-brain/data")) / "global_sync_state.json"
 
 def get_all_target_files():
     """Descubre dinámicamente todos los archivos de sesión y canales."""

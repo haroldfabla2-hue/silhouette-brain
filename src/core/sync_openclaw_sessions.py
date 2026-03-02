@@ -19,12 +19,12 @@ from typing import Dict, Iterable, Tuple
 
 import sys
 
-sys.path.insert(0, "/root/.openclaw/skills/silhouette-memory/scripts")
+sys.path.insert(0, "/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core")
 from memory_core import get_memory_core  # noqa: E402
 
 
-SESSIONS_DIR = Path("/root/.openclaw/agents/silhouette/sessions")
-STATE_PATH = Path(os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data")) / "session_sync_state.json"
+SESSIONS_DIR = Path("/home/ubuntu/.openclaw/agents/main/sessions")
+STATE_PATH = Path(os.getenv("BRAIN_DATA_DIR", "/home/ubuntu/.openclaw/workspace/silhouette-brain/data")) / "session_sync_state.json"
 VALID_ROLES = {"user", "assistant"}
 
 

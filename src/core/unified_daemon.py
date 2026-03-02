@@ -34,12 +34,14 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Optional
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-BRAIN_ROOT     = Path(os.getenv("BRAIN_ROOT", "/root/silhouette-brain"))
+BRAIN_ROOT     = Path(os.getenv("BRAIN_ROOT", "/home/ubuntu/.openclaw/workspace/silhouette-brain"))
 BRAIN_SRC_CORE = BRAIN_ROOT / "src" / "core"
 BRAIN_SRC_COG  = BRAIN_ROOT / "src" / "cognitive_engines"
 BRAIN_DATA     = Path(os.getenv("BRAIN_DATA_DIR", str(BRAIN_ROOT / "data")))
 STATE_FILE     = BRAIN_DATA / "unified_daemon_state.json"
-LOG_FILE       = Path("/var/log/silhouette_unified_daemon.log")
+LOG_FILE       = BRAIN_ROOT / "logs" / "silhouette_unified_daemon.log"
+# Asegurar que el directorio de logs existe
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 # Asegurar paths disponibles
 for p in [str(BRAIN_SRC_CORE), str(BRAIN_SRC_COG), str(BRAIN_ROOT / "src")]:
@@ -102,8 +104,8 @@ class Task:
 # Estado de la sesión (persistido en STATE_FILE["session_offsets"])
 _SESSION_OFFSETS: dict = {}
 
-OPENCLAW_WORKSPACE = Path("/root/.openclaw/workspace")
-OPENCLAW_AGENTS    = Path("/root/.openclaw/agents")
+OPENCLAW_WORKSPACE = Path("/home/ubuntu/.openclaw/workspace")
+OPENCLAW_AGENTS    = Path("/home/ubuntu/.openclaw/agents")
 
 def _get_all_jsonl_files():
     files = []
@@ -250,13 +252,12 @@ def task_api_health():
         pass
 
     log.warning("[api_health] Brain API no responde — reiniciando...")
-    scripts_dst = Path("/root/.openclaw/skills/silhouette-memory/scripts")
-    api_script  = scripts_dst / "enhanced_memory_api.py"
+    api_script  = BRAIN_ROOT / "src" / "api" / "enhanced_memory_api.py"
     if api_script.exists():
         subprocess.Popen(
             [sys.executable, str(api_script)],
-            env={**os.environ, "BRAIN_SRC_DIR": str(scripts_dst)},
-            stdout=open("/var/log/memory_api.log", "a"),
+            env={**os.environ, "BRAIN_SRC_DIR": str(BRAIN_ROOT / "src" / "core")},
+            stdout=open(BRAIN_ROOT / "logs" / "memory_api.log", "a"),
             stderr=subprocess.STDOUT,
         )
         time.sleep(3)

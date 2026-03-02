@@ -29,7 +29,7 @@ from memory_noise_filter import is_agent_heartbeat_report, is_operational_runtim
 
 # ---- Configuración -------------------------------------------------------
 
-_DATA_DIR = os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data")
+_DATA_DIR = os.getenv("BRAIN_DATA_DIR", "/home/ubuntu/.openclaw/workspace/silhouette-brain/data")
 TIER_FILES = {
     "working": os.path.join(_DATA_DIR, "working.json"),
     "medium":  os.path.join(_DATA_DIR, "medium.json"),
@@ -155,7 +155,7 @@ def _layer_graph(query: str, limit: int = 15) -> list:
                     MATCH (n)
                     WHERE toLower(n.name) CONTAINS toLower($term)
                        OR toLower(n.content) CONTAINS toLower($term)
-                    RETURN n.name AS name, labels(n) AS labels,
+                    RETURN coalesce(n.name, n.content, "?") AS name, labels(n) AS labels,
                            n.importance AS importance
                     ORDER BY n.importance DESC
                     LIMIT $lim

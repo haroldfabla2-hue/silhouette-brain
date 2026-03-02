@@ -1,0 +1,339 @@
+2026-03-01 22:57:05 [unified] ============================================================
+2026-03-01 22:57:05 [unified]   Silhouette Unified Daemon v1.0
+2026-03-01 22:57:05 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-01 22:57:05 [unified] ============================================================
+2026-03-01 22:57:05 [unified] [session_sync] ▶ inicio
+2026-03-01 22:57:05 [unified] [session_sync] ✗ ERROR (intento #1): [Errno 13] Permission denied: '/root/.openclaw/workspace'
+2026-03-01 22:57:05 [unified] [embedding_sync] ▶ inicio
+2026-03-01 22:57:05 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 22:57:05 [unified] [api_health] ▶ inicio
+2026-03-01 22:57:05 [unified] [api_health] Brain API no responde — reiniciando...
+2026-03-01 22:57:05 [unified] [api_health] ✗ ERROR (intento #1): [Errno 13] Permission denied: '/root/.openclaw/skills/silhouette-memory/scripts/enhanced_memory_api.py'
+2026-03-01 22:57:05 [unified] [curiosity] ▶ inicio
+2026-03-01 22:57:05 [unified] [curiosity] ✗ ERROR (intento #1): unterminated string literal (detected at line 251) (advanced_discovery.py, line 251)
+2026-03-01 22:57:05 [unified] [dreamer] ▶ inicio
+2026-03-01 22:57:05 [unified] [dreamer] No disponible: module 'importlib.util' has no attribute 'load_from_spec'
+2026-03-01 22:57:05 [unified] [dreamer] ✓ completado en 0.0s
+2026-03-01 22:57:05 [unified] [janitor] ▶ inicio
+2026-03-01 22:57:05 [unified] [janitor] ✓ completado en 0.0s
+2026-03-01 22:57:05 [unified] [evolution] ▶ inicio
+2026-03-01 22:57:05 [unified] [evolution] No disponible: module 'importlib.util' has no attribute 'load_from_spec'
+2026-03-01 22:57:05 [unified] [evolution] ✓ completado en 0.0s
+2026-03-01 22:59:05 [unified] [session_sync] ▶ inicio
+2026-03-01 22:59:05 [unified] [session_sync] ✗ ERROR (intento #2): [Errno 13] Permission denied: '/root/.openclaw/workspace'
+2026-03-01 23:00:05 [unified] [api_health] ▶ inicio
+2026-03-01 23:00:05 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:00:05 [unified] [status]
+  session_sync       runs=  0  errs=2  next_in=1min
+  embedding_sync     runs=  1  errs=0  next_in=2min
+  api_health         runs=  1  errs=1  next_in=3min
+  curiosity          runs=  0  errs=1  next_in=57min
+  dreamer            runs=  1  errs=0  next_in=357min
+  janitor            runs=  1  errs=0  next_in=717min
+  evolution          runs=  1  errs=0  next_in=357min
+2026-03-01 23:01:05 [unified] [session_sync] ▶ inicio
+2026-03-01 23:01:05 [unified] [session_sync] ✗ ERROR (intento #3): [Errno 13] Permission denied: '/root/.openclaw/workspace'
+2026-03-01 23:02:05 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:02:05 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:03:05 [unified] [session_sync] ▶ inicio
+2026-03-01 23:03:05 [unified] [session_sync] ✗ ERROR (intento #4): [Errno 13] Permission denied: '/root/.openclaw/workspace'
+2026-03-01 23:03:05 [unified] [api_health] ▶ inicio
+2026-03-01 23:03:05 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:03:57 [unified] Señal 2 recibida — cerrando ordenadamente...
+2026-03-01 23:03:58 [unified] Estado cargado (0 archivos tracked)
+2026-03-01 23:03:58 [unified] ============================================================
+2026-03-01 23:03:58 [unified]   Silhouette Unified Daemon v1.0
+2026-03-01 23:03:58 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-01 23:03:58 [unified] ============================================================
+2026-03-01 23:03:58 [unified] [session_sync] ▶ inicio
+2026-03-01 23:05:26 [unified] Señal 2 recibida — cerrando ordenadamente...
+2026-03-01 23:05:28 [unified] Estado cargado (0 archivos tracked)
+2026-03-01 23:05:28 [unified] ============================================================
+2026-03-01 23:05:28 [unified]   Silhouette Unified Daemon v1.0
+2026-03-01 23:05:28 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-01 23:05:28 [unified] ============================================================
+2026-03-01 23:05:28 [unified] [session_sync] ▶ inicio
+2026-03-01 23:11:56 [unified] Señal 2 recibida — cerrando ordenadamente...
+2026-03-01 23:11:58 [unified] Estado cargado (0 archivos tracked)
+2026-03-01 23:11:58 [unified] ============================================================
+2026-03-01 23:11:58 [unified]   Silhouette Unified Daemon v1.0
+2026-03-01 23:11:58 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-01 23:11:58 [unified] ============================================================
+2026-03-01 23:11:58 [unified] [session_sync] ▶ inicio
+2026-03-01 23:17:08 [unified] [session_sync] 5200 mensajes nuevos integrados
+2026-03-01 23:17:08 [unified] [session_sync] ✓ completado en 310.3s
+2026-03-01 23:17:08 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:17:11 [unified] [embedding_sync] 1 embeddings generados
+2026-03-01 23:17:11 [unified] [embedding_sync] ✓ completado en 2.9s
+2026-03-01 23:17:11 [unified] [api_health] ▶ inicio
+2026-03-01 23:17:11 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:17:34 [unified] Señal 2 recibida — cerrando ordenadamente...
+2026-03-01 23:17:36 [unified] Estado cargado (9 archivos tracked)
+2026-03-01 23:17:36 [unified] ============================================================
+2026-03-01 23:17:36 [unified]   Silhouette Unified Daemon v1.0
+2026-03-01 23:17:36 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-01 23:17:36 [unified] ============================================================
+2026-03-01 23:17:36 [unified] [session_sync] ▶ inicio
+2026-03-01 23:17:36 [unified] [session_sync] ✓ completado en 0.4s
+2026-03-01 23:17:36 [unified] [api_health] ▶ inicio
+2026-03-01 23:17:36 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:19:36 [unified] [session_sync] ▶ inicio
+2026-03-01 23:19:36 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:20:06 [unified] [status]
+  session_sync       runs=  2  errs=0  next_in=1min
+  embedding_sync     runs=  0  errs=0  next_in=2min
+  api_health         runs=  1  errs=0  next_in=0min
+  curiosity          runs=  0  errs=0  next_in=37min
+  dreamer            runs=  0  errs=0  next_in=337min
+  janitor            runs=  0  errs=0  next_in=697min
+  evolution          runs=  0  errs=0  next_in=337min
+2026-03-01 23:20:36 [unified] [api_health] ▶ inicio
+2026-03-01 23:20:36 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:21:36 [unified] [session_sync] ▶ inicio
+2026-03-01 23:21:36 [unified] [session_sync] ✓ completado en 0.0s
+2026-03-01 23:22:16 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:22:18 [unified] [embedding_sync] ✓ completado en 1.6s
+2026-03-01 23:23:38 [unified] [session_sync] ▶ inicio
+2026-03-01 23:23:38 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:23:38 [unified] [api_health] ▶ inicio
+2026-03-01 23:23:38 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:25:08 [unified] [status]
+  session_sync       runs=  4  errs=0  next_in=0min
+  embedding_sync     runs=  1  errs=0  next_in=2min
+  api_health         runs=  3  errs=0  next_in=1min
+  curiosity          runs=  0  errs=0  next_in=32min
+  dreamer            runs=  0  errs=0  next_in=332min
+  janitor            runs=  0  errs=0  next_in=692min
+  evolution          runs=  0  errs=0  next_in=332min
+2026-03-01 23:25:38 [unified] [session_sync] ▶ inicio
+2026-03-01 23:25:38 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:26:38 [unified] [api_health] ▶ inicio
+2026-03-01 23:26:38 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:27:18 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:27:18 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:27:38 [unified] [session_sync] ▶ inicio
+2026-03-01 23:27:38 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:29:38 [unified] [session_sync] ▶ inicio
+2026-03-01 23:29:38 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:29:38 [unified] [api_health] ▶ inicio
+2026-03-01 23:29:38 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:30:08 [unified] [status]
+  session_sync       runs=  7  errs=0  next_in=1min
+  embedding_sync     runs=  2  errs=0  next_in=2min
+  api_health         runs=  5  errs=0  next_in=2min
+  curiosity          runs=  0  errs=0  next_in=27min
+  dreamer            runs=  0  errs=0  next_in=327min
+  janitor            runs=  0  errs=0  next_in=687min
+  evolution          runs=  0  errs=0  next_in=327min
+2026-03-01 23:31:38 [unified] [session_sync] ▶ inicio
+2026-03-01 23:31:38 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:32:18 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:32:18 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:32:38 [unified] [api_health] ▶ inicio
+2026-03-01 23:32:38 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:33:38 [unified] [session_sync] ▶ inicio
+2026-03-01 23:33:38 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:35:08 [unified] [status]
+  session_sync       runs=  9  errs=0  next_in=0min
+  embedding_sync     runs=  3  errs=0  next_in=2min
+  api_health         runs=  6  errs=0  next_in=0min
+  curiosity          runs=  0  errs=0  next_in=22min
+  dreamer            runs=  0  errs=0  next_in=322min
+  janitor            runs=  0  errs=0  next_in=682min
+  evolution          runs=  0  errs=0  next_in=322min
+2026-03-01 23:35:38 [unified] [session_sync] ▶ inicio
+2026-03-01 23:35:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:35:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:35:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:37:19 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:37:19 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:37:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:37:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:38:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:38:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:39:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:39:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:40:09 [unified] [status]
+  session_sync       runs= 12  errs=0  next_in=1min
+  embedding_sync     runs=  4  errs=0  next_in=2min
+  api_health         runs=  8  errs=0  next_in=1min
+  curiosity          runs=  0  errs=0  next_in=17min
+  dreamer            runs=  0  errs=0  next_in=317min
+  janitor            runs=  0  errs=0  next_in=677min
+  evolution          runs=  0  errs=0  next_in=317min
+2026-03-01 23:41:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:41:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:41:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:41:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:42:19 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:42:19 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:43:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:43:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:44:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:44:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:45:09 [unified] [status]
+  session_sync       runs= 14  errs=0  next_in=0min
+  embedding_sync     runs=  5  errs=0  next_in=2min
+  api_health         runs= 10  errs=0  next_in=2min
+  curiosity          runs=  0  errs=0  next_in=12min
+  dreamer            runs=  0  errs=0  next_in=312min
+  janitor            runs=  0  errs=0  next_in=672min
+  evolution          runs=  0  errs=0  next_in=312min
+2026-03-01 23:45:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:45:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:47:19 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:47:19 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:47:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:47:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:47:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:47:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:49:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:49:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:50:09 [unified] [status]
+  session_sync       runs= 17  errs=0  next_in=1min
+  embedding_sync     runs=  6  errs=0  next_in=2min
+  api_health         runs= 11  errs=0  next_in=0min
+  curiosity          runs=  0  errs=0  next_in=7min
+  dreamer            runs=  0  errs=0  next_in=307min
+  janitor            runs=  0  errs=0  next_in=667min
+  evolution          runs=  0  errs=0  next_in=307min
+2026-03-01 23:50:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:50:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:51:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:51:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:52:19 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:52:19 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:53:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:53:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:53:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:53:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:55:09 [unified] [status]
+  session_sync       runs= 19  errs=0  next_in=0min
+  embedding_sync     runs=  7  errs=0  next_in=2min
+  api_health         runs= 13  errs=0  next_in=1min
+  curiosity          runs=  0  errs=0  next_in=2min
+  dreamer            runs=  0  errs=0  next_in=302min
+  janitor            runs=  0  errs=0  next_in=662min
+  evolution          runs=  0  errs=0  next_in=302min
+2026-03-01 23:55:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:55:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:56:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:56:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-01 23:57:09 [unified] [curiosity] ▶ inicio
+2026-03-01 23:57:09 [unified] [curiosity] ✗ ERROR (intento #1): unterminated string literal (detected at line 251) (advanced_discovery.py, line 251)
+2026-03-01 23:57:19 [unified] [embedding_sync] ▶ inicio
+2026-03-01 23:57:19 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-01 23:57:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:57:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:59:39 [unified] [session_sync] ▶ inicio
+2026-03-01 23:59:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-01 23:59:39 [unified] [api_health] ▶ inicio
+2026-03-01 23:59:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:00:09 [unified] [status]
+  session_sync       runs= 22  errs=0  next_in=1min
+  embedding_sync     runs=  8  errs=0  next_in=2min
+  api_health         runs= 15  errs=0  next_in=2min
+  curiosity          runs=  0  errs=1  next_in=57min
+  dreamer            runs=  0  errs=0  next_in=297min
+  janitor            runs=  0  errs=0  next_in=657min
+  evolution          runs=  0  errs=0  next_in=297min
+2026-03-02 00:01:39 [unified] [session_sync] ▶ inicio
+2026-03-02 00:01:39 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:02:19 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:02:19 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-02 00:02:39 [unified] [api_health] ▶ inicio
+2026-03-02 00:02:39 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:03:31 [unified] Señal 2 recibida — cerrando ordenadamente...
+2026-03-02 00:03:33 [unified] Estado cargado (9 archivos tracked)
+2026-03-02 00:03:33 [unified] ============================================================
+2026-03-02 00:03:33 [unified]   Silhouette Unified Daemon v1.0
+2026-03-02 00:03:33 [unified]   Tareas: session_sync, embedding_sync, api_health, curiosity, dreamer, janitor, evolution
+2026-03-02 00:03:33 [unified] ============================================================
+2026-03-02 00:03:33 [unified] [session_sync] ▶ inicio
+2026-03-02 00:03:34 [unified] [session_sync] ✓ completado en 0.5s
+2026-03-02 00:03:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:03:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:05:04 [unified] [status]
+  session_sync       runs=  1  errs=0  next_in=0min
+  embedding_sync     runs=  0  errs=0  next_in=2min
+  api_health         runs=  1  errs=0  next_in=1min
+  curiosity          runs=  0  errs=0  next_in=52min
+  dreamer            runs=  0  errs=0  next_in=292min
+  janitor            runs=  0  errs=0  next_in=652min
+  evolution          runs=  0  errs=0  next_in=292min
+2026-03-02 00:05:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:05:34 [unified] [session_sync] ✓ completado en 0.0s
+2026-03-02 00:06:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:06:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:07:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:07:24 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-02 00:07:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:07:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:09:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:09:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:09:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:09:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:10:04 [unified] [status]
+  session_sync       runs=  4  errs=0  next_in=1min
+  embedding_sync     runs=  1  errs=0  next_in=2min
+  api_health         runs=  3  errs=0  next_in=2min
+  curiosity          runs=  0  errs=0  next_in=47min
+  dreamer            runs=  0  errs=0  next_in=287min
+  janitor            runs=  0  errs=0  next_in=647min
+  evolution          runs=  0  errs=0  next_in=287min
+2026-03-02 00:11:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:11:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:12:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:12:24 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-02 00:12:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:12:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:13:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:13:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:15:04 [unified] [status]
+  session_sync       runs=  6  errs=0  next_in=0min
+  embedding_sync     runs=  2  errs=0  next_in=2min
+  api_health         runs=  4  errs=0  next_in=0min
+  curiosity          runs=  0  errs=0  next_in=42min
+  dreamer            runs=  0  errs=0  next_in=282min
+  janitor            runs=  0  errs=0  next_in=642min
+  evolution          runs=  0  errs=0  next_in=282min
+2026-03-02 00:15:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:15:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:15:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:15:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:17:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:17:24 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-02 00:17:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:17:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:18:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:18:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:19:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:19:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:20:04 [unified] [status]
+  session_sync       runs=  9  errs=0  next_in=1min
+  embedding_sync     runs=  3  errs=0  next_in=2min
+  api_health         runs=  6  errs=0  next_in=1min
+  curiosity          runs=  0  errs=0  next_in=37min
+  dreamer            runs=  0  errs=0  next_in=277min
+  janitor            runs=  0  errs=0  next_in=637min
+  evolution          runs=  0  errs=0  next_in=277min
+2026-03-02 00:21:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:21:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:21:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:21:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:22:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:22:24 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-02 00:23:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:23:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:24:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:24:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:25:04 [unified] [status]
+  session_sync       runs= 11  errs=0  next_in=0min
+  embedding_sync     runs=  4  errs=0  next_in=2min
+  api_health         runs=  8  errs=0  next_in=2min
+  curiosity          runs=  0  errs=0  next_in=32min
+  dreamer            runs=  0  errs=0  next_in=272min
+  janitor            runs=  0  errs=0  next_in=632min
+  evolution          runs=  0  errs=0  next_in=272min
+2026-03-02 00:25:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:25:34 [unified] [session_sync] ✓ completado en 0.1s

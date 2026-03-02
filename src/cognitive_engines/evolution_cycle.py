@@ -13,11 +13,11 @@ Ciclo automático de evolución que:
 import json
 import os
 import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core'))
+sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src'))
+sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src'))
 
 class EvolutionCycle:
     """
@@ -26,7 +26,7 @@ class EvolutionCycle:
     """
     
     def __init__(self):
-        self.data_path = os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')
+        self.data_path = os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data')
         self.cycle_file = f'{self.data_path}/evolution_cycle.json'
         self.load_cycle_state()
     

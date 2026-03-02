@@ -60,6 +60,23 @@ Añade un ciclo de revisión cognitiva al inicio de tu Heartbeat para procesar l
 - **En `SOUL.md`**: Asegúrate de incluir la directiva de que eres proactivo y utilizas la memoria inyectada `<industrial-memory>` antes de emitir respuestas.
 - **En `AGENTS.md`**: Asegúrate de mapear claramente qué agente es responsable de código, investigación, o comunicación, para que durante el `Ciclo 0` sepas a quién delegar las tareas cognitivas.
 
+### 3. Persistencia de Plantillas para Nuevos Agentes (Hook)
+Para asegurar que los futuros agentes que crees nazcan con el Cerebro integrado, y evitar que las actualizaciones del sistema borren tus plantillas base, usa el hook `bootstrap-extra-files`:
+1. Crea una carpeta `agent-templates` en este repositorio y pon allí tus archivos Markdown (`AGENTS.md`, `SOUL.md`, `TOOLS.md`, `HEARTBEAT.md`) ya modificados con las directivas del cerebro.
+2. Edita tu archivo `~/.openclaw/openclaw.json` para activar el hook:
+   ```json
+   "hooks": {
+     "internal": {
+       "entries": {
+         "bootstrap-extra-files": {
+           "enabled": true,
+           "paths": ["/ruta/absoluta/a/silhouette-brain/agent-templates/*"]
+         }
+       }
+     }
+   }
+   ```
+
 ## FASE 6: Configurar Demonios y PM2
 El sistema requiere procesos en segundo plano. Configura PM2 usando el ecosistema provisto en la raíz del repositorio:
 

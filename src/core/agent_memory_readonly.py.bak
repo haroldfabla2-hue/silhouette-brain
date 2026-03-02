@@ -26,7 +26,7 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-MEMORY_DB = os.path.join(os.getenv("BRAIN_DATA_DIR", "/home/ubuntu/.openclaw/workspace/silhouette-brain/data"), "memory_core.db")
+MEMORY_DB = os.getenv("BRAIN_DATA_DIR", "./data/memory_core.db")
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 CACHE_TTL = 300  # 5 minutos
@@ -53,7 +53,7 @@ def _cache_key(query, limit):
 
 def get_memory_context(query: str, limit: int = 5):
     """
-    Buscar en Neo4j (primario) con fallback a SQLite
+    Buscar en conversaciones - OPTIMIZADO con cache Redis
     """
     r = _get_redis()
     cache_key = _cache_key(query, limit)
@@ -68,13 +68,7 @@ def get_memory_context(query: str, limit: int = 5):
         except:
             pass
     
-    # 2. Query a Neo4j (primario)
-    neo4j_results = search_neo4j(query, limit)
-    if neo4j_results and not isinstance(neo4j_results, dict):
-        print(f"[MEMORY] ✅ Neo4j: {len(neo4j_results)} results for: {query[:30]}...")
-        return {"source": "neo4j", "results": neo4j_results}
-    
-    # 3. Fallback a SQLite
+    # 2. Query a DB
     conn = _get_connection()
     if not conn:
         return {"error": "Memory DB not found"}
@@ -254,38 +248,3 @@ def invalidate_cache():
             print("[MEMORY CACHE] 🗑️ Cache invalidada")
         except:
             pass
-
-# === NEO4J SEARCH ===
-def search_neo4j(query: str, limit: int = 5):
-    """Buscar en Neo4j"""
-    try:
-        from neo4j import GraphDatabase
-        import os
-        
-        NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-        NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "silhouette2035")
-        
-        driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
-        
-        with driver.session() as session:
-            result = session.run("""
-                MATCH (n)
-                WHERE n.content CONTAINS $search_term
-                RETURN n.content, n.importance, n.tags
-                ORDER BY n.importance DESC
-                LIMIT $limit_num
-            """, search_term=query, limit_num=limit)
-            
-            nodes = []
-            for record in result:
-                nodes.append({
-                    "content": record[0],
-                    "importance": record[1],
-                    "tags": record[2]
-                })
-        
-        driver.close()
-        return nodes
-    except Exception as e:
-        return {"error": str(e)}

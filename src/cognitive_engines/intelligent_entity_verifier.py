@@ -10,12 +10,12 @@ Verifica entidades automáticamente usando:
 import json
 import os
 import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src/core'))
+sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
 import re
 from datetime import datetime
 from collections import Counter
 
-sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', '/root/silhouette-brain/src'))
+sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src'))
 
 # Entidades CRÍTICAS que SIEMPRE deben estar verificadas
 CRITICAL_ENTITIES = {
