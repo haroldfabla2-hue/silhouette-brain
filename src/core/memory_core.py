@@ -21,14 +21,14 @@ from typing import List, Dict, Optional
 from pathlib import Path
 import sys
 
-# Try to import OpenAI embeddings
+# Try to import local embeddings
 try:
-    import openai_embeddings
-    from openai_embeddings import get_openai_embedding
+    from local_embeddings import get_embedding as get_openai_embedding
     EMBEDDINGS_AVAILABLE = True
+    print("[EMBEDDINGS] Local fastembed available")
 except ImportError:
     EMBEDDINGS_AVAILABLE = False
-    print("[EMBEDDINGS] Using simple similarity (no OpenAI)")
+    print("[EMBEDDINGS] Using simple similarity (no embeddings)")
 
 # Database setup
 DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'memory_core.db')
@@ -91,15 +91,59 @@ class MemoryCore:
         self._init_schema()
         
         self.neo4j_driver = None
+        self.embedding_dims = 384 # Default para fastembed local
+        
         try:
             from neo4j import GraphDatabase
-            self.neo4j_driver = GraphDatabase.driver('bolt://localhost:17687', auth=('neo4j', 'silhouette2035'))
+            self.neo4j_driver = GraphDatabase.driver(
+                os.getenv("NEO4J_URI", "bolt://localhost:17687"), 
+                auth=(os.getenv("NEO4J_USER", "neo4j"), os.getenv("NEO4J_PASSWORD", "silhouette2035"))
+            )
             self.neo4j_driver.verify_connectivity()
             print("[MEMORY CORE] ✅ Neo4j connected for Vector Search")
+            self._ensure_neo4j_index()
         except Exception as e:
             print(f"[MEMORY CORE] ⚠️ Neo4j Vector Search not available: {e}")
             
         print("[MEMORY CORE] ✅ Initialized")
+
+    def _ensure_neo4j_index(self):
+        """Asegura que el índice vectorial en Neo4j exista y tenga la dimensión correcta"""
+        if not self.neo4j_driver:
+            return
+            
+        try:
+            with self.neo4j_driver.session() as session:
+                # 1. Verificar índices existentes
+                result = session.run("SHOW INDEXES YIELD name, type, options WHERE type = 'VECTOR'")
+                indexes = [record for record in result]
+                index_exists = False
+                dims_match = False
+                
+                for idx in indexes:
+                    if idx['name'] == 'conversation_embeddings':
+                        index_exists = True
+                        options = idx['options']
+                        # Extraer dimensiones de la configuración del índice
+                        if options and 'indexConfig' in options:
+                            config = options['indexConfig']
+                            # Las claves pueden variar ligeramente entre versiones de Neo4j (ej. 'vector.dimensions' o '`vector.dimensions`')
+                            dim_key = next((k for k in config.keys() if 'dimensions' in k), None)
+                            if dim_key and config[dim_key] == self.embedding_dims:
+                                dims_match = True
+                                
+                # 2. Si no existe o las dimensiones cambiaron, recrearlo
+                if index_exists and not dims_match:
+                    print(f"[MEMORY CORE] ⚠️ Dimensions mismatch in Neo4j index. Recreating with {self.embedding_dims} dims...")
+                    session.run("DROP INDEX conversation_embeddings")
+                    index_exists = False
+                    
+                if not index_exists:
+                    print(f"[MEMORY CORE] 🔨 Creating Neo4j vector index with {self.embedding_dims} dimensions...")
+                    session.run(f"CALL db.index.vector.createNodeIndex('conversation_embeddings', 'Conversation', 'embedding', {self.embedding_dims}, 'cosine')")
+                    print("[MEMORY CORE] ✅ Neo4j vector index created successfully")
+        except Exception as e:
+            print(f"[MEMORY CORE] ⚠️ Failed to verify/create Neo4j index: {e}")
     
     def _init_schema(self):
         cur = self.conn.cursor()
@@ -173,7 +217,7 @@ class MemoryCore:
             # Fallback pseudo-embedding
             h = hashlib.sha256(text.encode()).digest()
             emb = [float(b) / 255.0 for b in h] * 64
-            return np.array(emb[:1536], dtype=np.float32).tobytes()
+            return np.array(emb[:384], dtype=np.float32).tobytes()
         
         try:
             cur = self.conn.cursor()
@@ -189,7 +233,7 @@ class MemoryCore:
             
             cur.execute(
                 "INSERT OR REPLACE INTO embeddings (id, embedding, model, created_at) VALUES (?, ?, ?, ?)",
-                (text_hash, embedding_bytes, os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"), int(time.time()))
+                (text_hash, embedding_bytes, "fastembed:paraphrase-multilingual-MiniLM-L12-v2", int(time.time()))
             )
             self.conn.commit()
             return embedding_bytes
@@ -276,7 +320,7 @@ class MemoryCore:
                 with self.neo4j_driver.session() as session:
                     res = session.run("""
                     CALL db.index.vector.queryNodes('conversation_embeddings', $limit, $emb) YIELD node, score
-                    WHERE score > 0.4
+                    WHERE score > 0.15
                     RETURN node.id as id, node.timestamp as timestamp, node.speaker as speaker, 
                            node.message as message, node.context as context, node.tags as tags, score as similarity
                     """, limit=limit, emb=emb_array)
@@ -331,7 +375,7 @@ class MemoryCore:
         
         results = []
         for idx, sim in enumerate(similarities):
-            if sim > 0.4:
+            if sim > 0.15:
                 r = valid_rows[idx]
                 results.append({
                     'id': r['id'],

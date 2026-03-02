@@ -194,21 +194,30 @@ def task_embedding_sync():
     import sqlite3
     import numpy as np
 
-    db_path = BRAIN_DATA / "memory_core.db"
+    # 1. Procesar memory_core.db (conversations)
+    _sync_db_embeddings(BRAIN_DATA / "memory_core.db", "conversations", "message", "embedding")
+    
+    # 2. Procesar memory.db (memory_nodes) - Para items guardados vía API/Tiers
+    _sync_db_embeddings(BRAIN_DATA / "memory.db", "memory_nodes", "content", "embedding")
+
+def _sync_db_embeddings(db_path, table, text_col, emb_col):
+    """Helper para sincronizar embeddings en una tabla específica."""
+    import sqlite3
+    import numpy as np
+    import time
+
     if not db_path.exists():
         return
 
     try:
         from local_embeddings import get_embedding_batch
     except ImportError:
-        return  # fastembed no instalado
+        return
 
     conn = sqlite3.connect(str(db_path))
-    # Solo mensajes recientes sin embedding (últimas 6h)
-    cutoff = int(time.time()) - 21600
+    # Mensajes sin embedding
     rows = conn.execute(
-        "SELECT id, message FROM conversations WHERE embedding IS NULL AND timestamp > ? LIMIT 200",
-        (cutoff,)
+        f"SELECT id, {text_col} FROM {table} WHERE {emb_col} IS NULL LIMIT 200"
     ).fetchall()
 
     if not rows:
@@ -226,11 +235,11 @@ def task_embedding_sync():
             if v and len(v) == 384
         ]
         if updates:
-            conn.executemany("UPDATE conversations SET embedding=? WHERE id=?", updates)
+            conn.executemany(f"UPDATE {table} SET {emb_col}=? WHERE id=?", updates)
             conn.commit()
-            log.info(f"[embedding_sync] {len(updates)} embeddings generados")
+            log.info(f"[embedding_sync] {len(updates)} embeddings generados en {db_path.name}:{table}")
     except Exception as e:
-        log.warning(f"[embedding_sync] Error: {e}")
+        log.warning(f"[embedding_sync] Error en {db_path.name}: {e}")
     finally:
         conn.close()
 

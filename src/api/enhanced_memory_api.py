@@ -89,6 +89,15 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                 node_id = sm.add(text, importance=importance, tags=tags, tier=tier)
                 sm.close()
                 
+                # ALSO use MemoryCore to store in conversations table for semantic indexing
+                # This ensures immediate embedding generation and availability in search
+                try:
+                    from memory_core import get_memory_core
+                    core = get_memory_core()
+                    core.store_message("user", text, tags=tags)
+                except Exception as core_err:
+                    print(f"[API] Warning: Failed to store in MemoryCore for indexing: {core_err}")
+                
                 if node_id:
                     self.send_json({"status": "ok", "id": node_id}, 201)
                 else:

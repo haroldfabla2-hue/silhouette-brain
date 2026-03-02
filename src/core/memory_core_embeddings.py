@@ -147,13 +147,13 @@ class MemoryCore:
         query_embedding = self._get_embedding(query)
         
         if query_embedding:
-            # Use vector similarity
+            # Use vector similarity (process in batches or full table if not huge)
             cursor.execute("""
                 SELECT id, timestamp, speaker, message, context, tags, embedding
                 FROM conversations
                 WHERE embedding IS NOT NULL
                 ORDER BY timestamp DESC
-                LIMIT 50
+                LIMIT 50000
             """)
             
             results = []
