@@ -38,7 +38,9 @@ class MemoryCore:
     def find_contradictions(self):
         """Find potential contradictions in memories"""
         cur = self.conn.cursor()
-        cur.execute("SELECT * FROM entities WHERE mention_count > 1")
+        cur.execute(
+            "SELECT * FROM entities WHERE mention_count > 1 ORDER BY mention_count DESC LIMIT 200"
+        )
         entities = [dict(row) for row in cur.fetchall()]
         
         contradictions = []
@@ -453,7 +455,9 @@ if __name__ == "__main__":
     def find_contradictions(self):
         """Find potential contradictions in memories"""
         cur = self.conn.cursor()
-        cur.execute("SELECT * FROM entities WHERE mention_count > 1")
+        cur.execute(
+            "SELECT * FROM entities WHERE mention_count > 1 ORDER BY mention_count DESC LIMIT 200"
+        )
         entities = [dict(row) for row in cur.fetchall()]
         
         contradictions = []
@@ -503,7 +507,9 @@ if __name__ == "__main__":
     def find_contradictions(self):
         """Find potential contradictions in memories"""
         cur = self.conn.cursor()
-        cur.execute("SELECT * FROM entities WHERE mention_count > 1")
+        cur.execute(
+            "SELECT * FROM entities WHERE mention_count > 1 ORDER BY mention_count DESC LIMIT 200"
+        )
         entities = [dict(row) for row in cur.fetchall()]
         
         contradictions = []
