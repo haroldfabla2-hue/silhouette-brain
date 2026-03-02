@@ -47,3 +47,6 @@ data/*.log
 docker-data/
 neo4j_data/
 redis_data/logs/
+
+logs/*.log
+logs/*.err

@@ -337,3 +337,25 @@
   evolution          runs=  0  errs=0  next_in=272min
 2026-03-02 00:25:34 [unified] [session_sync] ▶ inicio
 2026-03-02 00:25:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:27:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:27:24 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-02 00:27:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:27:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:27:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:27:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:29:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:29:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:30:04 [unified] [status]
+  session_sync       runs= 14  errs=0  next_in=1min
+  embedding_sync     runs=  5  errs=0  next_in=2min
+  api_health         runs=  9  errs=0  next_in=0min
+  curiosity          runs=  0  errs=0  next_in=27min
+  dreamer            runs=  0  errs=0  next_in=267min
+  janitor            runs=  0  errs=0  next_in=627min
+  evolution          runs=  0  errs=0  next_in=267min
+2026-03-02 00:30:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:30:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:31:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:31:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:32:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:32:25 [unified] [embedding_sync] ✓ completado en 0.0s

@@ -17424,3 +17424,40 @@
 2026-03-02 00:25:34: [MEMORY] Full system initialized
 2026-03-02 00:25:34: [AUTO MEMORY] ✅ Integrated
 2026-03-02 00:25:34: 2026-03-02 00:25:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:27:24: 2026-03-02 00:27:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:27:24: 2026-03-02 00:27:24 [unified] [embedding_sync] ✓ completado en 0.0s
+2026-03-02 00:27:34: 2026-03-02 00:27:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:27:34: [NEO4J] ❌ {code: Neo.ClientError.Security.Unauthorized} {message: The client is unauthorized due to authentication failure.}
+2026-03-02 00:27:34: [REDIS] ✅ Connected
+2026-03-02 00:27:34: [SQLite] ✅ Connected
+2026-03-02 00:27:34: [MEMORY] Full system initialized
+2026-03-02 00:27:34: [AUTO MEMORY] ✅ Integrated
+2026-03-02 00:27:34: 2026-03-02 00:27:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:27:34: 2026-03-02 00:27:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:27:34: 2026-03-02 00:27:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:29:34: 2026-03-02 00:29:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:29:34: [NEO4J] ❌ {code: Neo.ClientError.Security.Unauthorized} {message: The client is unauthorized due to authentication failure.}
+2026-03-02 00:29:34: [REDIS] ✅ Connected
+2026-03-02 00:29:34: [SQLite] ✅ Connected
+2026-03-02 00:29:34: [MEMORY] Full system initialized
+2026-03-02 00:29:34: [AUTO MEMORY] ✅ Integrated
+2026-03-02 00:29:34: 2026-03-02 00:29:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:30:04: 2026-03-02 00:30:04 [unified] [status]
+2026-03-02 00:30:04:   session_sync       runs= 14  errs=0  next_in=1min
+2026-03-02 00:30:04:   embedding_sync     runs=  5  errs=0  next_in=2min
+2026-03-02 00:30:04:   api_health         runs=  9  errs=0  next_in=0min
+2026-03-02 00:30:04:   curiosity          runs=  0  errs=0  next_in=27min
+2026-03-02 00:30:04:   dreamer            runs=  0  errs=0  next_in=267min
+2026-03-02 00:30:04:   janitor            runs=  0  errs=0  next_in=627min
+2026-03-02 00:30:04:   evolution          runs=  0  errs=0  next_in=267min
+2026-03-02 00:30:34: 2026-03-02 00:30:34 [unified] [api_health] ▶ inicio
+2026-03-02 00:30:34: 2026-03-02 00:30:34 [unified] [api_health] ✓ completado en 0.0s
+2026-03-02 00:31:34: 2026-03-02 00:31:34 [unified] [session_sync] ▶ inicio
+2026-03-02 00:31:34: [NEO4J] ❌ {code: Neo.ClientError.Security.Unauthorized} {message: The client is unauthorized due to authentication failure.}
+2026-03-02 00:31:34: [REDIS] ✅ Connected
+2026-03-02 00:31:34: [SQLite] ✅ Connected
+2026-03-02 00:31:34: [MEMORY] Full system initialized
+2026-03-02 00:31:34: [AUTO MEMORY] ✅ Integrated
+2026-03-02 00:31:34: 2026-03-02 00:31:34 [unified] [session_sync] ✓ completado en 0.1s
+2026-03-02 00:32:24: 2026-03-02 00:32:24 [unified] [embedding_sync] ▶ inicio
+2026-03-02 00:32:25: 2026-03-02 00:32:25 [unified] [embedding_sync] ✓ completado en 0.0s
