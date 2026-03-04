@@ -31,7 +31,7 @@ except ImportError:
     print("[EMBEDDINGS] Using simple similarity (no embeddings)")
 
 # Database setup
-DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'memory_core.db')
+DB_PATH = os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'memory_core.db')
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 class MemoryCore:
@@ -95,7 +95,7 @@ class MemoryCore:
         self._init_schema()
         
         self.neo4j_driver = None
-        self.embedding_dims = 384 # Default para fastembed local
+        self.embedding_dims = int(os.getenv("EMBEDDING_DIMS", "384"))
         
         try:
             from neo4j import GraphDatabase
@@ -214,6 +214,44 @@ class MemoryCore:
         cur.execute("CREATE INDEX IF NOT EXISTS idx_conv_time ON conversations(timestamp)")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_conv_speaker ON conversations(speaker)")
         self.conn.commit()
+
+    def _normalize_embedding_vector(self, vector: np.ndarray) -> np.ndarray:
+        """Normalize any embedding vector to the configured dimensionality."""
+        if vector is None:
+            return np.zeros(self.embedding_dims, dtype=np.float32)
+
+        v = np.asarray(vector, dtype=np.float32).reshape(-1)
+        if v.size == 0:
+            return np.zeros(self.embedding_dims, dtype=np.float32)
+
+        if v.size == self.embedding_dims:
+            out = v
+        elif v.size > self.embedding_dims:
+            # If dimensions are divisible (e.g. 1536 -> 384), average buckets.
+            if v.size % self.embedding_dims == 0:
+                factor = v.size // self.embedding_dims
+                out = v.reshape(self.embedding_dims, factor).mean(axis=1)
+            else:
+                out = v[: self.embedding_dims]
+        else:
+            out = np.pad(v, (0, self.embedding_dims - v.size), mode="constant")
+
+        norm = np.linalg.norm(out)
+        if norm > 0:
+            out = out / norm
+        return out.astype(np.float32)
+
+    def _normalize_embedding_bytes(self, embedding: bytes) -> Optional[bytes]:
+        """Normalize serialized embedding bytes to the configured dimensionality."""
+        if not embedding:
+            return None
+        try:
+            vec = np.frombuffer(embedding, dtype=np.float32)
+            if vec.size == 0:
+                return None
+            return self._normalize_embedding_vector(vec).tobytes()
+        except Exception:
+            return None
     
     def _get_embedding(self, text: str) -> Optional[bytes]:
         """Get embedding for text using OpenAI with SQLite cache"""
@@ -221,7 +259,7 @@ class MemoryCore:
             # Fallback pseudo-embedding
             h = hashlib.sha256(text.encode()).digest()
             emb = [float(b) / 255.0 for b in h] * 64
-            return np.array(emb[:384], dtype=np.float32).tobytes()
+            return self._normalize_embedding_vector(np.array(emb, dtype=np.float32)).tobytes()
         
         try:
             cur = self.conn.cursor()
@@ -230,10 +268,18 @@ class MemoryCore:
             row = cur.fetchone()
             
             if row:
-                return row[0]
+                normalized_cached = self._normalize_embedding_bytes(row[0])
+                if normalized_cached and normalized_cached != row[0]:
+                    cur.execute(
+                        "UPDATE embeddings SET embedding = ?, model = ?, created_at = ? WHERE id = ?",
+                        (normalized_cached, "fastembed:paraphrase-multilingual-MiniLM-L12-v2", int(time.time()), text_hash),
+                    )
+                    self.conn.commit()
+                return normalized_cached
             
             vector = get_openai_embedding(text)
-            embedding_bytes = np.array(vector, dtype=np.float32).tobytes()
+            normalized_vec = self._normalize_embedding_vector(np.array(vector, dtype=np.float32))
+            embedding_bytes = normalized_vec.tobytes()
             
             cur.execute(
                 "INSERT OR REPLACE INTO embeddings (id, embedding, model, created_at) VALUES (?, ?, ?, ?)",
@@ -364,9 +410,10 @@ class MemoryCore:
         for r in rows:
             if r['embedding']:
                 vec = np.frombuffer(r['embedding'], dtype=np.float32)
-                if vec.shape[0] == query_vec.shape[0]:
-                    embeddings.append(vec)
-                    valid_rows.append(r)
+                if vec.shape[0] != query_vec.shape[0]:
+                    vec = self._normalize_embedding_vector(vec)
+                embeddings.append(vec)
+                valid_rows.append(r)
                     
         if not embeddings:
             return []

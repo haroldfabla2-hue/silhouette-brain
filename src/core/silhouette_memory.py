@@ -134,7 +134,9 @@ class Neo4jHandler:
             return
         with self.driver.session() as s:
             s.run("""
-                MATCH (a:Memory {id: $from_id}), (b:Memory {id: $to_id})
+                MATCH (a:Memory {id: $from_id})
+                WITH a
+                MATCH (b:Memory {id: $to_id})
                 MERGE (a)-[r:RELATED {type: $rel_type}]->(b)
             """, from_id=from_id, to_id=to_id, rel_type=rel_type)
     

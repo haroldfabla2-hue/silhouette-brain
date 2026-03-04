@@ -1,12 +1,12 @@
-import os
 #!/usr/bin/env python3
+import os
 """
 Automatic Curiosity Discovery
 Runs every 30 minutes to find gaps and novel connections
 """
 import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
-sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src'))
+sys.path.append(os.getenv("BRAIN_SRC_DIR", "/root/silhouette-brain/src/core"))
+sys.path.insert(0, os.getenv("BRAIN_SRC_DIR_FALLBACK", "/root/silhouette-brain/src"))
 
 from advanced_discovery import CuriosityDiscovery, MemoryAssociation
 from silhouette_memory import SilhouetteMemory

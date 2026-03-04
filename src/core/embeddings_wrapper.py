@@ -33,7 +33,9 @@ def get_memory_core_embeddings(query: str, limit: int = 5):
                 {
                     "message": r.get("message", "")[:300],
                     "speaker": r.get("speaker", ""),
-                    "similarity": r.get("similarity", 0)
+                    "similarity": r.get("similarity", 0),
+                    "score": r.get("score", r.get("similarity", 0)),
+                    "timestamp": r.get("timestamp", 0),
                 }
                 for r in safe_results
             ]

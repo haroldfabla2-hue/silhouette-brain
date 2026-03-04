@@ -25,7 +25,7 @@ class IntelligentEvolution:
     """
     
     def __init__(self):
-        self.evolution_path = '/home/ubuntu/.openclaw/skills/silhouette-memory'
+        self.evolution_path = '/root/silhouette-brain'
         self.public_repo_path = '/root/silhouette-claw-repo/silhouette-claw'
         self.private_repo_path = '/root/silhouette-system-state'
         self.load_intelligence()

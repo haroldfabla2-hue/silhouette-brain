@@ -30,6 +30,7 @@ import logging
 import traceback
 import fcntl
 import hashlib
+import re
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass
@@ -958,10 +959,22 @@ def task_api_health():
 _dispatched_gaps: dict = {}   # entity → epoch timestamp del último despacho
 GAP_RENOTIFY_HOURS = 24       # No re-despachar el mismo gap en 24h
 GAP_URGENCY_THRESHOLD = 0.5   # discovery_potential mínimo para despachar
+GAP_NOTIFY_THRESHOLD = 0.75   # mínimo para notificación proactiva al humano
 
 
 def _normalize_gap_key(entity: str) -> str:
-    return str(entity or "").strip().lower()
+    raw = str(entity or "").strip().lower()
+    if not raw:
+        return ""
+    # Canonicalizar para dedupe estable: "N8N ", "n8n.", "n8n-" -> "n8n"
+    raw = re.sub(r"[^a-z0-9]+", " ", raw)
+    raw = re.sub(r"\s+", " ", raw).strip()
+    return raw
+
+
+def _entity_tag_slug(entity: str) -> str:
+    key = _normalize_gap_key(entity)
+    return key.replace(" ", "_") if key else ""
 
 
 def _merge_dispatched_gaps(dst: dict, src: dict) -> dict:
@@ -1069,7 +1082,7 @@ def task_curiosity():
         key=lambda g: float(g.get("discovery_potential", 0.0)),
         reverse=True,
     )[:8]
-    top_gap = ranked_gaps[0] if ranked_gaps else None
+    dispatched_gaps = []
 
     dispatched = 0
     for gap in ranked_gaps:
@@ -1131,14 +1144,27 @@ def task_curiosity():
             f"reporta el estado actual y guarda los hallazgos en memoria."
         )
         try:
+            entity_tag = _entity_tag_slug(entity)
+            tags = ["cognitive_task", "investigation", "curiosity"]
+            if entity_tag:
+                tags.append(entity_tag)
             memory.add(
                 task_text,
                 importance=min(0.7 + potential * 0.3, 0.98),
-                tags=["cognitive_task", "investigation", "curiosity", entity.lower().replace(" ", "_")],
+                tags=tags,
                 tier="WORKING",
             )
             _dispatched_gaps[entity_key] = now
             dispatched += 1
+            dispatched_gaps.append(
+                {
+                    "entity": entity,
+                    "entity_key": entity_key,
+                    "potential": float(potential),
+                    "context_confidence": float(context_confidence),
+                    "urgency": urgency_label,
+                }
+            )
             log.info(f"[curiosity] Gap despachado: '{entity}' (urgencia {urgency_label})")
         except Exception as e:
             log.warning(f"[curiosity] Error despachando gap '{entity}': {e}")
@@ -1188,22 +1214,25 @@ def task_curiosity():
         if proactive:
             from proactive_runtime import ProactiveEvent
 
-            if top_gap:
-                entity = str(top_gap.get("entity", "")).strip()
-                potential = float(top_gap.get("discovery_potential", 0.0))
-                context_conf = float(top_gap.get("_context_confidence", 0.0))
+            # Notificar solo gaps realmente despachados y de relevancia alta.
+            top_dispatched = dispatched_gaps[0] if dispatched_gaps else None
+            if top_dispatched and float(top_dispatched.get("potential", 0.0)) >= GAP_NOTIFY_THRESHOLD:
+                entity = str(top_dispatched.get("entity", "")).strip()
+                potential = float(top_dispatched.get("potential", 0.0))
+                context_conf = float(top_dispatched.get("context_confidence", 0.0))
+                entity_key = str(top_dispatched.get("entity_key", "")).strip() or _normalize_gap_key(entity)
                 if entity:
-                    severity = "high" if potential >= 0.8 else "medium"
+                    severity = "high" if potential >= 0.85 else "medium"
                     proactive.notify(
                         event=ProactiveEvent(
                             kind="curiosity_gap",
-                            title=f"Curiosity detectó gap en '{entity}'",
+                            title=f"Curiosity abrió investigación sobre '{entity}'",
                             body=(
-                                f"Potencial={potential:.0%}, contexto={context_conf:.0%}, "
-                                f"despachados={dispatched}/{len(ranked_gaps)}."
+                                f"Ya quedó en la cola cognitiva de Silhouette "
+                                f"(potencial {potential:.0%}, contexto {context_conf:.0%})."
                             ),
                             severity=severity,
-                            dedupe_key=f"gap:{entity.lower()}",
+                            dedupe_key=f"gap:{entity_key}",
                             requester_id="system-daemon",
                             action_prompt=(
                                 f"Prioriza una investigación acotada de '{entity}' y guarda "

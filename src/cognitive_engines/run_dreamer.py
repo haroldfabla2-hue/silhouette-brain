@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 import os
 import sys
-sys.path.append(os.getenv('BRAIN_SRC_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src/core'))
-sys.path.append(os.getenv('BRAIN_SRC_DIR_FALLBACK', '/home/ubuntu/.openclaw/workspace/silhouette-brain/src'))
-#!/usr/bin/env python3
+
+sys.path.append(os.getenv("BRAIN_SRC_DIR", "/root/silhouette-brain/src/core"))
+sys.path.append(os.getenv("BRAIN_SRC_DIR_FALLBACK", "/root/silhouette-brain/src"))
 """
 Dreamer Algorithm - Memory Consolidation During "Sleep"
 Based on Watts-Strogatz small-world network formation
@@ -36,7 +37,7 @@ class Dreamer:
     def load_dream_state(self):
         """Load previous dream state"""
         try:
-            with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'dream_state.json'), 'r') as f:
+            with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'dream_state.json'), 'r') as f:
                 data = json.load(f)
                 self.associations = defaultdict(lambda: defaultdict(float), 
                     {k: defaultdict(float, v) for k, v in data.get('associations', {}).items()})
@@ -50,7 +51,7 @@ class Dreamer:
             'associations': dict(self.associations),
             'dream_log': self.dream_log[-100:]  # Keep last 100 dreams
         }
-        with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data'), 'dream_state.json'), 'w') as f:
+        with open(os.path.join(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data'), 'dream_state.json'), 'w') as f:
             json.dump(data, f)
     
     def activate_memories(self, memory_core):
@@ -197,7 +198,9 @@ class Dreamer:
                     for other in important[:10]:
                         if other['name'] != entity['name']:
                             session.run(
-                                "MATCH (a:Semantic {name: $a}), (b:Semantic {name: $b}) "
+                                "MATCH (a:Semantic {name: $a}) "
+                                "WITH a "
+                                "MATCH (b:Semantic {name: $b}) "
                                 "MERGE (a)-[:ASSOCIATED]->(b)",
                                 a=entity['name'], b=other['name']
                             )
@@ -264,8 +267,12 @@ class Dreamer:
         }
 
 
+def run_dream_cycle():
+    dreamer = Dreamer()
+    return dreamer.dream_cycle()
+
+
 if __name__ == "__main__":
     print("=== DREAMER - Memory Consolidation ===")
-    dreamer = Dreamer()
-    result = dreamer.dream_cycle()
+    result = run_dream_cycle()
     print(f"\n✅ Dream cycle complete: {result}")
