@@ -2,11 +2,29 @@
 
 Si eres un agente (OpenClaw, Codex, Claude Code, etc.) y te pidieron integrar Silhouette Brain, este es tu procedimiento operativo.
 
-## Fase 1: Levantar infraestructura
-1. Configura `.env` desde `.env.example`.
-2. Inicia stack:
+## Fase 0: Detección de entorno (obligatoria)
+No asumas que todos los hosts usan la misma base (`systemd`, `pm2`, `docker-compose`, rutas, etc.). Primero detecta capacidades:
+
+1. Ubica herramientas disponibles:
    ```bash
+   command -v docker docker-compose systemctl pm2
+   ```
+2. Detecta variante de Compose:
+   - Si existe `docker-compose`, úsalo.
+   - Si no, usa `docker compose`.
+3. Detecta gestor de servicios:
+   - Preferir `systemctl` si existe.
+   - Si no existe, usa `pm2` o ejecución directa supervisada.
+4. Nunca hardcodees rutas de otra máquina sin verificar `pwd` y estructura real del repo.
+
+## Fase 1: Levantar infraestructura (adaptativo)
+1. Configura `.env` desde `.env.example`.
+2. Inicia stack con la variante detectada:
+   ```bash
+   # Opción A
    docker-compose up -d
+   # Opción B
+   docker compose up -d
    ```
 3. Verifica API:
    ```bash
@@ -81,5 +99,12 @@ Y usa el hook `bootstrap-extra-files` en OpenClaw para que agentes nuevos nazcan
    ```bash
    curl -s "http://127.0.0.1:9876/api/reasoning/feedback?limit=5"
    ```
+
+## Fase 9: Regla de portabilidad para integración autónoma
+Cuando una instrucción no aplica al host actual:
+1. Detecta el equivalente funcional (no abortes por primer comando faltante).
+2. Documenta en el reporte qué comando alternativo usaste.
+3. Valida resultado por API (`/api/status`, `/api/heartbeat`) en vez de asumir éxito por salida de consola.
+4. Si no hay alternativa segura, recién ahí pide intervención humana.
 
 Operación correcta = agente con memoria, investigación multinivel y aprendizaje de fuentes activo.

@@ -72,3 +72,4 @@ curl -s -X POST "http://127.0.0.1:9876/api/reasoning/feedback" \
 ## Nota de implementación
 - El ranking aprendido se persiste en `data/source_feedback.json`.
 - Este archivo ajusta multiplicadores por fuente y mejora la selección futura.
+- Para entornos distintos, el agente debe autodetectar capacidades del host (compose, gestor de servicios, rutas) y elegir equivalentes sin asumir una única plataforma.
