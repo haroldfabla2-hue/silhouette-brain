@@ -959,7 +959,6 @@ def task_api_health():
 _dispatched_gaps: dict = {}   # entity → epoch timestamp del último despacho
 GAP_RENOTIFY_HOURS = 24       # No re-despachar el mismo gap en 24h
 GAP_URGENCY_THRESHOLD = 0.5   # discovery_potential mínimo para despachar
-GAP_NOTIFY_THRESHOLD = 0.75   # mínimo para notificación proactiva al humano
 
 
 def _normalize_gap_key(entity: str) -> str:
@@ -1208,57 +1207,24 @@ def task_curiosity():
         f"{dispatched} despachados, {len(novel_connections)} conexiones novedosas"
     )
 
-    # Señales proactivas controladas (sin spam, con dedupe/rate-limit).
+    # Curiosity es interno: no se envían gaps crudos al canal humano.
+    # El agente los consume desde heartbeat_state/investigaciones y reporta conclusiones.
     try:
-        proactive = _get_proactive_runtime()
-        if proactive:
-            from proactive_runtime import ProactiveEvent
-
-            # Notificar solo gaps realmente despachados y de relevancia alta.
-            top_dispatched = dispatched_gaps[0] if dispatched_gaps else None
-            if top_dispatched and float(top_dispatched.get("potential", 0.0)) >= GAP_NOTIFY_THRESHOLD:
-                entity = str(top_dispatched.get("entity", "")).strip()
-                potential = float(top_dispatched.get("potential", 0.0))
-                context_conf = float(top_dispatched.get("context_confidence", 0.0))
-                entity_key = str(top_dispatched.get("entity_key", "")).strip() or _normalize_gap_key(entity)
-                if entity:
-                    severity = "high" if potential >= 0.85 else "medium"
-                    proactive.notify(
-                        event=ProactiveEvent(
-                            kind="curiosity_gap",
-                            title=f"Curiosity abrió investigación sobre '{entity}'",
-                            body=(
-                                f"Ya quedó en la cola cognitiva de Silhouette "
-                                f"(potencial {potential:.0%}, contexto {context_conf:.0%})."
-                            ),
-                            severity=severity,
-                            dedupe_key=f"gap:{entity_key}",
-                            requester_id="system-daemon",
-                            action_prompt=(
-                                f"Prioriza una investigación acotada de '{entity}' y guarda "
-                                "hallazgos accionables en memoria de trabajo."
-                                if potential >= 0.88
-                                else None
-                            ),
-                        )
-                    )
-            elif novel_connections:
-                first = novel_connections[0]
-                left = str(first.get("from", "")).strip()
-                right = str(first.get("to", "")).strip()
-                if left and right:
-                    proactive.notify(
-                        event=ProactiveEvent(
-                            kind="curiosity_novel",
-                            title="Curiosity encontró conexión novedosa",
-                            body=f"Conexión sugerida: {left} ↔ {right}.",
-                            severity="medium",
-                            dedupe_key=f"novel:{left.lower()}:{right.lower()}",
-                            requester_id="system-daemon",
-                        )
-                    )
+        top_dispatched = dispatched_gaps[0] if dispatched_gaps else None
+        if top_dispatched:
+            log.info(
+                "[curiosity] interno: gap en cola para agentes "
+                f"('{top_dispatched.get('entity','')}', "
+                f"potencial={float(top_dispatched.get('potential', 0.0)):.0%})"
+            )
+        elif novel_connections:
+            first = novel_connections[0]
+            left = str(first.get("from", "")).strip()
+            right = str(first.get("to", "")).strip()
+            if left and right:
+                log.info(f"[curiosity] interno: conexión novedosa '{left} ↔ {right}'")
     except Exception as e:
-        log.debug(f"[proactive] curiosity notify error: {e}")
+        log.debug(f"[curiosity] internal notify/log error: {e}")
 
 
 # ============================================================================

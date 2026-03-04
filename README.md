@@ -120,6 +120,10 @@ Para sacar el máximo provecho de esta arquitectura, te recomendamos revisar nue
    - *Qué es:* Una guía sobre costos, consumo de RAM y cómo cambiar los modelos de OpenAI.
    - *Por qué leerlo:* Para optimizar el rendimiento de tu servidor y controlar los gastos de la API.
 
+7. 💓 **[Heartbeat y Notificaciones](docs/HEARTBEAT_AND_NOTIFICATIONS.md):**
+   - *Qué es:* La política operativa de autonomía para heartbeats, gaps de curiosidad y mensajería proactiva.
+   - *Por qué leerlo:* Define qué se queda interno para agentes y qué sí se reporta al humano.
+
 ---
 
 ## ⚠️ Advertencia de Consumo

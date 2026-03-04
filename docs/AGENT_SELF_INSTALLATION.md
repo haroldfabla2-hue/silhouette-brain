@@ -48,6 +48,7 @@ Asegura que el heartbeat:
 3. Investigue, documente hallazgo y guarde memoria.
 4. Envíe feedback de fuentes usadas.
 5. Responda `HEARTBEAT_OK` solo si no quedan pendientes críticas.
+6. No envíe gaps crudos al humano; reporta solo conclusiones verificadas.
 
 ## Fase 6: Integración en TOOLS.md
 Agrega comandos base para todos los agentes:

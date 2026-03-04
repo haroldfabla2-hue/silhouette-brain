@@ -48,6 +48,7 @@ Antes de responder, el agente debe consultar memoria/contexto. Si la certeza es 
 - Esas tareas aparecen en `heartbeat_state` (`investigaciones` y `pendientes`).
 - Su objetivo es aumentar cobertura de conocimiento y prevenir respuestas superficiales.
 - El agente debe procesar esas tareas en heartbeats y registrar hallazgos en memoria.
+- Los gaps son internos: no se envían crudos al humano; se reportan conclusiones y acciones.
 
 ## Política de Fuentes (evitar alucinaciones)
 1. Priorizar evidencia interna con mayor score.

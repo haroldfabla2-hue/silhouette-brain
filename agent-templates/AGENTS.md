@@ -34,6 +34,7 @@ Los gaps de Curiosity son tareas de investigación reales del sistema, no ruido:
 - Prioriza uno por ciclo de heartbeat.
 - Investiga y guarda hallazgo en memoria.
 - Si el gap no puede cerrarse con evidencia suficiente, pregunta de forma específica qué dato falta.
+- No envíes el gap crudo al humano: comunica solo conclusiones y decisiones accionables.
 
 ## Feedback De Fuentes (Aprendizaje)
 

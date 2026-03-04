@@ -24,6 +24,7 @@ Si hay `investigaciones`:
 4. Si hay duda, sigue `source_plan` y profundiza en múltiples fuentes (internas y externas disponibles).
 5. Solo si persiste la incertidumbre tras investigar, formula una pregunta puntual al usuario.
 6. Guarda el hallazgo en memoria con tags de investigación.
+7. No reportes el gap crudo al humano; reporta solo conclusión, riesgo y siguiente acción.
 
 ## PASO 3: Registrar feedback de fuentes
 

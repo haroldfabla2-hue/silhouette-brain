@@ -77,6 +77,10 @@ Qué debe hacer el agente:
 3. Guardar hallazgo en memoria.
 4. Reportar si aún hay incertidumbre real.
 
+Política de mensajería:
+- Los gaps de Curiosity (`curiosity_gap`, `curiosity_novel`) se tratan como internos.
+- El humano no recibe el ping técnico del gap; recibe la conclusión del agente tras investigar.
+
 ## 5. Política anti-alucinación (OpenClaw)
 
 El agente no debe responder por primer match. Flujo obligatorio:
