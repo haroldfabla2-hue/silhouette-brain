@@ -1,92 +1,84 @@
-# 🤖 Meta-Instrucciones: Autoinstalación para Agentes AI
+# Meta-Instrucciones: Autoinstalación para Agentes AI
 
-**[ATENCIÓN AGENTE LECTOR]**
-Si eres un agente de IA (como OpenClaw, Codex, Claude, etc.) y tu usuario te ha pedido "integrar Silhouette Brain en mi sistema", **ESTE ES TU MANUAL DE INSTRUCCIONES**. Sigue estos pasos al pie de la letra para dotarte a ti mismo (o al ecosistema de agentes que administras) de memoria a largo plazo.
+Si eres un agente (OpenClaw, Codex, Claude Code, etc.) y te pidieron integrar Silhouette Brain, este es tu procedimiento operativo.
 
----
-
-## FASE 1: Entender la Misión
-Tu objetivo no es solo copiar archivos. Tu objetivo es conectar tu flujo de consciencia (chat history y workspaces) a una base de datos vectorial y de grafos (Neo4j) que corre en segundo plano.
-
-## FASE 2: Despliegue de la Infraestructura
-1. Pide al usuario que configure el archivo `.env` basándose en `.env.example`. Necesitarás obligatoriamente una `OPENAI_API_KEY`.
-2. Ejecuta el comando para levantar el clúster:
+## Fase 1: Levantar infraestructura
+1. Configura `.env` desde `.env.example`.
+2. Inicia stack:
    ```bash
    docker-compose up -d
    ```
-3. Verifica que la Brain API esté viva haciendo una llamada a `http://localhost:9876/api/status`. Si responde `{"status": "ok"}`, puedes continuar.
+3. Verifica API:
+   ```bash
+   curl -s http://127.0.0.1:9876/api/status
+   ```
+4. Verifica heartbeat:
+   ```bash
+   curl -s http://127.0.0.1:9876/api/heartbeat
+   ```
 
-## FASE 3: Autoconfiguración y Modificación del "Alma"
-**No lo hagas manualmente si no es necesario.** Ejecuta el script de autoconfiguración que hemos preparado para ti:
-
+## Fase 2: Autoconfiguración del agente
+Ejecuta:
 ```bash
 python3 src/core/agent_self_configure.py
 ```
 
-Este script buscará automáticamente tus archivos `SOUL.md` y `TOOLS.md`, inyectará las directivas de memoria necesarias y verificará que la conexión con el clúster de Docker sea exitosa.
+El script inyecta reglas en `SOUL.md`/`TOOLS.md` sin romper personalidad base.
 
-Si el script no encuentra tus archivos, puedes añadir la siguiente directiva manualmente al final de tu archivo de identidad:
+## Fase 3: Regla cognitiva obligatoria (debe quedar escrita)
+Inyecta esta política en identidad/sistema del agente:
 
-> **[DIRECTIVA COGNITIVA OBLIGATORIA]**
-> Posees una memoria persistente externa. ANTES de ejecutar cualquier plan, buscar en internet o responder, **DEBES** consultar tu memoria para obtener contexto.
-> Usa la herramienta `exec` para ejecutar: `curl -s "http://localhost:9876/api/memory/semantic?query=tema"`
-> Adapta tu comportamiento al contexto histórico que te devuelva la API. Nunca asumas que algo es nuevo sin preguntar a tu memoria primero.
+1. Antes de responder, consultar `context/assemble` o `reasoning/context`.
+2. Si la certeza es baja, investigar profundo en múltiples capas/fuentes.
+3. Detectar y usar fuentes disponibles inteligentemente.
+4. Preguntar al usuario solo si persiste incertidumbre después de investigar interno + externo.
+5. Registrar feedback de fuentes para aprendizaje de ranking.
 
-## FASE 4: Exposición de Herramientas (TOOLS.md)
-Si el ecosistema tiene un archivo `TOOLS.md` o equivalente, actualízalo para que todos los agentes sepan cómo usar la memoria. Agrega esto:
+## Fase 4: Detección inteligente de fuentes
+El motor detecta capacidades en runtime y arma `source_plan`:
+- Internas: `semantic`, `recent`, `graph`, `tiers`, `heartbeat`.
+- Externas (si disponibles): `workspace_digital`, `google_workspace`, `notebook_intel`, `web_search`, `gmail_monitor`.
+
+Tu comportamiento debe respetar ese plan; no usar siempre la misma fuente por defecto.
+
+## Fase 5: Integración en HEARTBEAT.md
+Asegura que el heartbeat:
+1. Lea `heartbeat_state.json`.
+2. Procese `investigaciones` despachadas por Curiosity.
+3. Investigue, documente hallazgo y guarde memoria.
+4. Envíe feedback de fuentes usadas.
+5. Responda `HEARTBEAT_OK` solo si no quedan pendientes críticas.
+
+## Fase 6: Integración en TOOLS.md
+Agrega comandos base para todos los agentes:
 
 ```markdown
-## 🧠 Sistema de Memoria Profunda (Brain API)
-- **Consultar Contexto (Semántico):** `curl -s "http://localhost:9876/api/memory/semantic?query=tu_busqueda"`
-- **Ver Entidades (Personas/Proyectos):** `curl -s "http://localhost:9876/api/memory/entities"`
-- **Ver Nodos (Relaciones Neo4j):** `curl -s "http://localhost:9876/api/memory/graph?entity=nombre"`
-- **Ver Mensajes Recientes (Hoy):** `curl -s "http://localhost:9876/api/memory/recent?hours=12"`
+## Silhouette Brain API
+- Estado: `curl -s "http://127.0.0.1:9876/api/status"`
+- Heartbeat: `curl -s "http://127.0.0.1:9876/api/heartbeat"`
+- Context Assembler: `curl -s "http://127.0.0.1:9876/api/context/assemble?query=<tema>&mode=reply_fast"`
+- Reasoning Context: `curl -s "http://127.0.0.1:9876/api/reasoning/context?query=<tema>"`
+- Feedback fuentes (POST): `curl -s -X POST "http://127.0.0.1:9876/api/reasoning/feedback" -H "Content-Type: application/json" -d '{"sources":["workspace_digital"],"outcome":"success","reason":"util","actor":"agent"}'`
 ```
 
-## FASE 5: Autonomía y Archivos de Identidad del Agente
-Para lograr autonomía y resiliencia completa, el agente debe modificar sus propios archivos de configuración (si utiliza una arquitectura como OpenClaw o similar):
+## Fase 7: Persistencia para agentes nuevos (templates)
+Mantén plantillas actualizadas en `agent-templates/`:
+- `AGENTS.md`
+- `SOUL.md`
+- `HEARTBEAT.md`
+- `TOOLS.md`
 
-### 1. Actualizar `HEARTBEAT.md`
-Añade un ciclo de revisión cognitiva al inicio de tu Heartbeat para procesar los *Gaps de curiosidad* generados por el cerebro.
+Y usa el hook `bootstrap-extra-files` en OpenClaw para que agentes nuevos nazcan con estas reglas.
 
-```markdown
-### Ciclo 0: Revisión Cognitiva y Resiliencia (Siempre)
-1. Revisar Memoria a Corto Plazo (Working Memory) buscando `[TAREA COGNITIVA — INVESTIGAR]`.
-2. Si existe un gap de urgencia, resolverlo proactivamente delegando o ejecutándolo.
-3. Resiliencia: Si una herramienta o script da error, NO abandones la tarea. Lee el error (Introspección), reevalúa el enfoque y prueba una vía alternativa. No pidas ayuda humana a menos que hayas agotado 3 intentos distintos.
-```
-
-### 2. Actualizar `SOUL.md` y `AGENTS.md`
-- **En `SOUL.md`**: Asegúrate de incluir la directiva de que eres proactivo y utilizas la memoria inyectada `<industrial-memory>` antes de emitir respuestas.
-- **En `AGENTS.md`**: Asegúrate de mapear claramente qué agente es responsable de código, investigación, o comunicación, para que durante el `Ciclo 0` sepas a quién delegar las tareas cognitivas.
-
-### 3. Persistencia de Plantillas para Nuevos Agentes (Hook)
-Para asegurar que los futuros agentes que crees nazcan con el Cerebro integrado, y evitar que las actualizaciones del sistema borren tus plantillas base, usa el hook `bootstrap-extra-files`:
-1. Crea una carpeta `agent-templates` en este repositorio y pon allí tus archivos Markdown (`AGENTS.md`, `SOUL.md`, `TOOLS.md`, `HEARTBEAT.md`) ya modificados con las directivas del cerebro.
-2. Edita tu archivo `~/.openclaw/openclaw.json` para activar el hook:
-   ```json
-   "hooks": {
-     "internal": {
-       "entries": {
-         "bootstrap-extra-files": {
-           "enabled": true,
-           "paths": ["/ruta/absoluta/a/silhouette-brain/agent-templates/*"]
-         }
-       }
-     }
-   }
+## Fase 8: Verificación final
+1. Consulta de prueba:
+   ```bash
+   curl -s "http://127.0.0.1:9876/api/context/assemble?query=test&mode=reply_fast"
+   ```
+2. Verifica que incluya `investigation_pass` y `sources_policy`.
+3. Registra feedback de prueba y confirma snapshot:
+   ```bash
+   curl -s "http://127.0.0.1:9876/api/reasoning/feedback?limit=5"
    ```
 
-## FASE 6: Configurar Demonios y PM2
-El sistema requiere procesos en segundo plano. Configura PM2 usando el ecosistema provisto en la raíz del repositorio:
-
-```bash
-cd /ruta/absoluta/a/silhouette-brain
-pm2 start ecosystem.config.js
-pm2 save
-```
-
-Esto iniciará el `silhouette-unified-daemon`, que maneja la sincronización, embeddings, curiosidad, y evolución.
-
-## FASE 7: Verificación Final
-Haz una petición de prueba. Pregunta a tu memoria: `curl -s "http://localhost:9876/api/memory/context?query=test"`. Verifica que el demonio esté corriendo con `pm2 status`. Si todo funciona, informa al usuario del éxito de la operación.
+Operación correcta = agente con memoria, investigación multinivel y aprendizaje de fuentes activo.

@@ -45,27 +45,53 @@ La forma más sencilla de instalar y probar Silhouette Brain es a través de Doc
 
 El servidor "Brain API" estará disponible en: `http://localhost:9876`
 
-## Uso de la API (Brain API v1.1.0)
+## Uso de la API (Brain API v2.0.0)
 
-La API corre en `http://localhost:9876`. Puedes consultar la memoria a través de solicitudes HTTP:
+La API corre en `http://localhost:9876`. Endpoints principales:
 
-- **Estado del sistema:** `GET /api/status`
-- **Búsqueda semántica:** `GET /api/memory/semantic?query=tu_texto&min_score=0.35&filter_heartbeats=true`
-- **Contexto combinado (recomendado):** `GET /api/memory/context?query=tu_texto&sem_limit=5&rec_limit=3&hours=2`
+- **Estado y features:** `GET /api/status`
+- **Context Assembler (recomendado para agentes):** `GET /api/context/assemble?query=tema&mode=reply_fast&token_budget=2800&semantic=full`
+- **Reasoning Context (unificado):** `GET /api/reasoning/context?query=tema&sem_limit=5&rec_limit=3&hours=2&min_score=0.15`
+- **Feedback de fuentes (ranking aprendido):**
+  - Lectura: `GET /api/reasoning/feedback?limit=50`
+  - Escritura: `POST /api/reasoning/feedback`
+- **Memoria semántica:** `GET /api/memory/semantic?query=tema&min_score=0.15&filter_heartbeats=true`
+- **Contexto combinado clásico:** `GET /api/memory/context?query=tema&sem_limit=5&rec_limit=3&hours=2`
 - **Conversaciones recientes:** `GET /api/memory/recent?hours=2&limit=5`
-- **Consulta de entidades:** `GET /api/memory/entities`
-- **Consulta del grafo:** `GET /api/memory/graph?entity=nombre`
+- **Entidades:** `GET /api/memory/entities`
+- **Grafo (Neo4j):** `GET /api/memory/graph?entity=nombre`
+- **Tiers de memoria:** `GET /api/memory/tiers`
+- **Heartbeat del daemon:** `GET /api/heartbeat`
+- **Soul + heartbeat para agentes:** `GET /api/soul`
 - **Ingesta de memoria:** `POST /api/memory`
-  ```json
-  {
-    "text": "Hoy aprendí a configurar Neo4j",
-    "importance": 0.8,
-    "tags": ["tech", "database"],
-    "tier": "WORKING"
-  }
-  ```
 
-El endpoint `/api/memory/context` es el más eficiente para agentes — combina búsqueda semántica y contexto reciente en un solo round-trip HTTP.
+Ejemplo de ingesta:
+```json
+{
+  "text": "Hoy aprendí a configurar Neo4j",
+  "importance": 0.8,
+  "tags": ["tech", "database"],
+  "tier": "WORKING"
+}
+```
+
+Ejemplo de feedback de fuentes:
+```json
+{
+  "sources": ["workspace_digital", "web_search"],
+  "outcome": "success",
+  "reason": "respuesta_verificada",
+  "actor": "agent"
+}
+```
+
+### Protocolo anti-alucinación (operativo)
+1. Consultar memoria y estado (`/api/context/assemble` o `/api/reasoning/context`).
+2. Si hay baja certeza, ejecutar investigación profunda en múltiples capas/fuentes.
+3. Usar `investigation_pass.source_plan` para decidir dónde investigar.
+4. Preguntar al usuario solo si, después de investigar interno + externo, persiste la incertidumbre.
+5. Registrar resultado en `/api/reasoning/feedback` para mejorar el ranking de fuentes.
+
 ## 📚 Documentación Completa
 
 Para sacar el máximo provecho de esta arquitectura, te recomendamos revisar nuestra documentación detallada en el siguiente orden:

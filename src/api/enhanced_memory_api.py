@@ -12,7 +12,15 @@ API completa para que los agentes accedan a TODAS las capas de memoria:
 import sys
 import json
 import os
-sys.path.insert(0, os.getenv('BRAIN_SRC_DIR', os.path.dirname(os.path.abspath(__file__))))
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_SRC_CANDIDATES = [
+    os.getenv("BRAIN_SRC_DIR"),
+    "/root/silhouette-brain/src/core",
+    _THIS_DIR,
+]
+for _path in reversed(_SRC_CANDIDATES):
+    if _path and os.path.isdir(_path) and _path not in sys.path:
+        sys.path.insert(0, _path)
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
@@ -23,11 +31,26 @@ from agent_memory_readonly import get_memory_context, get_entities, get_recent
 
 # Importar motor de razonamiento unificado
 try:
-    from reasoning_engine import get_reasoning_context
+    import reasoning_engine as _reasoning_engine
+    get_reasoning_context = _reasoning_engine.get_reasoning_context
+    assemble_context_packet = getattr(_reasoning_engine, "assemble_context_packet", None)
+    record_source_feedback = getattr(_reasoning_engine, "record_source_feedback", None)
+    get_source_feedback_snapshot = getattr(_reasoning_engine, "get_source_feedback_snapshot", None)
     REASONING_AVAILABLE = True
+    CONTEXT_ASSEMBLER_AVAILABLE = callable(assemble_context_packet)
+    SOURCE_FEEDBACK_AVAILABLE = callable(record_source_feedback) and callable(get_source_feedback_snapshot)
     print("[API] Reasoning Engine available")
+    if CONTEXT_ASSEMBLER_AVAILABLE:
+        print("[API] Context Assembler available")
+    if SOURCE_FEEDBACK_AVAILABLE:
+        print("[API] Source Feedback available")
 except Exception as e:
     REASONING_AVAILABLE = False
+    CONTEXT_ASSEMBLER_AVAILABLE = False
+    SOURCE_FEEDBACK_AVAILABLE = False
+    assemble_context_packet = None
+    record_source_feedback = None
+    get_source_feedback_snapshot = None
     print(f"[API] Reasoning Engine not available: {e}")
 
 # Intentar importar embeddings
@@ -50,13 +73,50 @@ except:
     NEO4J_AVAILABLE = False
 
 # Rutas de archivos 4-tier
-_DATA_DIR = os.getenv('BRAIN_DATA_DIR', '/home/ubuntu/.openclaw/workspace/silhouette-brain/data')
+_DATA_DIR = os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')
 TIER_FILES = {
     'working': os.path.join(_DATA_DIR, 'working.json'),
     'medium':  os.path.join(_DATA_DIR, 'medium.json'),
     'long':    os.path.join(_DATA_DIR, 'long.json'),
     'deep':    os.path.join(_DATA_DIR, 'deep.json'),
 }
+
+# Synonym mapping for embedding issues
+SYNONYM_MAP = {
+    "suscripciones": "suscripcion",
+    "suscripci": "suscripcion",
+}
+
+def apply_synonyms(text):
+    for old, new in SYNONYM_MAP.items():
+        text = text.replace(old, new)
+    return text
+
+
+def parse_optional_bool(value):
+    """Parsea bool opcional para query params.
+    Devuelve True/False si viene valor explícito, o None si no viene.
+    """
+    if value is None:
+        return None
+    v = str(value).strip().lower()
+    if v in ("1", "true", "yes", "on"):
+        return True
+    if v in ("0", "false", "no", "off"):
+        return False
+    return None
+
+
+def parse_sources_param(raw):
+    if raw is None:
+        return []
+    if isinstance(raw, list):
+        parts = []
+        for item in raw:
+            parts.extend(str(item).split(","))
+    else:
+        parts = str(raw).split(",")
+    return [p.strip() for p in parts if p and p.strip()]
 
 class MemoryAPIHandler(BaseHTTPRequestHandler):
     """Manejador de la API de memoria"""
@@ -70,7 +130,37 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
     
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
-        if parsed.path in ['/api/memory', '/memory']:
+        if parsed.path in ['/api/reasoning/feedback', '/api/reasoning/source-feedback']:
+            if not SOURCE_FEEDBACK_AVAILABLE:
+                self.send_json({"error": "Source feedback not available"}, 503)
+                return
+            try:
+                content_length = int(self.headers.get('Content-Length', '0') or 0)
+                post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+                data = json.loads(post_data.decode('utf-8') or '{}')
+                sources = parse_sources_param(data.get('sources'))
+                if not sources:
+                    sources = parse_sources_param(data.get('source'))
+                outcome = data.get('outcome', data.get('status', data.get('result', '')))
+                reason = data.get('reason', '')
+                actor = data.get('actor', 'user')
+                if not outcome:
+                    self.send_json({"error": "Missing outcome (success/failure)"}, 400)
+                    return
+                result = record_source_feedback(
+                    sources=sources,
+                    outcome=outcome,
+                    reason=reason,
+                    actor=actor,
+                )
+                if result.get("ok"):
+                    self.send_json(result, 200)
+                else:
+                    self.send_json(result, 400)
+            except Exception as e:
+                self.send_json({"error": str(e)}, 400)
+
+        elif parsed.path in ['/api/memory', '/memory']:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             try:
@@ -116,7 +206,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         
         # 1. Búsqueda básica en conversaciones
         if path in ['/api/memory', '/memory']:
-            q = query.get('query', [''])[0]
+            q = apply_synonyms(query.get('query', [''])[0])
             limit = int(query.get('limit', [10])[0])
             if q:
                 result = get_memory_context(q, limit)
@@ -140,7 +230,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         
         # 4. Búsqueda con EMBEDDINGS (semántica)
         elif path in ['/api/memory/semantic', '/semantic', '/api/semantic']:
-            q = query.get('query', [''])[0]
+            q = apply_synonyms(query.get('query', [''])[0])
             limit = int(query.get('limit', [5])[0])
             min_score = float(query.get('min_score', [0.0])[0])
             filter_heartbeats = query.get('filter_heartbeats', ['false'])[0].lower() == 'true'
@@ -151,7 +241,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     if min_score > 0.0 and 'results' in result:
                         result['results'] = [
                             r for r in result['results']
-                            if r.get('similarity', 0.0) >= min_score
+                            if float(r.get('score', r.get('similarity', 0.0))) >= min_score
                         ]
                         result['found'] = len(result['results'])
                     # Filter agent heartbeat reports from auto-recall context
@@ -184,7 +274,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     sem_data = get_memory_core_embeddings(q, sem_limit)
                     raw = sem_data.get('results', [])
                     for r in raw:
-                        if r.get('similarity', 0.0) < min_score:
+                        if float(r.get('score', r.get('similarity', 0.0))) < min_score:
                             continue
                         if filter_heartbeats and is_agent_heartbeat_report(r.get('message', '')):
                             continue
@@ -207,8 +297,64 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                 "semantic_count": len(semantic_results),
                 "recent_count": len(recent_results),
             })
-        
-        # 4c. Reasoning Engine — motor cognitivo unificado (semántica + reciente + grafo + tiers + síntesis)
+
+        # 4c. Context Assembler — paralelo + presupuesto de tokens + pruning
+        elif path in ['/api/context/assemble', '/api/assemble/context']:
+            q = query.get('query', [''])[0]
+            mode = query.get('mode', ['reply_fast'])[0]
+            token_budget = int(query.get('token_budget', [0])[0] or 0)
+            sem_limit = int(query.get('sem_limit', [0])[0] or 0)
+            rec_limit = int(query.get('rec_limit', [0])[0] or 0)
+            rec_hours = int(query.get('hours', [0])[0] or 0)
+            min_score = query.get('min_score', [None])[0]
+            min_score = float(min_score) if min_score not in (None, "") else None
+            semantic_mode = query.get('semantic', [None])[0]
+            semantic_mode = semantic_mode.strip().lower() if isinstance(semantic_mode, str) else None
+            if semantic_mode in ("", "auto"):
+                semantic_mode = None
+            if semantic_mode not in (None, "full", "cache_only", "off"):
+                self.send_json({"error": "Invalid 'semantic' parameter (use full|cache_only|off)"}, 400)
+                return
+            inc_graph = parse_optional_bool(query.get('graph', [None])[0])
+            inc_tiers = parse_optional_bool(query.get('tiers', [None])[0])
+            synthesize = parse_optional_bool(query.get('synthesize', [None])[0])
+            filter_hb = query.get('filter_heartbeats', ['true'])[0].lower() != 'false'
+            tier_filter = query.get('tier_filter', [None])[0]
+            include_heartbeat = query.get('include_heartbeat', ['true'])[0].lower() != 'false'
+            agent_id = query.get('agent_id', [''])[0]
+            channel = query.get('channel', [''])[0]
+
+            if not q:
+                self.send_json({"error": "Missing 'query' parameter"}, 400)
+                return
+            if not CONTEXT_ASSEMBLER_AVAILABLE:
+                self.send_json({"error": "Context Assembler not available"}, 503)
+                return
+
+            try:
+                packet = assemble_context_packet(
+                    query=q,
+                    mode=mode,
+                    token_budget=token_budget or None,
+                    sem_limit=sem_limit or None,
+                    rec_limit=rec_limit or None,
+                    hours=rec_hours or None,
+                    min_score=min_score,
+                    include_graph=inc_graph,
+                    include_tiers=inc_tiers,
+                    synthesize=synthesize,
+                    semantic_mode=semantic_mode,
+                    filter_heartbeats=filter_hb,
+                    tier_filter=tier_filter,
+                    include_heartbeat=include_heartbeat,
+                    agent_id=agent_id,
+                    channel=channel,
+                )
+                self.send_json(packet)
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+
+        # 4d. Reasoning Engine — motor cognitivo unificado (semántica + reciente + grafo + tiers + síntesis)
         elif path in ['/api/reasoning/context', '/api/reasoning']:
             q             = query.get('query', [''])[0]
             sem_limit     = int(query.get('sem_limit',   [5])[0])
@@ -249,6 +395,36 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                 self.send_json(ctx)
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
+
+        # 4e. Feedback de fuentes para aprendizaje del ranking
+        elif path in ['/api/reasoning/feedback', '/api/reasoning/source-feedback']:
+            if not SOURCE_FEEDBACK_AVAILABLE:
+                self.send_json({"error": "Source feedback not available"}, 503)
+                return
+
+            sources = parse_sources_param(query.get('source', []))
+            if not sources:
+                sources = parse_sources_param(query.get('sources', []))
+            outcome = query.get('outcome', [''])[0]
+            reason = query.get('reason', [''])[0]
+            actor = query.get('actor', ['user'])[0]
+            limit = int(query.get('limit', [200])[0])
+
+            # Modo lectura: snapshot completo si no se envía outcome.
+            if not outcome:
+                self.send_json(get_source_feedback_snapshot(limit=limit), 200)
+                return
+
+            result = record_source_feedback(
+                sources=sources,
+                outcome=outcome,
+                reason=reason,
+                actor=actor,
+            )
+            if result.get("ok"):
+                self.send_json(result, 200)
+            else:
+                self.send_json(result, 400)
 
         # 5. Neo4j - Grafo de relaciones
         elif path in ['/api/memory/graph', '/graph', '/api/graph']:
@@ -298,6 +474,7 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         
         # 7. Estado de la API
         elif path in ['/api/heartbeat']:
+            # Estado en tiempo real del sistema (escrito por el daemon cada 10min)
             import pathlib
             hb_paths = [
                 pathlib.Path(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')) / 'heartbeat_state.json',
@@ -310,18 +487,26 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                         return
                     except Exception:
                         pass
-            self.send_json({"error": "heartbeat_state.json not found"}, 404)
+            self.send_json({"error": "heartbeat_state.json not found — daemon may not have run yet"}, 404)
 
         elif path in ['/api/soul']:
+            # Soul + heartbeat combinados para inyección en agentes
             import pathlib
             soul_content = ""
-            for sp in [pathlib.Path('/root/.openclaw/workspace/SOUL.md'), pathlib.Path('/root/.openclaw/workspace/soul.md')]:
+            soul_paths = [
+                pathlib.Path('/root/.openclaw/workspace/SOUL.md'),
+                pathlib.Path('/root/.openclaw/workspace/soul.md'),
+            ]
+            for sp in soul_paths:
                 if sp.exists():
                     soul_content = sp.read_text(encoding='utf-8')
                     break
             heartbeat = {}
-            for hb in [pathlib.Path(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')) / 'heartbeat_state.json',
-                       pathlib.Path('/root/.openclaw/workspace/heartbeat-state.json')]:
+            hb_paths = [
+                pathlib.Path(os.getenv('BRAIN_DATA_DIR', '/root/silhouette-brain/data')) / 'heartbeat_state.json',
+                pathlib.Path('/root/.openclaw/workspace/heartbeat-state.json'),
+            ]
+            for hb in hb_paths:
                 if hb.exists():
                     try:
                         heartbeat = json.loads(hb.read_text())
@@ -339,7 +524,10 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                 "status": "ok",
                 "version": "2.0.0",
                 "endpoints": [
+                    "/api/context/assemble?query=xxx&mode=reply_fast&token_budget=2800&semantic=full",
                     "/api/reasoning/context?query=xxx&sem_limit=5&rec_limit=3&hours=2&min_score=0.15&graph=true&tiers=false&synthesize=false",
+                    "/api/reasoning/feedback?limit=50",
+                    "/api/reasoning/feedback?source=web_search&outcome=success&reason=respuesta_util",
                     "/api/memory?query=xxx",
                     "/api/memory/entities",
                     "/api/memory/recent?hours=2&limit=5",
@@ -355,6 +543,8 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     "embeddings":       EMBEDDINGS,
                     "embedding_model":  "hf:paraphrase-multilingual-MiniLM-L12-v2 (384 dims)",
                     "reasoning":        REASONING_AVAILABLE,
+                    "context_assembler": CONTEXT_ASSEMBLER_AVAILABLE,
+                    "source_feedback":  SOURCE_FEEDBACK_AVAILABLE,
                     "reasoning_model":  "minimax:MiniMax-M2.5 (synthesis)",
                     "neo4j":            NEO4J_AVAILABLE,
                     "4_tier":           True,
@@ -377,6 +567,8 @@ def run_api(port=9876):
     server = ReuseAddressServer(('0.0.0.0', port), MemoryAPIHandler)
     print(f"🚀 Enhanced Memory API running on port {port}")
     print(f"   Endpoints:")
+    print(f"   - /api/context/assemble?query=xxx&mode=reply_fast&token_budget=2800&semantic=full")
+    print(f"   - /api/reasoning/feedback?limit=50")
     print(f"   - /api/memory?query=xxx")
     print(f"   - /api/memory/entities")
     print(f"   - /api/memory/recent")

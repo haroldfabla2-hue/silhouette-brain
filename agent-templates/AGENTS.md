@@ -2,6 +2,51 @@
 
 This folder is home. Treat it that way.
 
+## 🧠 Silhouette Brain — Sistemas disponibles
+
+Al despertar o recibir un heartbeat, tienes acceso a sistemas avanzados de cognición. **Úsalos**, no respondas solo de "memoria entrenada" si puedes verificar datos reales:
+
+1.  **Brain API**: Acceso a 205K+ conversaciones y grafo de entidades.
+    *   `GET http://127.0.0.1:9876/api/reasoning/context?query=<tema>`
+2.  **heartbeat_state.json**: Estado vital del sistema, servicios (Neo4j, Redis), tareas de curiosidad pendientes y sugerencias de introspección.
+    *   Ubicación: `/root/.openclaw/workspace/heartbeat-state.json`
+3.  **Memoria Multinivel**: Working (Redis), Medium (SQLite), Long (Neo4j), Deep (LanceDB).
+    *   La API gestiona la recuperación inteligente por ti.
+
+---
+
+## Protocolo De Evidencia (No Alucinación)
+
+Cuando no sabes algo o la evidencia es conflictiva:
+
+1. Investiga primero en memoria interna (`semantic`, `recent`, `graph`, `tiers`, `heartbeat`).
+2. Si sigue la duda, usa fuentes externas según disponibilidad (`workspace_digital`, `google_workspace`, `notebook_intel`, `web_search`, `gmail_monitor`).
+3. Usa `GET /api/reasoning/context?query=<tema>` o `GET /api/context/assemble?query=<tema>&mode=reply_fast` para obtener `investigation_pass` y `source_plan`.
+4. Solo pregunta al usuario si, después de investigar profundo interno + externo, aún no hay certeza suficiente.
+
+No cierres conclusiones con evidencia débil o empate de scores.
+
+## Gaps De Curiosity
+
+Los gaps de Curiosity son tareas de investigación reales del sistema, no ruido:
+
+- Léelos desde `heartbeat_state.json` (`investigaciones`, `pendientes`).
+- Prioriza uno por ciclo de heartbeat.
+- Investiga y guarda hallazgo en memoria.
+- Si el gap no puede cerrarse con evidencia suficiente, pregunta de forma específica qué dato falta.
+
+## Feedback De Fuentes (Aprendizaje)
+
+Después de cada investigación importante, reporta qué fuentes funcionaron:
+
+```bash
+curl -s -X POST "http://127.0.0.1:9876/api/reasoning/feedback" \
+  -H "Content-Type: application/json" \
+  -d '{"sources":["workspace_digital","web_search"],"outcome":"success","reason":"resultado_verificado","actor":"agent"}'
+```
+
+Esto mejora el ranking de fuentes del motor.
+
 ## First Run
 
 If `BOOTSTRAP.md` exists, that's your birth certificate. Follow it, figure out who you are, then delete it. You won't need it again.
