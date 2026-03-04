@@ -123,3 +123,42 @@ Problema: respuestas ambiguas o contradictorias
 Problema: endpoint nuevo no disponible
 1. `curl /api/status`
 2. Revisar `features.context_assembler` y `features.source_feedback`.
+
+## 8. Actualizar otros OpenClaw (sin conflicto)
+
+Esta es la secuencia recomendada para replicar exactamente esta versión en otras máquinas:
+
+```bash
+cd /root/silhouette-brain
+git checkout main
+git fetch origin
+git pull --rebase --autostash origin main
+```
+
+Verifica que tengas los commits clave:
+
+```bash
+git log --oneline -n 3
+# a5659f7 feat: keep curiosity gaps internal and document heartbeat notification policy
+# 1c62646 fix: dedupe curiosity gap alerts and complete brain runtime updates
+# 549e32d feat: harden reasoning with deep investigation and learned source ranking
+```
+
+Reinicia servicios para aplicar cambios en runtime:
+
+```bash
+systemctl restart silhouette-memory-api.service silhouette-unified-daemon.service
+systemctl is-active silhouette-memory-api.service silhouette-unified-daemon.service
+```
+
+Valida salud final:
+
+```bash
+curl -sS http://127.0.0.1:9876/api/heartbeat | jq -c '{energia,servicios,investigaciones:(.investigaciones|length)}'
+curl -sS http://127.0.0.1:9876/api/status | jq -c '{status,features}'
+```
+
+Si tu `pull` falla por cambios locales:
+1. Ejecuta `git status --short` y revisa qué archivos chocan.
+2. Si son solo logs runtime, descártalos: `git restore logs/*.log logs/*.err`.
+3. Reintenta: `git pull --rebase --autostash origin main`.
