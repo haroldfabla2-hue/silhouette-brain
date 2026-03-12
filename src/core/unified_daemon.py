@@ -147,6 +147,73 @@ class Task:
 # Referencia global al daemon para que task_heartbeat acceda a métricas de tareas
 _daemon_ref = None
 
+
+def _to_epoch(value) -> float:
+    """Convierte timestamps heterogéneos (epoch/ISO) a epoch segundos."""
+    if value is None:
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return 0.0
+    try:
+        return float(text)
+    except Exception:
+        pass
+    try:
+        dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        return float(dt.timestamp())
+    except Exception:
+        return 0.0
+
+
+def _extract_task_entity(task_text: str) -> str:
+    """Extrae 'Entidad: <x>' desde una tarea cognitiva de investigación."""
+    txt = str(task_text or "")
+    m = re.search(r"Entidad:\s*([^\n\r]+)", txt, flags=re.IGNORECASE)
+    if not m:
+        return ""
+    return _normalize_gap_key(m.group(1))
+
+
+def _investigation_completed(entity_key: str, task_ts, memory_db: Path) -> bool:
+    """
+    Heurística: consideramos completada si, después del despacho, existe un
+    hallazgo en memoria que mencione la entidad y no sea otra tarea cognitiva.
+    """
+    if not entity_key or not memory_db.exists():
+        return False
+
+    since_ts = _to_epoch(task_ts)
+    entity_literal = entity_key.replace("_", " ")
+
+    try:
+        import sqlite3
+        conn = sqlite3.connect(str(memory_db))
+        row = conn.execute(
+            """
+            SELECT 1
+            FROM memory_nodes
+            WHERE timestamp > ?
+              AND lower(content) LIKE ?
+              AND content NOT LIKE '%[TAREA COGNITIVA — INVESTIGAR]%'
+              AND (
+                    lower(content) LIKE '%research%'
+                 OR lower(content) LIKE '%investig%'
+                 OR lower(content) LIKE '%hallazgo%'
+                 OR lower(content) LIKE '%insight%'
+              )
+            LIMIT 1
+            """,
+            (since_ts, f"%{entity_literal}%"),
+        ).fetchone()
+        conn.close()
+        return bool(row)
+    except Exception:
+        return False
+
+
 def task_heartbeat():
     """
     Escribe heartbeat_state.json con el estado real del sistema.
@@ -285,10 +352,19 @@ def task_heartbeat():
         except Exception:
             pass
 
-    if cognitive_items:
+    active_cognitive_items = []
+    for item in cognitive_items:
+        content = str(item.get("content", ""))
+        entity_key = _extract_task_entity(content)
+        task_ts = item.get("timestamp") or item.get("ts")
+        if _investigation_completed(entity_key, task_ts, memory_db):
+            continue
+        active_cognitive_items.append(item)
+
+    if active_cognitive_items:
         state["pendientes"] += [
             f"🔍 Investigar: {item.get('content','')[:80]}"
-            for item in cognitive_items[:3]
+            for item in active_cognitive_items[:3]
         ]
 
     # ── Introspección cognitiva ────────────────────────────────────────────
@@ -351,6 +427,17 @@ def task_heartbeat():
             ]
         except Exception:
             pass
+
+    # Filtrar investigaciones ya completadas para reflejar solo pendientes reales
+    if state["investigaciones"]:
+        filtered_investigaciones = []
+        for item in state["investigaciones"]:
+            task_text = str(item.get("tarea", ""))
+            entity_key = _extract_task_entity(task_text)
+            if _investigation_completed(entity_key, item.get("ts"), memory_db):
+                continue
+            filtered_investigaciones.append(item)
+        state["investigaciones"] = filtered_investigaciones
 
     # ── Energía del sistema (0.0-1.0) ─────────────────────────────────────
     api_ok   = state["servicios"].get("brain_api") == "OK"
@@ -956,9 +1043,20 @@ def task_api_health():
 # ============================================================================
 
 # Control de gaps ya despachados (para no repetir en la misma sesión)
-_dispatched_gaps: dict = {}   # entity → epoch timestamp del último despacho
-GAP_RENOTIFY_HOURS = 24       # No re-despachar el mismo gap en 24h
+_dispatched_gaps: dict = {}   # entity → {ts: epoch, count: int}
+GAP_RENOTIFY_HOURS = 24       # Base cooldown (se multiplica con backoff)
 GAP_URGENCY_THRESHOLD = 0.5   # discovery_potential mínimo para despachar
+GAP_MAX_BACKOFF = 7           # Máximo multiplicador de cooldown (24h * 7 = 168h = 7 días)
+
+# Entidades genéricas de infraestructura — NO son investigaciones útiles para el equipo.
+# El curiosity las genera porque aparecen mucho en memoria pero con poco contexto.
+INFRASTRUCTURE_ENTITIES = frozenset({
+    "openai", "docker", "redis", "neo4j", "python", "node", "npm",
+    "git", "ssh", "linux", "ubuntu", "nginx", "coolify", "sqlite",
+    "telegram", "whatsapp", "discord", "javascript", "typescript",
+    "bash", "curl", "pip", "json", "html", "css", "api", "http",
+    "postgres", "mongodb", "mysql", "flask", "fastapi", "express",
+})
 
 
 def _normalize_gap_key(entity: str) -> str:
@@ -978,16 +1076,30 @@ def _entity_tag_slug(entity: str) -> str:
 
 def _merge_dispatched_gaps(dst: dict, src: dict) -> dict:
     out = dict(dst or {})
-    for raw_key, raw_ts in (src or {}).items():
+    for raw_key, raw_val in (src or {}).items():
         key = _normalize_gap_key(raw_key)
         if not key:
             continue
-        try:
-            ts = float(raw_ts)
-        except Exception:
-            continue
-        if ts > float(out.get(key, 0) or 0):
-            out[key] = ts
+        # Soporte legacy (valor plano = timestamp) y nuevo (dict con ts + count)
+        if isinstance(raw_val, dict):
+            ts = float(raw_val.get("ts", 0))
+            count = int(raw_val.get("count", 1))
+        else:
+            try:
+                ts = float(raw_val)
+            except Exception:
+                continue
+            count = 1
+        existing = out.get(key)
+        if isinstance(existing, dict):
+            if ts > float(existing.get("ts", 0)):
+                out[key] = {"ts": ts, "count": max(count, existing.get("count", 1))}
+        else:
+            old_ts = float(existing) if existing else 0
+            if ts > old_ts:
+                out[key] = {"ts": ts, "count": count}
+            elif old_ts > 0:
+                out[key] = {"ts": old_ts, "count": 1}
     return out
 
 
@@ -996,16 +1108,21 @@ def _prune_dispatched_gaps(gaps: dict, now_ts: float = None) -> dict:
     # Mantener historial acotado: 14 días de TTL técnico para evitar crecimiento infinito.
     keep_after = now_ts - (14 * 86400)
     out = {}
-    for raw_key, raw_ts in (gaps or {}).items():
+    for raw_key, raw_val in (gaps or {}).items():
         key = _normalize_gap_key(raw_key)
         if not key:
             continue
-        try:
-            ts = float(raw_ts)
-        except Exception:
-            continue
+        if isinstance(raw_val, dict):
+            ts = float(raw_val.get("ts", 0))
+            count = int(raw_val.get("count", 1))
+        else:
+            try:
+                ts = float(raw_val)
+            except Exception:
+                continue
+            count = 1
         if ts >= keep_after:
-            out[key] = ts
+            out[key] = {"ts": ts, "count": count}
     return out
 
 
@@ -1091,10 +1208,26 @@ def task_curiosity():
         if not entity or potential < GAP_URGENCY_THRESHOLD:
             continue
 
-        # ¿Ya despachado recientemente?
+        # Filtrar entidades genéricas de infraestructura (no son útiles para el equipo)
         entity_key = _normalize_gap_key(entity)
-        last_dispatch = float(_dispatched_gaps.get(entity_key, 0) or 0)
-        if now - last_dispatch < GAP_RENOTIFY_HOURS * 3600:
+        if entity_key in INFRASTRUCTURE_ENTITIES:
+            continue
+
+        # ¿Ya despachado recientemente? Usa backoff adaptativo.
+        gap_record = _dispatched_gaps.get(entity_key)
+        if isinstance(gap_record, dict):
+            last_dispatch = float(gap_record.get("ts", 0))
+            dispatch_count = int(gap_record.get("count", 1))
+        elif gap_record is not None:
+            last_dispatch = float(gap_record)
+            dispatch_count = 1
+        else:
+            last_dispatch = 0
+            dispatch_count = 0
+        # Backoff: cada re-despacho sin resultado duplica el cooldown (hasta GAP_MAX_BACKOFF)
+        backoff_multiplier = min(dispatch_count, GAP_MAX_BACKOFF) if dispatch_count > 0 else 1
+        effective_cooldown = GAP_RENOTIFY_HOURS * 3600 * backoff_multiplier
+        if now - last_dispatch < effective_cooldown:
             continue
 
         # ── Validación contextual opcional (motor de contexto) ─────────────
@@ -1139,8 +1272,9 @@ def task_curiosity():
             f"Entidad: {entity}\n"
             f"Urgencia: {urgency_label} ({potential:.0%} potencial de descubrimiento)\n"
             f"Confianza contextual: {context_confidence:.0%}\n"
-            f"Acción: Busca información actualizada sobre '{entity}', "
-            f"reporta el estado actual y guarda los hallazgos en memoria."
+            f"Ruta: CEO (Silhouette) decide asignación al equipo\n"
+            f"Acción: Silhouette evalúa relevancia y asigna al agente apropiado "
+            f"(Roger=scout, Cami=research, Rose=analysis, Rick=code, Jack=planning)."
         )
         try:
             entity_tag = _entity_tag_slug(entity)
@@ -1153,7 +1287,11 @@ def task_curiosity():
                 tags=tags,
                 tier="WORKING",
             )
-            _dispatched_gaps[entity_key] = now
+            prev_count = 0
+            prev_record = _dispatched_gaps.get(entity_key)
+            if isinstance(prev_record, dict):
+                prev_count = int(prev_record.get("count", 0))
+            _dispatched_gaps[entity_key] = {"ts": now, "count": prev_count + 1}
             dispatched += 1
             dispatched_gaps.append(
                 {
