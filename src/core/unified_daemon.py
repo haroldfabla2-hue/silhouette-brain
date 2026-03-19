@@ -470,6 +470,36 @@ def task_heartbeat():
         f"pendientes={len(state['pendientes'])}"
     )
 
+    # ── SELF-REFLECTION: Guardar heartbeat en Brain API ─────────────────────
+    try:
+        import urllib.request
+        import urllib.parse
+        
+        # Preparar payload del heartbeat
+        heartbeat_summary = (
+            f"HEARTBEAT {state['timestamp']} | "
+            f"energia={state['energia']} | "
+            f"servicios={svcs} | "
+            f"memoria={state['memoria'].get('conversaciones','?')} convs | "
+            f"investigaciones={len(state.get('investigaciones', []))}"
+        )
+        
+        # Guardar en Brain API
+        payload = json.dumps({
+            "content": heartbeat_summary,
+            "tags": ["heartbeat", "auto", "silhouette", "self_memory"]
+        }).encode('utf-8')
+        
+        req = urllib.request.Request(
+            "http://127.0.0.1:9876/api/memory",
+            data=payload,
+            headers={"Content-Type": "application/json"}
+        )
+        urllib.request.urlopen(req, timeout=5)
+        log.info("[self_memory] Heartbeat guardado en Brain API")
+    except Exception as e:
+        log.warning(f"[self_memory] Error guardando: {e}")
+
     # Proactividad robusta: alertas útiles con límites y anti-injection.
     try:
         proactive = _get_proactive_runtime()

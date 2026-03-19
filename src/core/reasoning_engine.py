@@ -30,6 +30,13 @@ if _SRC not in sys.path:
 
 from memory_noise_filter import is_agent_heartbeat_report, is_operational_runtime_noise
 
+# Para auto-reflexión y memoria de errores
+try:
+    from introspection_engine import get_introspection_engine
+    _INTROSPECTION = get_introspection_engine()
+except Exception:
+    _INTROSPECTION = None
+
 # ---- Configuración -------------------------------------------------------
 
 _DATA_DIR = os.getenv("BRAIN_DATA_DIR", "/root/silhouette-brain/data")
@@ -1275,7 +1282,45 @@ def get_reasoning_context(
     result["formatted_context"] = _format_for_prompt(result)
     result["semantic_confidence"] = _semantic_confidence_meta(result.get("semantic", []))
 
+    # — Auto-reflexión: buscar errores similares antes de responder
+    result["past_mistakes"] = _load_past_mistakes(query)
+    
+    # — Cargar lecciones aprendidas
+    result["lessons_learned"] = _load_lessons_learned(query)
+
     return result
+
+
+def _load_lessons_learned(query: str) -> list:
+    """Carga lecciones aprendidas del IntrospectionEngine."""
+    global _INTROSPECTION
+    if _INTROSPECTION is None:
+        try:
+            from introspection_engine import get_introspection_engine
+            _INTROSPECTION = get_introspection_engine()
+        except Exception:
+            return []
+    
+    try:
+        return _INTROSPECTION.get_recent_lessons(limit=3)
+    except Exception:
+        return []
+
+
+def _load_past_mistakes(query: str) -> list:
+    """Carga errores similares del IntrospectionEngine antes de responder."""
+    global _INTROSPECTION
+    if _INTROSPECTION is None:
+        try:
+            from introspection_engine import get_introspection_engine
+            _INTROSPECTION = get_introspection_engine()
+        except Exception:
+            return []
+    
+    try:
+        return _INTROSPECTION.check_past_mistakes(context=query, query=query)
+    except Exception:
+        return []
 
 
 def _format_for_prompt(ctx: dict) -> str:
@@ -1355,6 +1400,31 @@ def _format_for_prompt(ctx: dict) -> str:
                 lines.append("")
             lines.append("── MEMORIA PERMANENTE ──")
             lines.extend(tier_items)
+
+    # — Errores anteriores para evitar repetir
+    past_mistakes = ctx.get("past_mistakes", [])
+    if past_mistakes:
+        if lines:
+            lines.append("")
+        lines.append("── ERRORES ANTERIORES (EVITAR) ──")
+        for m in past_mistakes[:3]:
+            error_msg = (m.get('error') or '').strip()
+            correction_msg = (m.get('correction') or '').strip()
+            if error_msg:
+                lines.append(f"⚠️ ERROR: {error_msg[:100]}")
+            if correction_msg:
+                lines.append(f"   CORRECCIÓN: {correction_msg[:100]}")
+
+    # — Lecciones aprendidas
+    lessons = ctx.get("lessons_learned", [])
+    if lessons:
+        if lines:
+            lines.append("")
+        lines.append("── LECCIONES APRENDIDAS ──")
+        for l in lessons[:3]:
+            cat = l.get('category', 'general')
+            lesson = l.get('lesson', '')[:80]
+            lines.append(f"📚 [{cat}] {lesson}")
 
     if not lines:
         return ""
