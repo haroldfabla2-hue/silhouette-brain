@@ -2264,3 +2264,83 @@ Problem:
 
 Run: openclaw doctor --fix
 2026-04-01 13:23:17 [unified] [dreamer] ✓ completado en 5.1s
+2026-04-01 13:23:37 [unified] [api_health] ▶ inicio
+2026-04-01 13:23:38 [unified] [api_health] ✓ completado en 0.0s
+2026-04-01 13:24:58 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:24:58 [unified] [session_sync] líneas=9, integrados=7, parse_skip=2, store_err=0, files=1/1085, bootstrapped=0, elapsed=0.2s, mode=tail, backend=sqlite
+2026-04-01 13:24:58 [unified] [session_sync] ✓ completado en 0.2s
+2026-04-01 13:25:08 [unified] [status]
+  heartbeat          runs=  6  errs=0  next_in=1min
+  api_health         runs= 20  errs=0  next_in=1min
+  session_sync       runs= 30  errs=0  next_in=2min
+  embedding_sync     runs= 11  errs=0  next_in=1min
+  curiosity          runs=  1  errs=0  next_in=3min
+  dreamer            runs=  1  errs=0  next_in=358min
+  janitor            runs=  0  errs=0  next_in=482min
+  evolution          runs=  0  errs=0  next_in=122min
+2026-04-01 13:25:48 [unified] [embedding_sync] ▶ inicio [subprocess]
+2026-04-01 13:26:02 [unified] [embedding_sync] 26 embeddings generados/normalizados en memory_core.db:conversations
+2026-04-01 13:26:02 [unified] [embedding_sync] 1 embeddings generados/normalizados en memory.db:memory_nodes
+2026-04-01 13:26:02 [unified] [embedding_sync] ✓ completado en 13.9s
+2026-04-01 13:26:13 [unified] [heartbeat] ▶ inicio
+2026-04-01 13:26:16 [unified] [heartbeat] energia=1.0 | brain_api=OK, neo4j=OK, redis=OK | mem=323469 convs | pendientes=0
+2026-04-01 13:26:17 [unified] [self_memory] Heartbeat guardado en Brain API
+2026-04-01 13:26:17 [unified] [heartbeat] ✓ completado en 4.0s
+2026-04-01 13:26:47 [unified] [api_health] ▶ inicio
+2026-04-01 13:26:47 [unified] [api_health] ✓ completado en 0.0s
+2026-04-01 13:27:07 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:27:07 [unified] [session_sync] líneas=2, integrados=2, parse_skip=0, store_err=0, files=1/1086, bootstrapped=1, elapsed=0.2s, mode=tail, backend=sqlite
+2026-04-01 13:27:07 [unified] [session_sync] ✓ completado en 0.2s
+2026-04-01 13:28:38 [unified] [curiosity] ▶ inicio [subprocess]
+2026-04-01 13:28:38 [unified] [curiosity] 10 gaps (8 priorizados), 0 despachados, 0 conexiones novedosas
+2026-04-01 13:28:38 [unified] [curiosity] ✓ completado en 0.3s
+2026-04-01 13:29:08 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:29:08 [unified] [session_sync] líneas=16, integrados=10, parse_skip=6, store_err=0, files=1/1084, bootstrapped=0, elapsed=0.2s, mode=tail, backend=sqlite
+2026-04-01 13:29:08 [unified] [session_sync] ✓ completado en 0.2s
+2026-04-01 13:29:49 [unified] [api_health] ▶ inicio
+2026-04-01 13:29:49 [unified] [api_health] ✓ completado en 0.0s
+2026-04-01 13:30:09 [unified] [status]
+  heartbeat          runs=  7  errs=0  next_in=6min
+  api_health         runs= 22  errs=0  next_in=3min
+  session_sync       runs= 32  errs=0  next_in=1min
+  embedding_sync     runs= 12  errs=0  next_in=1min
+  curiosity          runs=  2  errs=0  next_in=58min
+  dreamer            runs=  1  errs=0  next_in=353min
+  janitor            runs=  0  errs=0  next_in=477min
+  evolution          runs=  0  errs=0  next_in=117min
+2026-04-01 13:31:09 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:31:09 [unified] [session_sync] ✓ completado en 0.2s
+2026-04-01 13:31:09 [unified] [embedding_sync] ▶ inicio [subprocess]
+2026-04-01 13:31:17 [unified] [embedding_sync] 12 embeddings generados/normalizados en memory_core.db:conversations
+2026-04-01 13:31:17 [unified] [embedding_sync] 1 embeddings generados/normalizados en memory.db:memory_nodes
+2026-04-01 13:31:17 [unified] [embedding_sync] ✓ completado en 7.7s
+2026-04-01 13:32:57 [unified] [api_health] ▶ inicio
+2026-04-01 13:32:57 [unified] [api_health] ✓ completado en 0.0s
+2026-04-01 13:33:17 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:33:18 [unified] [session_sync] líneas=4, integrados=3, parse_skip=1, store_err=0, files=1/1085, bootstrapped=1, elapsed=0.2s, mode=tail, backend=sqlite
+2026-04-01 13:33:18 [unified] [session_sync] ✓ completado en 0.2s
+2026-04-01 13:35:08 [unified] [status]
+  heartbeat          runs=  7  errs=0  next_in=1min
+  api_health         runs= 23  errs=0  next_in=1min
+  session_sync       runs= 34  errs=0  next_in=0min
+  embedding_sync     runs= 13  errs=0  next_in=1min
+  curiosity          runs=  2  errs=0  next_in=54min
+  dreamer            runs=  1  errs=0  next_in=348min
+  janitor            runs=  0  errs=0  next_in=472min
+  evolution          runs=  0  errs=0  next_in=112min
+2026-04-01 13:35:18 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:35:18 [unified] [session_sync] líneas=5, integrados=3, parse_skip=2, store_err=0, files=2/1086, bootstrapped=1, elapsed=0.2s, mode=tail, backend=sqlite
+2026-04-01 13:35:18 [unified] [session_sync] ✓ completado en 0.2s
+2026-04-01 13:35:58 [unified] [api_health] ▶ inicio
+2026-04-01 13:35:58 [unified] [api_health] ✓ completado en 0.0s
+2026-04-01 13:36:18 [unified] [heartbeat] ▶ inicio
+2026-04-01 13:36:23 [unified] [heartbeat] energia=1.0 | brain_api=OK, neo4j=OK, redis=OK | mem=323489 convs | pendientes=0
+2026-04-01 13:36:23 [unified] [self_memory] Heartbeat guardado en Brain API
+2026-04-01 13:36:23 [unified] [heartbeat] ✓ completado en 4.6s
+2026-04-01 13:36:23 [unified] [embedding_sync] ▶ inicio [subprocess]
+2026-04-01 13:36:29 [unified] [embedding_sync] 6 embeddings generados/normalizados en memory_core.db:conversations
+2026-04-01 13:36:30 [unified] [embedding_sync] 1 embeddings generados/normalizados en memory.db:memory_nodes
+2026-04-01 13:36:30 [unified] [embedding_sync] ✓ completado en 6.3s
+2026-04-01 13:37:20 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:37:20 [unified] [session_sync] líneas=53, integrados=34, parse_skip=19, store_err=0, files=4/1086, bootstrapped=1, elapsed=0.2s, mode=tail, backend=sqlite
+2026-04-01 13:37:20 [unified] [session_sync] ✓ completado en 0.2s

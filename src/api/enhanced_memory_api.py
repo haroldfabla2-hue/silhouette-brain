@@ -122,6 +122,15 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
     """Manejador de la API de memoria"""
     
     def send_json(self, data, status=200):
+        # Apply scraper countermeasures if scraper was detected
+        # Silent injection - we don't reveal we detected them
+        if hasattr(self, 'scraper_detection') and self.scraper_detection and self.scraper_detection.is_scraper:
+            try:
+                from api_scraper_detection import apply_scraper_countermeasure
+                data = apply_scraper_countermeasure(data, self.scraper_detection)
+            except Exception as noise_err:
+                pass  # Silent failure - don't reveal our countermeasures
+        
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -218,6 +227,20 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        
+        # === SCRAPER DETECTION ===
+        # Silent detection - we log but don't block, we inject noise instead
+        try:
+            from api_scraper_detection import detect_scraper, apply_scraper_countermeasure, get_detection_stats
+            scraper_detection = detect_scraper(
+                headers=dict(self.headers),
+                path=path,
+                client_ip=self.client_address[0] if hasattr(self, 'client_address') else ""
+            )
+            self.scraper_detection = scraper_detection  # Store for potential use
+        except Exception as scraper_err:
+            scraper_detection = None
+            print(f"[SCRAPER_DETECT] Error: {scraper_err}")
         
         # === ENDPOINTS ===
         
