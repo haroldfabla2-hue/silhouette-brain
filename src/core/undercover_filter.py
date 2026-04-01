@@ -100,6 +100,9 @@ def undercover_filter(text: str) -> str:
     # Clean up "by" at end of sentences
     result = re.sub(r'\s+by\s*$', '', result, flags=re.IGNORECASE)
     
+    # Clean up leading "and" or ", and" from removed subject
+    result = re.sub(r'^\s*,?\s*and\s+', '', result, flags=re.IGNORECASE)
+    
     # Fix "I can processing" -> "I can process"
     result = re.sub(r'\bI can processing\b', 'I can process', result)
     
