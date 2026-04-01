@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/root/silhouette-brain/src/core/unified_daemon.py", line 1388, in _acquire_single_instance_lock
+    fcntl.flock(self._lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+BlockingIOError: [Errno 11] Resource temporarily unavailable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/root/silhouette-brain/src/core/unified_daemon.py", line 1440, in <module>
+    daemon = UnifiedDaemon()
+             ^^^^^^^^^^^^^^^
+  File "/root/silhouette-brain/src/core/unified_daemon.py", line 1304, in __init__
+    self._acquire_single_instance_lock()
+  File "/root/silhouette-brain/src/core/unified_daemon.py", line 1390, in _acquire_single_instance_lock
+    raise RuntimeError("Ya existe una instancia activa de unified_daemon")
+RuntimeError: Ya existe una instancia activa de unified_daemon

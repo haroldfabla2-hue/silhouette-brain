@@ -173,23 +173,6 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
                     self.send_json({"status": "blocked", "reason": "runtime_operational_noise"}, 200)
                     return
                 
-                # Conversation Injection Guard
-                try:
-                    from conversation_injection_guard import check_injection
-                    channel = data.get('channel', 'unknown')
-                    sender_id = data.get('sender_id')
-                    # Only check non-trusted channels (skip DMs with Alberto)
-                    if channel not in ('telegram_dm', 'whatsapp_dm'):
-                        inj = check_injection(text, sender_id=sender_id, channel=channel)
-                        if inj.should_block:
-                            print(f"[INJECTION GUARD] BLOCKED from {sender_id} on {channel}: {inj.message}")
-                            self.send_json({"status": "blocked", "reason": "injection_detected", "threat": inj.threat_level.value}, 200)
-                            return
-                        elif inj.should_warn:
-                            print(f"[INJECTION GUARD] WARN from {sender_id} on {channel}: {inj.message}")
-                except Exception as inj_err:
-                    print(f"[INJECTION GUARD] Error: {inj_err}")
-                
                 # Use SilhouetteMemory to add
                 from silhouette_memory import SilhouetteMemory
                 sm = SilhouetteMemory()

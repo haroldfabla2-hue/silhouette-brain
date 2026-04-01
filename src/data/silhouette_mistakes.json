@@ -1,0 +1,26 @@
+[
+  {
+    "id": "mistake_0_1773715074",
+    "timestamp": "2026-03-17T02:37:54.880946",
+    "context": "Deploy de Silhouette OS",
+    "error": "Asum\u00ed que el healthcheck funcionaba pero no verifiqu\u00e9",
+    "correction": "Primero verificar manualmente antes de reportar",
+    "resolved": false
+  },
+  {
+    "id": "mistake_1_1773715291",
+    "timestamp": "2026-03-17T02:41:31.890251",
+    "context": "Test context",
+    "error": "Test error",
+    "correction": "Test correction",
+    "resolved": false
+  },
+  {
+    "id": "mistake_2_1773715999",
+    "timestamp": "2026-03-17T02:53:19.765194",
+    "context": "test",
+    "error": "error test",
+    "correction": "correction test",
+    "resolved": false
+  }
+]
