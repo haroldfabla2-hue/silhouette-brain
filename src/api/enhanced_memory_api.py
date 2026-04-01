@@ -604,8 +604,8 @@ class ReuseAddressServer(HTTPServer):
     allow_reuse_address = True
 
 def run_api(port=9876):
-    server = ReuseAddressServer(('0.0.0.0', port), MemoryAPIHandler)
-    print(f"🚀 Enhanced Memory API running on port {port}")
+    server = ReuseAddressServer(('127.0.0.1', port), MemoryAPIHandler)
+    print(f"🚀 Enhanced Memory API running on 127.0.0.1:{port} (localhost only)")
     print(f"   Endpoints:")
     print(f"   - /api/context/assemble?query=xxx&mode=reply_fast&token_budget=2800&semantic=full")
     print(f"   - /api/reasoning/feedback?limit=50")

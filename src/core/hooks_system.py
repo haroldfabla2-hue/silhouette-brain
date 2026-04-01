@@ -436,7 +436,7 @@ def on_hook(event: HookEvent, name: str | None = None):
     """
     def decorator(func: HookCallback) -> HookCallback:
         func._hook_event = event
-        func._hook_name = name
+        func._hook_name = name if name is not None else func.__name__
         return func
 
     return decorator

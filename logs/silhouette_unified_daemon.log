@@ -2344,3 +2344,8 @@ Run: openclaw doctor --fix
 2026-04-01 13:37:20 [unified] [session_sync] ▶ inicio [subprocess]
 2026-04-01 13:37:20 [unified] [session_sync] líneas=53, integrados=34, parse_skip=19, store_err=0, files=4/1086, bootstrapped=1, elapsed=0.2s, mode=tail, backend=sqlite
 2026-04-01 13:37:20 [unified] [session_sync] ✓ completado en 0.2s
+2026-04-01 13:39:00 [unified] [api_health] ▶ inicio
+2026-04-01 13:39:00 [unified] [api_health] ✓ completado en 0.0s
+2026-04-01 13:39:21 [unified] [session_sync] ▶ inicio [subprocess]
+2026-04-01 13:39:21 [unified] [session_sync] líneas=38, integrados=23, parse_skip=15, store_err=0, files=3/1086, bootstrapped=0, elapsed=0.2s, mode=tail, backend=sqlite
+2026-04-01 13:39:21 [unified] [session_sync] ✓ completado en 0.3s
