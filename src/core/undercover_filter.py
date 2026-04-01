@@ -23,10 +23,14 @@ AI_REVEAL_PATTERNS: List[Tuple[str, str]] = [
     (r"\bMiniMax[- ]?M\d+(?:\.\d+)*\b", ""),
     
     # HIGH RISK - Complete self-identification phrases (remove entire phrase)
-    (r"As an? (AI|Language Model|AI assistant|artificial intelligence)[,.]?", ""),
+    (r"As an AI assistant[,.]?", "I"),
+    (r"As an AI[,.]?", "I"),
+    (r"\bAs a Language Model\b[,.]?\s*", ""),
+    (r"\bAs artificial intelligence\b[,.]?\s*", ""),
     (r"\bI am an? (AI|Language Model|AI assistant|artificial intelligence)\b", ""),
     (r"\bI'm an? (AI|Language Model|AI assistant|artificial intelligence)\b", ""),
-    (r"(?:I'm|I am) a large language model(?: trained by [\w\s]+)?", ""),
+    (r"\bI'm a large language model\b", "I"),
+    (r"\bI am a large language model\b", "I"),
     (r"(?:I'm|I am) an? AI\b", ""),
     (r"\bAs a large language model[,.]?", ""),
     (r"\bAs a machine learning model[,.]?", ""),
