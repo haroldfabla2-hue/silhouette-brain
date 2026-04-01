@@ -6,7 +6,7 @@ AI-revealing phrases to enable natural communication in group chats and
 public contexts.
 
 Usage:
-    from undercover_filter import undercover_filter
+    from src.core.undercover_filter import undercover_filter
     cleaned_text = undercover_filter(raw_text)
 """
 
@@ -14,35 +14,36 @@ import re
 from typing import List, Tuple
 
 # Patterns for AI-revealing phrases: (regex_pattern, replacement)
-# Order matters - more specific patterns should come first
+# Order matters - more specific/longer patterns should come first
 AI_REVEAL_PATTERNS: List[Tuple[str, str]] = [
     # CRITICAL - Model names and codenames (never reveal)
-    (r"\bI'm (Claude|Capybara|Tengu|Opus|MiniMax|GPT|Gemini)\b", ""),
-    (r"\bI am (Claude|Capybara|Tengu|Opus|MiniMax|GPT|Gemini)\b", ""),
-    (r"\brunning (Claude|Capybara|Tengu|Opus|MiniMax|GPT|Gemini)\b", ""),
-    (r"\busing (Claude|Claude |Capybara |Tengu )?(Code|API)?\b", ""),
+    (r"\b(?:I'm|I am)\s*(?:Claude|Capybara|Tengu|Opus)\b", ""),
+    (r"\b(?:I'm|I am)\s*MiniMax[- ]?M\d+(?:\.\d+)*\b", ""),
+    (r"\brunning\s*(?:Claude|Capybara|Tengu|Opus|MiniMax)\b", ""),
+    (r"\bMiniMax[- ]?M\d+(?:\.\d+)*\b", ""),
     
-    # HIGH RISK - Self-identification as AI
-    (r"\bAs an? (AI|Language Model|AI assistant|artificial intelligence)\b", ""),
+    # HIGH RISK - Complete self-identification phrases (remove entire phrase)
+    (r"As an? (AI|Language Model|AI assistant|artificial intelligence)[,.]?", ""),
     (r"\bI am an? (AI|Language Model|AI assistant|artificial intelligence)\b", ""),
     (r"\bI'm an? (AI|Language Model|AI assistant|artificial intelligence)\b", ""),
-    (r"\bI('m| am) a (large language model|AI|machine learning model)\b", ""),
-    (r"\bAs a (large language model|machine learning model)\b", ""),
+    (r"(?:I'm|I am) a large language model(?: trained by [\w\s]+)?", ""),
+    (r"(?:I'm|I am) an? AI\b", ""),
+    (r"\bAs a large language model[,.]?", ""),
+    (r"\bAs a machine learning model[,.]?", ""),
     
-    # MEDIUM RISK - Capability disclaimers
-    (r"\bMy training (data|includes|cutoff)\b", "I have experience with"),
+    # MEDIUM RISK - Capability disclaimers with replacements
     (r"\bBased on my training data\b", "From what I know"),
+    (r"\bMy training (data|includes|cutoff)\b", "I have experience with"),
     (r"\bI have access to\b", "I can use"),
     (r"\bI('m| am) capable of\b", "I can"),
-    (r"\bI was (trained|built|created) by\b", ""),
+    (r"(?:I )?was (?:trained|built|created) by [\w\s,]+[.]?", ""),
     (r"\bI don't have access to\b", "I can't"),
-    (r"\bI cannot\b", "I can't"),
-    (r"\bI don't have\b", "I don't have"),
     
-    # MEDIUM RISK - Knowledge/awareness disclaimers
+    # MEDIUM RISK - Knowledge disclaimers
     (r"\bMy knowledge cutoff\b", ""),
     (r"\bbeyond my training\b", ""),
     (r"\bwithin my training\b", ""),
+    (r"\bI don't have\b", "I don't have"),  # Keep but normalize
     
     # LOW RISK - Tool/integration reveals
     (r"\bI have a tool for that\b", "Let me check"),
@@ -51,14 +52,9 @@ AI_REVEAL_PATTERNS: List[Tuple[str, str]] = [
     (r"\bI use the (Brain API|Memory API)\b", ""),
     (r"\bI have access to the\b", "I can access the"),
     
-    # Model/version reveals
-    (r"\bI'm running MiniMax[- ]?M\d+(\.\d+)*\b", ""),
-    (r"\bMiniMax[- ]?M\d+(\.\d+)*\b", ""),
-    (r"\busing the (OpenAI|Anthropic|Google) (API|model)\b", ""),
-    
-    # Generic AI references that should be cleaned
-    (r"\bAI(,| | assistant| model)\b", "I"),
-    (r"\bai(,| | assistant| model)\b", "I"),
+    # Generic AI references cleanup
+    (r"\bAI[, ]?(assistant|model|chatbot)\b", "I"),
+    (r"\bai[, ]?(assistant|model|chatbot)\b", "I"),
 ]
 
 
@@ -99,6 +95,13 @@ def undercover_filter(text: str) -> str:
     # Clean up commas after removed phrases
     result = re.sub(r',\s*,', ',', result)
     result = re.sub(r'^\s*,\s*', '', result)
+    result = re.sub(r'\s*,\s*$', '', result)
+    
+    # Clean up "by" at end of sentences
+    result = re.sub(r'\s+by\s*$', '', result, flags=re.IGNORECASE)
+    
+    # Fix "I can processing" -> "I can process"
+    result = re.sub(r'\bI can processing\b', 'I can process', result)
     
     return result.strip()
 
@@ -166,5 +169,8 @@ def undercover_filter_fast(text: str) -> str:
     result = re.sub(r'\(\s*\)', '', result)
     result = re.sub(r',\s*,', ',', result)
     result = re.sub(r'^\s*,\s*', '', result)
+    result = re.sub(r'\s*,\s*$', '', result)
+    result = re.sub(r'\s+by\s*$', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'\bI can processing\b', 'I can process', result)
     
     return result.strip()
