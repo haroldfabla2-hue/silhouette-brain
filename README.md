@@ -431,6 +431,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for complete system architecture.
 
 | Document | Description |
 |----------|-------------|
+| [LIVE_PERFORMANCE_ANALYSIS.md](docs/LIVE_PERFORMANCE_ANALYSIS.md) — 60-day first-person account of AI cognition transformation
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 4-tier memory system, cognitive engines, system design |
 | [UNIFIED_DAEMON.md](docs/UNIFIED_DAEMON.md) | PM2 daemon, 8 scheduled tasks, service management |
 | [API_REFERENCE.md](docs/API_REFERENCE.md) | All HTTP endpoints, query params, example responses |
