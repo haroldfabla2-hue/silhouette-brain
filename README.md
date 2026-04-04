@@ -290,9 +290,9 @@ The system tracks:
 ## 📚 Further Reading
 
 - [API Documentation](https://github.com/haroldfabla2-hue/silhouette-brain#api-usage)
-- [Cognitive Engines Deep Dive](docs/cognitive_engines.md)
-- [Architecture Decisions](docs/adr.md)
-- [OpenClaw Integration](docs/openclaw.md)
+- [Cognitive Engines Deep Dive](cognitive_engines.md)
+- [Architecture Decisions](adr.md)
+- [OpenClaw Integration](openclaw.md)
 
 ---
 
@@ -338,7 +338,7 @@ The daemon orchestrates all cognitive operations:
 | `janitor` | 12h | subprocess | Resolve entity contradictions |
 | `evolution` | 6h | subprocess | Self-improvement evaluation |
 
-See [docs/UNIFIED_DAEMON.md](docs/UNIFIED_DAEMON.md) for full technical reference.
+See [UNIFIED_DAEMON.md](docs/UNIFIED_DAEMON.md) for full technical reference.
 
 ### Process Architecture
 
@@ -389,4 +389,27 @@ FASTEMBED_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 | 6379 | Redis | Redis protocol |
 | 17687 | Neo4j | Bolt |
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for complete system architecture.
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for complete system architecture.
+
+---
+
+## 📚 Documentation Index
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 4-tier memory system, cognitive engines, system design |
+| [UNIFIED_DAEMON.md](docs/UNIFIED_DAEMON.md) | PM2 daemon, 8 scheduled tasks, service management |
+| [API_REFERENCE.md](docs/API_REFERENCE.md) | All HTTP endpoints, query params, example responses |
+| [COGNITIVE_ENGINES.md](docs/COGNITIVE_ENGINES.md) | Curiosity, Janitor, Dreamer, Evolution — deep dive |
+| [AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) | How to connect agents to Brain API |
+| [OPENCLAW_INTEGRATION.md](docs/OPENCLAW_INTEGRATION.md) | OpenClaw-specific setup and configuration |
+| [AGENT_SELF_INSTALLATION.md](docs/AGENT_SELF_INSTALLATION.md) | Agent bootstrap and self-configuration |
+| [HEARTBEAT_AND_NOTIFICATIONS.md](docs/HEARTBEAT_AND_NOTIFICATIONS.md) | Heartbeat protocol and alert system |
+| [RESOURCES_AND_MODELS.md](docs/RESOURCES_AND_MODELS.md) | LLM providers, embedding models |
+
+## 🎯 Quick Links
+
+- **Repository**: https://github.com/haroldfabla2-hue/silhouette-brain
+- **Releases**: https://github.com/haroldfabla2-hue/silhouette-brain/releases
+- **API**: http://localhost:9876 (local)
+- **Issues**: https://github.com/haroldfabla2-hue/silhouette-brain/issues
