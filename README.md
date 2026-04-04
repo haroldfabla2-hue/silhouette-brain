@@ -168,3 +168,128 @@ MIT License - See [LICENSE](LICENSE) for details.
 If Silhouette Brain helps your AI agents, please star the repo and share it with the community.
 
 Built with ❤️ for the AI developer community.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph External["External Layer"]
+        Agent[AI Agent]
+        API[Brain API]
+    end
+    
+    subgraph Cognitive["Cognitive Engines"]
+        Curiosity[Curiosity Engine]
+        Janitor[Janitor Engine]
+        Dreamer[Dreamer Engine]
+        Evolution[Evolution Engine]
+    end
+    
+    subgraph Memory["Memory Tiers"]
+        Working[(Redis<br/>Working Memory)]
+        Medium[(SQLite<br/>Medium Memory)]
+        LongTerm[(Vectors<br/>Long-Term Memory)]
+        Deep[(Neo4j<br/>Deep Memory)]
+    end
+    
+    Agent --> API
+    API --> Working
+    Working --> Medium
+    Medium --> LongTerm
+    Medium --> Deep
+    Curiosity -.->|explores gaps| Memory
+    Janitor -.->|cleans| Medium
+    Dreamer -.->|consolidates| Deep
+    Evolution -.->|optimizes| Memory
+```
+
+### Data Flow
+
+```
+┌─────────────┐
+│   AGENT     │ ←─── Reasoning + Synthesis
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│            BRAIN API (FastAPI)           │
+│  ┌─────────────────────────────────┐  │
+│  │   Memory Integration Layer        │  │
+│  │  ┌───────┐ ┌───────┐ ┌─────┐  │  │
+│  │  │Redis  │ │SQLite │ │Neo4j│  │  │
+│  │  │ Cache │ │Medium │ │Graph │  │  │
+│  │  └───────┘ └───────┘ └──┬──┘  │  │
+│  └─────────────────────────┼───────┘  │
+└────────────────────────────┼────────────┘
+                           │
+                           ▼
+              ┌──────────────────────┐
+              │  Cognitive Engines   │
+              │ Curiosity │ Janitor  │
+              │ Dreamer  │ Evolution │
+              └──────────────────────┘
+```
+
+### Cognitive Engine Cycle
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AGENT SESSION                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────┐    Store    ┌─────────┐   Consolidate   ┌─────────┐
+│   │ Working │────────────▶│ Medium  │───────────────▶│   Deep  │
+│   │ (Redis) │   session   │ (SQLite)│   nightly     │ (Neo4j) │
+│   └─────────┘    data      └─────────┘                └─────────┘
+│        ▲              ▲                                   │
+│        │              │                                   │
+│   ┌────┴──────────────┴────┐                    ┌────┴────┐
+│   │   Curiosity Engine     │                    │ Dreamer │
+│   │  Finds knowledge gaps  │                    │ Engine  │
+│   └───────────────────────┘                    └─────────┘
+│        ▲              │                              │
+│        │              │                              │
+│   ┌────┴──────────────┴────┐               ┌────┴────────┐
+│   │   Janitor Engine       │               │ Evolution  │
+│   │ Resolves conflicts    │               │  Engine   │
+│   └───────────────────────┘               └───────────┘
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 Performance Metrics
+
+The system tracks:
+
+| Metric | Description | Target |
+|--------|-------------|--------|
+| Truth Rate | Ratio of verified truths to total facts | >95% |
+| Memory Efficiency | Relevant context retrieval rate | >90% |
+| Cognitive Cycles | Auto-evolution runs per day | 4-6 |
+| Gap Coverage | Knowledge gaps filled over time | 80% |
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **API** | FastAPI | HTTP endpoints |
+| **Working Memory** | Redis | Session cache |
+| **Medium Memory** | SQLite | Episode storage |
+| **Long-Term Memory** | FastEmbed | Vector embeddings |
+| **Deep Memory** | Neo4j | Knowledge graphs |
+| **Orchestration** | Python asyncio | Concurrent engines |
+| **Container** | Docker Compose | Full stack deploy |
+
+---
+
+## 📚 Further Reading
+
+- [API Documentation](https://github.com/haroldfabla2-hue/silhouette-brain#api-usage)
+- [Cognitive Engines Deep Dive](docs/cognitive_engines.md)
+- [Architecture Decisions](docs/adr.md)
+- [OpenClaw Integration](docs/openclaw.md)
