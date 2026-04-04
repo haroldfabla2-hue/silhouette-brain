@@ -11,6 +11,40 @@
 
 Originally built for OpenClaw agents, now decoupled to be **framework-agnostic** via HTTP API.
 
+[![Deployments](https://img.shields.io/badge/deployments-1_production-blue)]()
+[![NPM](https://img.shields.io/badge/api-v2.0.0-green)]()
+[![4-Tier](https://img.shields.io/badge/architecture-4--tier-purple)]()
+[![Neo4j](https://img.shields.io/badge/graph-217K_nodes-orange)]()
+
+---
+
+### 📊 Live Production Stats
+
+| Metric | Value |
+
+|--------|-------|
+
+| **Conversations Processed** | 334,994+ |
+
+| **Neo4j Graph Nodes** | 217,042 |
+
+| **Relationships** | 122,864 |
+
+| **Entities Tracked** | 7,146 |
+
+| **Vector Embeddings** | 60,939 |
+
+| **Agent Sessions** | 9,955 |
+
+| **Embedding Coverage** | 100% |
+
+| **API Latency (context)** | ~394ms |
+
+| **System Uptime** | 60+ days |
+
+
+*[See full benchmarks](docs/BENCHMARKS.md)*
+
 ---
 
 ## 🎯 What is this?
