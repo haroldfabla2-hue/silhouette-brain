@@ -293,3 +293,100 @@ The system tracks:
 - [Cognitive Engines Deep Dive](docs/cognitive_engines.md)
 - [Architecture Decisions](docs/adr.md)
 - [OpenClaw Integration](docs/openclaw.md)
+
+---
+
+## 🏭 Deployment & Services
+
+Silhouette Brain is managed by **PM2** via `ecosystem.config.js`. The system runs as a set of coordinated services:
+
+### Core Services
+
+| Service | Manager | Command | Purpose |
+|---------|---------|---------|---------|
+| **Brain API** | PM2 | `silhouette-brain-api` | FastAPI HTTP server (:9876) |
+| **Unified Daemon** | PM2 | `silhouette-unified-daemon` | Task scheduler + all 8 cognitive tasks |
+
+### PM2 Management
+
+```bash
+# View all services
+pm2 status
+
+# View logs for a specific service
+pm2 logs silhouette-unified-daemon --lines 100
+
+# Restart a service
+pm2 restart silhouette-unified-daemon
+
+# Real-time monit
+pm2 monit
+```
+
+### The Unified Daemon — 8 Scheduled Tasks
+
+The daemon orchestrates all cognitive operations:
+
+| Task | Interval | Type | Description |
+|------|----------|------|-------------|
+| `heartbeat` | 10min | in-process | Monitor brain_api, neo4j, redis health |
+| `api_health` | 3min | in-process | HTTP health checks on Brain API |
+| `session_sync` | 2min | subprocess | Sync agent sessions to Medium memory |
+| `embedding_sync` | 5min | subprocess | Generate and store vector embeddings |
+| `curiosity` | 1h | subprocess | Find knowledge gaps, generate investigations |
+| `dreamer` | 6h | subprocess | Consolidate Medium → Deep memory |
+| `janitor` | 12h | subprocess | Resolve entity contradictions |
+| `evolution` | 6h | subprocess | Self-improvement evaluation |
+
+See [docs/UNIFIED_DAEMON.md](docs/UNIFIED_DAEMON.md) for full technical reference.
+
+### Process Architecture
+
+```
+PM2 (Process Manager)
+├── silhouette-brain-api (FastAPI :9876)
+│   └── Responds to agent memory requests
+│
+└── silhouette-unified-daemon (Python daemon)
+    ├── Scheduler (ticks every 10s)
+    ├── 2 in-process tasks (lightweight)
+    └── 6 subprocess tasks (heavy: embeddings, cognitive engines)
+            │
+            ├── Redis (6379) ← Working memory
+            ├── SQLite (data/memory_core.db) ← Medium memory
+            ├── Neo4j (17687) ← Deep memory
+            └── FastEmbed ← Vector embeddings
+```
+
+### Configuration
+
+All configuration via `.env`:
+
+```bash
+# Core paths
+BRAIN_ROOT=/root/silhouette-brain
+BRAIN_SRC_DIR=/root/silhouette-brain/src/core
+BRAIN_DATA_DIR=/root/silhouette-brain/data
+
+# Reasoning (for cognitive engines)
+REASONING_PROVIDER=minimax
+REASONING_API_KEY=your_key_here
+REASONING_MODEL=MiniMax-M2.5
+
+# Storage
+NEO4J_URI=bolt://localhost:17687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=silhouette2035
+REDIS_URL=redis://localhost:6379
+FASTEMBED_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+```
+
+### Port Reference
+
+| Port | Service | Protocol |
+|------|---------|----------|
+| 9876 | Brain API | HTTP (FastAPI) |
+| 6379 | Redis | Redis protocol |
+| 17687 | Neo4j | Bolt |
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for complete system architecture.

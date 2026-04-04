@@ -1,30 +1,110 @@
-# Arquitectura de 4 Capas (4-Tier Memory System)
+# Silhouette Brain — 4-Tier Memory Architecture
 
-El **Silhouette Brain** está construido bajo un modelo de arquitectura cognitiva profunda (Deep Cognitive Architecture). En lugar de usar una simple base de datos o depender solo del contexto del modelo (context window), divide la memoria en 4 capas de persistencia y velocidad distintas, imitando el cerebro humano.
+Silhouette Brain implements a **Deep Cognitive Architecture** that mimics the human brain's memory system. Rather than relying on a model's context window, it divides memory into 4 layers of persistence and speed.
 
-## 1. Working Memory (Memoria de Trabajo)
-- **Tecnología:** Redis (Caché en Memoria RAM).
-- **Velocidad:** Ultra-rápida (ms).
-- **Propósito:** Almacena el contexto actual de la conversación, IDs de sesión temporales y entidades que se están discutiendo en los últimos 5-10 minutos. 
-- **Limpieza:** Los datos aquí expiran (TTL).
+## Architecture Overview
 
-## 2. Medium-Term Memory (Memoria Reciente)
-- **Tecnología:** SQLite (`memory_core.db`).
-- **Velocidad:** Rápida.
-- **Propósito:** Almacena todos los mensajes recientes (hasta un par de días), reportes diarios de los agentes y "memorias episódicas".
-- **Limpieza:** Se depura periódicamente moviendo las piezas valiosas a las capas inferiores y borrando la basura ("noise cleanup").
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                           AGENTS (OpenClaw, etc.)                    │
+└─────────────────────────────────┬────────────────────────────────────┘
+                                  │ HTTP / API
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                        BRAIN API (:9876)                            │
+│                  enhanced_memory_api.py (FastAPI)                   │
+│                  Reasoning + Memory Integration Layer                │
+└─────────────────────────────────┬────────────────────────────────────┘
+                                  │
+        ┌─────────────────────────┼─────────────────────────┐
+        ▼                         ▼                         ▼
+┌───────────────┐       ┌───────────────────┐       ┌─────────────┐
+│    WORKING    │       │      MEDIUM        │       │    DEEP     │
+│    (Redis)    │       │     (SQLite)       │       │   (Neo4j)   │
+│   RAM Cache   │       │  Recent Episodes   │       │ Graph DB    │
+│   Instant     │       │    Fast query      │       │ Relations   │
+└───────────────┘       └───────────────────┘       └─────────────┘
+        │                         │                         │
+        └─────────────────────────┼─────────────────────────┘
+                                  │
+                    ┌─────────────┴─────────────┐
+                    │   COGNITIVE ENGINES       │
+                    │  Curiosity │ Janitor     │
+                    │  Dreamer   │ Evolution   │
+                    └──────────────────────────┘
+                                  │
+                    ┌─────────────┴─────────────┐
+                    │     UNIFIED DAEMON         │
+                    │  (PM2 managed process)     │
+                    │  8 scheduled tasks         │
+                    └────────────────────────────┘
+```
 
-## 3. Long-Term Memory (Conocimiento Semántico)
-- **Tecnología:** SQLite + OpenAI Vector Embeddings (text-embedding-3-small) / LanceDB.
-- **Velocidad:** Media.
-- **Propósito:** Búsqueda semántica (Búsqueda por significado, no solo por palabras clave). Guarda conceptos clave, instrucciones de proyectos, y datos técnicos estáticos.
+## The 4 Memory Tiers
 
-## 4. Deep Memory (Red Semántica / Grafos)
-- **Tecnología:** Neo4j (Graph Database).
-- **Velocidad:** Compleja (Consultas Cypher).
-- **Propósito:** Relaciona entidades entre sí. Si un agente habla sobre "Alberto", Neo4j sabe que Alberto "es_dueño_de" -> "Brandistry" y "trabaja_con" -> "React". Esto le da al sistema "sentido común" y la capacidad de entender el mundo.
+### Tier 1: Working Memory — Redis (RAM Cache)
+- **Purpose:** Active conversation context, session IDs, entities discussed in last 5-10 minutes
+- **Speed:** ⚡⚡⚡ Ultra-fast (ms)
+- **Persistence:** Ephemeral (TTL-based expiry)
+- **Use case:** Real-time context, temporary state
 
-## El Puente: Brain API
-Ningún agente interactúa directamente con las bases de datos. Todos deben pasar por `enhanced_memory_api.py`, un servidor Flask ligero expuesto típicamente en el puerto `9876`. Esto asegura que:
-1. No haya corrupción de datos por concurrencia.
-2. OpenClaw (o cualquier otro sistema multi-agente) pueda actualizarse sin romper la memoria.
+### Tier 2: Medium Memory — SQLite
+- **Purpose:** Recent messages (up to a few days), agent daily reports, episodic memories
+- **Speed:** ⚡⚡ Fast
+- **Persistence:** Days to weeks
+- **Use case:** Session history, recent context
+
+### Tier 3: Long-Term Memory — SQLite + Vectors
+- **Purpose:** Semantic search (meaning-based, not keyword-based), key concepts, project instructions
+- **Speed:** ⚡ Medium
+- **Persistence:** Months
+- **Use case:** Knowledge retrieval, concept lookups
+
+### Tier 4: Deep Memory — Neo4j (Graph Database)
+- **Purpose:** Entity relationships, semantic network (Alberto "owns" Brandistry, "works_with" React)
+- **Speed:** Slow (Cypher queries)
+- **Persistence:** Long-term
+- **Use case:** Common sense reasoning, relationship understanding
+
+## Brain API — The Only Door
+
+No agent touches the databases directly. All access goes through `enhanced_memory_api.py` (FastAPI on port 9876). This ensures:
+1. No data corruption from concurrent writes
+2. Framework-agnostic design (OpenClaw, CrewAI, LangGraph, etc.)
+3. Consistent reasoning and memory patterns
+
+## Cognitive Engines
+
+Four Python engines run as scheduled tasks inside the Unified Daemon:
+
+| Engine | Schedule | Function |
+|--------|----------|----------|
+| **Curiosity** | Every 1h | Finds knowledge gaps in the graph, generates investigation tasks |
+| **Janitor** | Every 12h | Detects contradictions (Agent A said X, Agent B said not-X), resolves and verifies truths |
+| **Dreamer** | Every 6h | Consolidates Medium → Deep memory, creates graph relations, synaptic pruning |
+| **Evolution** | Every 6h | Evaluates system metrics, proposes/applies self-improvements |
+
+## System Dependencies
+
+```
+Redis (6379) ←→ Brain API ←→ Neo4j (17687)
+                   ↑
+           Unified Daemon (PM2)
+              ├── session_sync (2min)
+              ├── embedding_sync (5min)
+              ├── curiosity (1h)
+              ├── dreamer (6h)
+              ├── janitor (12h)
+              └── evolution (6h)
+```
+
+## Key Files
+
+| File | Description |
+|------|-------------|
+| `src/core/enhanced_memory_api.py` | FastAPI server — main HTTP interface |
+| `src/core/unified_daemon.py` | PM2-managed scheduler — runs all 8 tasks |
+| `src/core/unified_memory.py` | Core memory operations class |
+| `src/cognitive_engines/` | Curiosity, Janitor, Dreamer, Evolution engines |
+| `data/memory_core.db` | SQLite medium-term storage |
+| `data/vector_store/` | FastEmbed vector storage |
