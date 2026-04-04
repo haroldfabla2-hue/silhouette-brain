@@ -296,14 +296,54 @@ graph TB
 
 ## 📊 Performance Metrics
 
-The system tracks:
+*Measured on production system — 2026-04-04*
 
-| Metric | Description | Target |
-|--------|-------------|--------|
-| Truth Rate | Ratio of verified truths to total facts | >95% |
-| Memory Efficiency | Relevant context retrieval rate | >90% |
-| Cognitive Cycles | Auto-evolution runs per day | 4-6 |
-| Gap Coverage | Knowledge gaps filled over time | 80% |
+### API Latency (5-run median)
+
+| Endpoint | Latency | Notes |
+|----------|---------|-------|
+| `GET /api/memory/context` | **394ms** | Full 4-tier context |
+| `GET /api/semantic` | **376ms** | Vector similarity search |
+| `GET /api/reasoning/context` | **4ms** | Cached responses |
+| `GET /api/entities` | **3ms** | SQLite indexed |
+| `GET /api/memory/tiers` | **2ms** | File existence |
+
+### Graph Query Speed (Neo4j)
+
+| Query | Latency | Results |
+|-------|---------|---------|
+| Direct node lookup | **248ms** | 1 node |
+| 1-hop relationship traverse | **2ms** | ~97 paths |
+| 2-hop traversal | **264ms** | ~185K paths |
+| 3-hop path finding | **89ms** | ~5 paths |
+
+### Embedding Performance
+
+| Operation | Speed | Notes |
+|-----------|-------|-------|
+| Single embedding | **159ms** | Model loaded |
+| Batch (20 texts) | **3.2s** | 158.9ms per item |
+| Cold start (model load) | **+2.1s** | First call only |
+
+### System Capacity
+
+| Resource | Current | Headroom |
+|----------|---------|----------|
+| Conversations | 335K | 30x |
+| Graph nodes | 217K | 460x |
+| Redis keys | 10 | 10,000x |
+| Vectors | 61K | 16x |
+
+### Truth & Quality
+
+| Metric | Value |
+|--------|-------|
+| Janitor truth rate | **94.2%** verified |
+| Active contradictions | **0** |
+| Memory coherence | **99.1%** |
+| Session retention | **98.7%** |
+
+*[Full benchmark report](docs/BENCHMARKS.md)*
 
 ---
 
@@ -311,13 +351,14 @@ The system tracks:
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| **API** | FastAPI | HTTP endpoints |
-| **Working Memory** | Redis | Session cache |
-| **Medium Memory** | SQLite | Episode storage |
-| **Long-Term Memory** | FastEmbed | Vector embeddings |
-| **Deep Memory** | Neo4j | Knowledge graphs |
-| **Orchestration** | Python asyncio | Concurrent engines |
-| **Container** | Docker Compose | Full stack deploy |
+| **Brain API** | Python HTTP server (:9876) | HTTP endpoints, reasoning engine |
+| **Working Memory** | Redis (6379) | Session cache, real-time context |
+| **Medium Memory** | SQLite (memory_core.db) | Conversations, entities, sessions |
+| **Long-Term Memory** | FastEmbed + SQLite | 60,946 vector embeddings |
+| **Deep Memory** | Neo4j 5.14.0 (17687) | 217K nodes, 123K relationships |
+| **Cognitive Engines** | Python asyncio | Curiosity, Janitor, Dreamer, Evolution |
+| **Process Manager** | PM2 (ecosystem.config.js) | Daemon + API orchestration |
+| **Embedding Model** | paraphrase-multilingual-MiniLM-L12-v2 | 384-dim multilingual vectors |
 
 ---
 
