@@ -375,8 +375,8 @@ for ep in /api/memory/context /api/semantic /api/entities; do
 done
 
 # Neo4j stats
-cypher-shell -u neo4j -p silhouette2035 "MATCH (n) RETURN count(n)"
-cypher-shell -u neo4j -p silhouette2035 "MATCH ()-[r]->() RETURN count(r)"
+cypher-shell -u neo4j -p changeme "MATCH (n) RETURN count(n)"
+cypher-shell -u neo4j -p changeme "MATCH ()-[r]->() RETURN count(r)"
 
 # Redis info
 redis-cli info | grep -E "keys|memory|uptime"

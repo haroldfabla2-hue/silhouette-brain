@@ -101,7 +101,7 @@ class MemoryCore:
             from neo4j import GraphDatabase
             self.neo4j_driver = GraphDatabase.driver(
                 os.getenv("NEO4J_URI", "bolt://localhost:17687"), 
-                auth=(os.getenv("NEO4J_USER", "neo4j"), os.getenv("NEO4J_PASSWORD", "silhouette2035"))
+                auth=(os.getenv("NEO4J_USER", "neo4j"), os.getenv("NEO4J_PASSWORD", "changeme"))
             )
             self.neo4j_driver.verify_connectivity()
             print("[MEMORY CORE] ✅ Neo4j connected for Vector Search")

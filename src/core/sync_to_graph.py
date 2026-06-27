@@ -37,7 +37,9 @@ def sync_to_neo4j():
         print("No clean items to sync")
         return
     
-    driver = GraphDatabase.driver('bolt://localhost:17687', auth=('neo4j', 'silhouette2035'))
+    driver = GraphDatabase.driver(
+        os.getenv('NEO4J_URI', 'bolt://localhost:17687'),
+        auth=(os.getenv('NEO4J_USER', 'neo4j'), os.getenv('NEO4J_PASSWORD', 'changeme')))
     
     with driver.session() as s:
         # Clear old Semantic nodes

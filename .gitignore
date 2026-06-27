@@ -31,11 +31,21 @@ ENV/
 env.bak/
 venv.bak/
 
-# Datos y bases de datos locales
+# Datos y bases de datos locales (en cualquier carpeta data/ del proyecto)
 data/*.db
 data/*.sqlite
 data/*.json
 data/*.log
+**/data/*.db
+**/data/*.sqlite
+*.db
+*.sqlite
+
+# Backups / archivos temporales de edición
+*.bak
+*.backup
+*.backup.*
+*.orig
 
 # IDEs y Editores
 .vscode/
