@@ -47,7 +47,7 @@ class EnhancedMemory:
         self.load()
     
     def load(self):
-        f = os.getenv('BRAIN_DATA_DIR', './data'/priority_memory.json'
+        f = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'priority_memory.json')
         try:
             with open(f) as fp:
                 data = json.load(fp)
@@ -65,7 +65,7 @@ class EnhancedMemory:
         self._prune_runtime_noise_entries()
     
     def save(self):
-        f = os.getenv('BRAIN_DATA_DIR', './data'/priority_memory.json'
+        f = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'priority_memory.json')
         data = {
             'never_forget': self.never_forget[-20:],
             'important': self.important[-50:],

@@ -27,7 +27,7 @@ def is_noise(text):
     return False
 
 def sync_to_neo4j():
-    with open(os.getenv('BRAIN_DATA_DIR', './data'/priority_memory.json') as f:
+    with open(os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'priority_memory.json')) as f:
         data = json.load(f)
     
     never_forget = [item for item in data.get('never_forget', []) 

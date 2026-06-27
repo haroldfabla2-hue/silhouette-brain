@@ -22,7 +22,7 @@ from typing import Dict, Iterable, List
 
 from memory_noise_filter import is_operational_runtime_noise
 
-DATA_DIR = Path(os.getenv("BRAIN_DATA_DIR", "./data")")
+DATA_DIR = Path(os.getenv("BRAIN_DATA_DIR", "./data"))
 DB_PATH = DATA_DIR / "memory_core.db"
 PRIORITY_PATH = DATA_DIR / "priority_memory.json"
 BACKUP_ROOT = DATA_DIR / "backups"

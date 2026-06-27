@@ -11,7 +11,7 @@ Agente Memory Access - Para que los subagentes puedan acceder a la memoria de Si
 import sqlite3
 import os
 
-MEMORY_DB = os.getenv("BRAIN_DATA_DIR", "./data")/memory_core.db"
+MEMORY_DB = os.path.join(os.getenv("BRAIN_DATA_DIR", "./data"), "memory_core.db")
 
 def get_memory_context(query: str, limit: int = 10):
     """Buscar en la memoria de Silhouette"""
