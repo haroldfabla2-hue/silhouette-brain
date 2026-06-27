@@ -40,7 +40,7 @@ class SelfEvolution:
     def load_state(self):
         """Carga estado de evoluación"""
         try:
-            with open(os.getenv('BRAIN_DATA_DIR', './data'/evolution_state.json') as f:
+            with open(os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'evolution_state.json')) as f:
                 data = json.load(f)
                 self.metrics = data.get('metrics', self.metrics)
         except:
@@ -48,7 +48,7 @@ class SelfEvolution:
     
     def save_state(self):
         """Guarda estado"""
-        with open(os.getenv('BRAIN_DATA_DIR', './data'/evolution_state.json', 'w') as f:
+        with open(os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'evolution_state.json'), 'w') as f:
             json.dump({
                 'metrics': self.metrics,
                 'last_update': datetime.now().isoformat()
@@ -150,7 +150,7 @@ class SelfEvolution:
     
     def save_proposal(self, proposal: dict):
         """Guarda propuesta para revisión"""
-        proposals_dir = os.getenv('BRAIN_DATA_DIR', './data'/proposals'
+        proposals_dir = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'proposals')
         os.makedirs(proposals_dir, exist_ok=True)
         
         with open(f"{proposals_dir}/{proposal['id']}.json", 'w') as f:
@@ -158,7 +158,7 @@ class SelfEvolution:
     
     def get_pending_proposals(self) -> list:
         """Obtiene propuestas pendientes"""
-        proposals_dir = os.getenv('BRAIN_DATA_DIR', './data'/proposals'
+        proposals_dir = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'proposals')
         
         if not os.path.exists(proposals_dir):
             return []
@@ -175,7 +175,7 @@ class SelfEvolution:
     
     def approve_proposal(self, proposal_id: str) -> dict:
         """Aprueba una propuesta"""
-        proposals_dir = os.getenv('BRAIN_DATA_DIR', './data'/proposals'
+        proposals_dir = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'proposals')
         filepath = f"{proposals_dir}/{proposal_id}.json"
         
         if not os.path.exists(filepath):
@@ -197,7 +197,7 @@ class SelfEvolution:
     
     def reject_proposal(self, proposal_id: str, reason: str = None) -> dict:
         """Rechaza una propuesta"""
-        proposals_dir = os.getenv('BRAIN_DATA_DIR', './data'/proposals'
+        proposals_dir = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'proposals')
         filepath = f"{proposals_dir}/{proposal_id}.json"
         
         if not os.path.exists(filepath):

@@ -21,8 +21,8 @@ import numpy as np
 # Reasoning (síntesis) — Multi-Provider Support
 # Providers soportados: 'minimax', 'openai', 'anthropic', 'zhipu'
 REASONING_PROVIDER = os.getenv("REASONING_PROVIDER", "minimax").lower()
-# API Key genérica o fallback a la antigua
-REASONING_API_KEY  = os.getenv("REASONING_API_KEY", os.getenv("MINIMAX_API_KEY", "sk-cp-xncSehim5dGFqvsdPbo5IyTKNwNewWRCrf53Fd2uOPk0CKlBpa-20kvtX8yFB-P1tJlfrkuraIOFyMXw5iPhY6CPKU1kZQvmNG7SWLYHlYMFnXxNYs2-gPI"))
+# API Key del proveedor de razonamiento. NUNCA hardcodear: leer del entorno.
+REASONING_API_KEY  = os.getenv("REASONING_API_KEY", os.getenv("MINIMAX_API_KEY", ""))
 # Modelo a usar según el provider
 REASONING_MODEL    = os.getenv("REASONING_MODEL", "MiniMax-M2.5")
 

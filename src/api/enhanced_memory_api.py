@@ -68,7 +68,7 @@ try:
     NEO4J_AVAILABLE = True
     NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:17687")
     NEO4J_USER = "neo4j"
-    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "silhouette2035")
+    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "changeme")
 except:
     NEO4J_AVAILABLE = False
 
@@ -603,9 +603,14 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
 class ReuseAddressServer(HTTPServer):
     allow_reuse_address = True
 
-def run_api(port=9876):
-    server = ReuseAddressServer(('127.0.0.1', port), MemoryAPIHandler)
-    print(f"🚀 Enhanced Memory API running on 127.0.0.1:{port} (localhost only)")
+def run_api(port=None, host=None):
+    # Bind to localhost by default for safety. Override with BRAIN_API_HOST=0.0.0.0
+    # when running inside a container (where the runtime, not the bind address,
+    # provides isolation and you control which ports are published).
+    host = host or os.getenv("BRAIN_API_HOST", "127.0.0.1")
+    port = int(port or os.getenv("BRAIN_API_PORT", "9876"))
+    server = ReuseAddressServer((host, port), MemoryAPIHandler)
+    print(f"🚀 Enhanced Memory API running on {host}:{port}")
     print(f"   Endpoints:")
     print(f"   - /api/context/assemble?query=xxx&mode=reply_fast&token_budget=2800&semantic=full")
     print(f"   - /api/reasoning/feedback?limit=50")

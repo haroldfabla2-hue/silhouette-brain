@@ -253,7 +253,7 @@ def task_heartbeat():
         from neo4j import GraphDatabase
         drv = GraphDatabase.driver(
             os.getenv("NEO4J_URI", "bolt://localhost:17687"),
-            auth=("neo4j", os.getenv("NEO4J_PASSWORD", "silhouette2035"))
+            auth=("neo4j", os.getenv("NEO4J_PASSWORD", "changeme"))
         )
         drv.verify_connectivity()
         drv.close()

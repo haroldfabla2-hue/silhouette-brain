@@ -49,7 +49,7 @@ TIER_FILES = {
 
 NEO4J_URI      = os.getenv("NEO4J_URI",      "bolt://localhost:17687")
 NEO4J_USER     = os.getenv("NEO4J_USER",     "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "silhouette2035")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "changeme")
 
 _SEMANTIC_CACHE = {}
 _SEMANTIC_CACHE_TTL_SEC = 180

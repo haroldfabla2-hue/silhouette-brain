@@ -15,7 +15,10 @@ fi
 if [ ! -f ".env" ]; then
     echo "📄 Creando archivo .env desde la plantilla..."
     cp .env.example .env
-    echo "⚠️ ATENCIÓN HUMANO: Por favor, introduce tu OPENAI_API_KEY en el archivo .env para habilitar los embeddings."
+    echo "⚠️ ATENCIÓN HUMANO: Edita el archivo .env y define:"
+    echo "    - NEO4J_PASSWORD (obligatorio)"
+    echo "    - REASONING_API_KEY (opcional, para la síntesis/razonamiento)"
+    echo "    Los embeddings son 100% locales (fastembed) y no requieren clave."
 fi
 
 # 3. Intentar levantar los servicios (Docker)
@@ -34,4 +37,4 @@ echo "🧬 Integrando el cerebro con el sistema de archivos del agente..."
 python3 src/core/agent_self_configure.py
 
 echo "✅ Instalación y configuración completada."
-echo "💡 PRÓXIMO PASO: El humano debe asegurarse de que la OPENAI_API_KEY en el .env sea válida."
+echo "💡 PRÓXIMO PASO: Verifica que NEO4J_PASSWORD (y, si la usas, REASONING_API_KEY) estén definidas en .env."

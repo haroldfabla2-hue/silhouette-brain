@@ -19,11 +19,21 @@ from src.core.hooks_system import (
     HookCallback,
     create_logging_hook,
     create_counter_hook,
+    create_notification_hook,
     on_hook,
     auto_register_hooks,
     emit_memory_stored,
     hooks_system,
 )
+
+
+def handler_count(hooks, event):
+    """Number of handlers registered for a given event.
+
+    `list_handlers(event)` returns a {event_value: count} dict, so we read the
+    count value rather than the dict length.
+    """
+    return hooks.list_handlers(event).get(event.value, 0)
 
 
 class TestHookEvent:
@@ -104,7 +114,7 @@ class TestHooksSystem:
             handler_called.append(input_data)
 
         self.hooks.register(HookEvent.MEMORY_STORED, "test_handler", my_handler)
-        assert len(self.hooks.list_handlers(HookEvent.MEMORY_STORED)) == 1
+        assert handler_count(self.hooks, HookEvent.MEMORY_STORED) == 1
 
     def test_register_multiple_handlers(self):
         """Should register multiple handlers for same event."""
@@ -114,7 +124,7 @@ class TestHooksSystem:
         self.hooks.register(HookEvent.MEMORY_STORED, "h1", handler1)
         self.hooks.register(HookEvent.MEMORY_STORED, "h2", handler2)
 
-        assert len(self.hooks.list_handlers(HookEvent.MEMORY_STORED)) == 2
+        assert handler_count(self.hooks, HookEvent.MEMORY_STORED) == 2
 
     def test_register_idempotent(self):
         """Registering with same name should replace, not duplicate."""
@@ -124,7 +134,7 @@ class TestHooksSystem:
         self.hooks.register(HookEvent.MEMORY_STORED, "same_name", handler1)
         self.hooks.register(HookEvent.MEMORY_STORED, "same_name", handler2)
 
-        assert len(self.hooks.list_handlers(HookEvent.MEMORY_STORED)) == 1
+        assert handler_count(self.hooks, HookEvent.MEMORY_STORED) == 1
 
     def test_register_max_handlers(self):
         """Should enforce MAX_HANDLERS_PER_EVENT limit."""
@@ -145,11 +155,11 @@ class TestHooksSystem:
         def handler(inp): pass
 
         self.hooks.register(HookEvent.MEMORY_STORED, "to_remove", handler)
-        assert len(self.hooks.list_handlers(HookEvent.MEMORY_STORED)) == 1
+        assert handler_count(self.hooks, HookEvent.MEMORY_STORED) == 1
 
         removed = self.hooks.unregister(HookEvent.MEMORY_STORED, "to_remove")
         assert removed is True
-        assert len(self.hooks.list_handlers(HookEvent.MEMORY_STORED)) == 0
+        assert handler_count(self.hooks, HookEvent.MEMORY_STORED) == 0
 
     def test_unregister_nonexistent(self):
         """Unregistering non-existent handler should return False."""
@@ -289,8 +299,8 @@ class TestHooksSystem:
 
         removed = self.hooks.clear(HookEvent.MEMORY_STORED)
         assert removed == 1
-        assert len(self.hooks.list_handlers(HookEvent.MEMORY_STORED)) == 0
-        assert len(self.hooks.list_handlers(HookEvent.ERROR_OCCURRED)) == 1
+        assert handler_count(self.hooks, HookEvent.MEMORY_STORED) == 0
+        assert handler_count(self.hooks, HookEvent.ERROR_OCCURRED) == 1
 
     def test_clear_all_events(self):
         """clear(None) should remove all handlers."""
@@ -310,11 +320,6 @@ class TestAsyncHooks:
     def setup_method(self):
         """Create fresh HooksSystem for each test."""
         self.hooks = HooksSystem()
-
-    @pytest_asyncio.fixture
-    async def fresh_hooks(self):
-        """Provide a fresh HooksSystem for async tests."""
-        return HooksSystem()
 
     async def test_emit_async_calls_handlers(self):
         """emit_async should call async handlers."""
@@ -475,7 +480,7 @@ class TestDecorators:
         def registered_handler(inp):
             return "registered"
 
-        assert len(hooks.list_handlers(HookEvent.MEMORY_STORED)) == 1
+        assert handler_count(hooks, HookEvent.MEMORY_STORED) == 1
 
 
 class TestGlobalInstance:

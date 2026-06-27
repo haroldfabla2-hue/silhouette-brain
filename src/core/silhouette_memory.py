@@ -50,7 +50,7 @@ except:
 # Config
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:17687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "silhouette2035")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "changeme")
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 

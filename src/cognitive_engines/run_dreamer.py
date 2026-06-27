@@ -181,8 +181,9 @@ class Dreamer:
         # Store in Neo4j as semantic memory
         try:
             from neo4j import GraphDatabase
-            driver = GraphDatabase.driver('bolt://localhost:17687', 
-                                        auth=('neo4j', 'silhouette2035'))
+            driver = GraphDatabase.driver(
+                os.getenv('NEO4J_URI', 'bolt://localhost:17687'),
+                auth=(os.getenv('NEO4J_USER', 'neo4j'), os.getenv('NEO4J_PASSWORD', 'changeme')))
             
             with driver.session() as session:
                 for entity in important[:20]:

@@ -180,7 +180,7 @@ class EntityVerifier:
     """
     
     def __init__(self):
-        self.db_path = os.getenv('BRAIN_DATA_DIR', './data'/memory_core.db'
+        self.db_path = os.path.join(os.getenv('BRAIN_DATA_DIR', './data'), 'memory_core.db')
         self.results = []
     
     def get_all_entities(self):
