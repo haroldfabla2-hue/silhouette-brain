@@ -4,3 +4,5 @@ openai==1.12.0
 numpy==1.26.4
 requests==2.31.0
 python-dotenv==1.0.1
+# Embeddings locales (ONNX, sin API key). Núcleo del sistema de Long-Term memory.
+fastembed==0.7.4
