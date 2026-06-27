@@ -6,7 +6,7 @@ services:
     image: neo4j:5.15.0
     container_name: brain-neo4j
     environment:
-      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-openclaw123}
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-changeme}
       - NEO4J_PLUGINS=["apoc"]
     ports:
       - "7474:7474" # Interfaz web
@@ -32,10 +32,19 @@ services:
     ports:
       - "9876:9876" # Puerto de la API
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Inside the container we must bind to all interfaces so the published
+      # port (9876) is reachable. Host isolation is handled by Docker.
+      - BRAIN_API_HOST=0.0.0.0
+      # Reasoning provider (used by the cognitive/synthesis layer)
+      - REASONING_PROVIDER=${REASONING_PROVIDER:-minimax}
+      - REASONING_API_KEY=${REASONING_API_KEY}
+      - REASONING_MODEL=${REASONING_MODEL:-MiniMax-M2.5}
+      # Local embeddings (no API key required)
+      - FASTEMBED_MODEL=${FASTEMBED_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      # Inside the compose network Neo4j is reachable as neo4j:7687 (bolt)
       - NEO4J_URI=bolt://neo4j:7687
       - NEO4J_USER=${NEO4J_USER:-neo4j}
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-openclaw123}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-changeme}
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./data:/app/data
