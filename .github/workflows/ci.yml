@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          # api extra pulls FastAPI so the API tests run; dev brings the toolchain.
+          pip install -e ".[dev,api]"
+
+      - name: Lint (ruff)
+        run: ruff check src/silhouette tests/silhouette
+
+      - name: Type check (mypy)
+        run: mypy
+
+      - name: Test (pytest + coverage)
+        run: pytest tests/silhouette tests/test_hooks_system.py --cov=silhouette --cov-report=term-missing

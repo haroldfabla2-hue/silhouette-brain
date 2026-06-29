@@ -7,13 +7,78 @@
 [![Last Commit](https://img.shields.io/github/last-commit/haroldfabla2-hue/silhouette-brain)](https://github.com/haroldfabla2-hue/silhouette-brain)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
 
-**Silhouette Brain** is an advanced cognitive memory system designed for AI agents. It processes, cleans, and evolves information from its environment using AI, graph structures (Neo4j), and vector databases.
+**Silhouette Brain** is an advanced cognitive memory system designed for AI agents. It processes, cleans, and evolves information from its environment using graph structures, vector embeddings, and a set of always-on background "cognitive engines".
 
-Originally built for OpenClaw agents, now decoupled to be **framework-agnostic** via HTTP API.
+Originally built for OpenClaw agents, now decoupled to be **framework-agnostic** via a Python package, a CLI, and an HTTP API.
 
-[![API](https://img.shields.io/badge/api-v2.0.0-green)]()
+[![API](https://img.shields.io/badge/api-v3.0.0-green)]()
 [![4-Tier](https://img.shields.io/badge/architecture-4--tier-purple)]()
 [![Storage](https://img.shields.io/badge/graph-Neo4j-orange)]()
+
+---
+
+## ⚡ v3.0 — Clean Core (recommended)
+
+`v3` is a fully rewritten, typed, tested core (the `silhouette` package). It
+**runs anywhere with zero external services** — SQLite for the durable tiers, an
+in-memory graph, and a dependency-free embedder — and transparently upgrades to
+production backends (Redis, Neo4j, fastembed, an LLM) when you configure them.
+
+```bash
+# Install (core is tiny; extras are opt-in)
+pip install -e ".[all]"          # everything, or pick: ".[api,embeddings,graph,cache]"
+
+# Store and recall a memory from the CLI
+silhouette remember "The Dreamer engine consolidates memory into the graph" --importance 0.8
+silhouette query "memory consolidation"
+silhouette stats
+
+# Run a single cognitive engine once
+silhouette engine evolution
+
+# Serve the HTTP API (FastAPI, OpenAPI docs at /docs)
+silhouette serve            # http://127.0.0.1:9876
+
+# Run the cognitive daemon (Curiosity / Janitor / Dreamer / Evolution)
+silhouette daemon
+```
+
+```bash
+# HTTP API examples
+curl -X POST localhost:9876/api/memory -H 'content-type: application/json' \
+     -d '{"content":"Alberto is building the Silhouette Brain","importance":0.8}'
+curl "localhost:9876/api/context?query=Silhouette&graph=true&synthesize=true"
+curl -X POST localhost:9876/api/engines/dreamer/run
+```
+
+### Package architecture (`src/silhouette/`)
+
+| Layer | Module | Responsibility |
+|-------|--------|----------------|
+| Config | `config` | Env-driven settings (`SILHOUETTE_*`), secrets never hardcoded |
+| Models | `models` | Typed domain objects (records, entities, packets, results) |
+| Embeddings | `embeddings` | `Embedder` protocol — hashing fallback + optional fastembed |
+| Storage | `storage` | Working (LRU/Redis) · Episodic (SQLite) · Semantic (vectors) · Deep (graph) + `MemorySystem` |
+| Reasoning | `reasoning` | Token-budgeted `ContextAssembler` + extractive/LLM synthesis |
+| Engines | `engines` | `Curiosity`, `Janitor`, `Dreamer`, `Evolution` over a safe base |
+| Daemon | `daemon` | Observable async `Scheduler` running the engines |
+| API / CLI | `api`, `cli` | FastAPI surface and the `silhouette` command |
+
+**Quality bar:** fully typed (`mypy` clean), linted (`ruff`), and covered by an
+80+ test suite that runs without any external services. CI runs on Python
+3.10–3.12.
+
+```bash
+pip install -e ".[dev,api]"
+ruff check src/silhouette tests/silhouette
+mypy
+pytest tests/silhouette --cov=silhouette
+```
+
+> The sections below describe the broader project vision and the legacy
+> OpenClaw-oriented deployment. The `v3` core above is the supported,
+> reproducible entry point. See [LEGACY.md](LEGACY.md) for migration from
+> `src/core/` and the old HTTP server.
 
 ---
 

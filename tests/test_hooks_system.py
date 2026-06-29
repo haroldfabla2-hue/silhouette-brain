@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.core.hooks_system import (
+from silhouette.hooks import (
     HookEvent,
     HookInput,
     HookResult,

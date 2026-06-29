@@ -9,20 +9,27 @@ if core_dir not in sys.path: sys.path.append(core_dir)
 """
 Smart Task Decisions - Analizo y decido qué hacer
 """
-import requests
 from datetime import datetime
 
-API_KEY = "5998956bd378b210adf4d9907876b414"
-TOKEN = "ATTA5265b7adab6bca47d729308071db452dcae4119d3bd2b82604f147f6447d8c0b0D84EB7C"
+import requests
+
+API_KEY = os.getenv("TRELLO_API_KEY", "")
+TOKEN = os.getenv("TRELLO_TOKEN", "")
+BOARD_ID = os.getenv("TRELLO_BOARD_ID", "")
+
 
 def analyze_and_decide():
     """Analizar estado y tomar decisiones"""
-    
+    if not API_KEY or not TOKEN or not BOARD_ID:
+        print("TRELLO_API_KEY / TRELLO_TOKEN / TRELLO_BOARD_ID no configurados — omitiendo check")
+        return
+
     print(f"[{datetime.now().strftime('%H:%M')}] === ANÁLISIS DE DECISIONES ===\n")
-    
-    # Get Trello state
-    r = requests.get("https://api.trello.com/1/boards/698b618d53e6bf940183872d/cards",
-                    params={"key": API_KEY, "token": TOKEN})
+
+    r = requests.get(
+        f"https://api.trello.com/1/boards/{BOARD_ID}/cards",
+        params={"key": API_KEY, "token": TOKEN},
+    )
     cards = r.json()
     
     # Count by status

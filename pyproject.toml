@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "silhouette-brain"
+version = "3.0.0"
+description = "Advanced 4-tier cognitive memory system for AI agents, with background cognitive engines."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Alberto Farah" }]
+keywords = ["ai", "agents", "memory", "knowledge-graph", "embeddings", "neo4j", "rag"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Core deps are intentionally tiny: the system runs end-to-end with ZERO
+# external services using stdlib (sqlite3) + a dependency-free embedder.
+dependencies = [
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+]
+
+[project.optional-dependencies]
+# Production backends / accelerators — opt in as needed.
+embeddings = ["fastembed>=0.7,<0.9", "numpy>=1.26"]
+graph = ["neo4j>=5.14"]
+cache = ["redis>=5.0"]
+api = ["fastapi>=0.110", "uvicorn[standard]>=0.27"]
+llm = ["httpx>=0.27"]
+all = [
+    "fastembed>=0.7,<0.9", "numpy>=1.26",
+    "neo4j>=5.14",
+    "redis>=5.0",
+    "fastapi>=0.110", "uvicorn[standard]>=0.27",
+    "httpx>=0.27",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+    "mypy>=1.9",
+    "httpx>=0.27",
+]
+
+[project.urls]
+Homepage = "https://github.com/haroldfabla2-hue/silhouette-brain"
+Repository = "https://github.com/haroldfabla2-hue/silhouette-brain"
+Issues = "https://github.com/haroldfabla2-hue/silhouette-brain/issues"
+
+[project.scripts]
+silhouette = "silhouette.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["silhouette*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/silhouette/hooks/*" = ["B023", "SIM105"]
+
+[tool.mypy]
+python_version = "3.10"
+packages = ["silhouette"]
+mypy_path = "src"
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "silhouette.hooks.*"
+ignore_errors = true
