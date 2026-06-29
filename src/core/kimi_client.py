@@ -10,17 +10,20 @@ if core_dir not in sys.path: sys.path.append(core_dir)
 Kimi k2.5 Integration for Agents
 Uses OpenClaw's configured Kimi API
 """
-import requests
 import json
-import os
 
-# Get API key from OpenClaw config
-KIMI_API_KEY = "sk-kimi-1TwqVcohVActjxEVPuzkGDRuuaxo687BLWM6h4vgAo650kAVU6NHc6u4FSgvIt9d"
-KIMI_BASE_URL = "https://api.moonshot.cn/v1"
+import requests
+
+# Read from env — never hardcode (OpenClaw / .env).
+KIMI_API_KEY = os.getenv("KIMI_API_KEY", "")
+KIMI_BASE_URL = os.getenv("KIMI_BASE_URL", "https://api.moonshot.cn/v1")
+
 
 def kimi_chat(prompt: str, model: str = "kimi-k2.5", temperature: float = 0.7) -> str:
     """Send prompt to Kimi k2.5 and get response"""
-    
+    if not KIMI_API_KEY:
+        raise RuntimeError("KIMI_API_KEY no configurada")
+
     response = requests.post(
         f"{KIMI_BASE_URL}/chat/completions",
         headers={

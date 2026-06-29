@@ -1,21 +1,26 @@
-FROM python:3.12-slim
+# Silhouette Brain — production image for the v3 'silhouette' package.
+FROM python:3.12-slim AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    SILHOUETTE_DATA_DIR=/data \
+    SILHOUETTE_API_HOST=0.0.0.0 \
+    SILHOUETTE_API_PORT=9876
 
 WORKDIR /app
 
-# Instalar dependencias del sistema y de Python
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies first for better layer caching.
+COPY pyproject.toml README.md ./
+COPY src ./src
+# Install with all production backends (embeddings, graph, cache, api, llm).
+RUN pip install ".[all]"
 
-# Copiar el código fuente
-COPY src/ ./src/
-COPY data/ ./data/
+# Persistent data (SQLite tiers, heartbeat, evolution state) lives here.
+RUN mkdir -p /data
+VOLUME ["/data"]
 
-# Variables de entorno por defecto
-ENV PYTHONPATH=/app/src
-ENV BRAIN_DATA_DIR=/app/data
-
-# Exponer el puerto de la Brain API
 EXPOSE 9876
 
-# Comando por defecto: Ejecutar la API del cerebro
-CMD ["python", "src/api/enhanced_memory_api.py"]
+# Default: serve the HTTP API. Override the command with `silhouette daemon`
+# to run the cognitive engines (see docker-compose.yml).
+CMD ["silhouette", "serve"]

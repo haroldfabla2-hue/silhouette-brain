@@ -10,16 +10,31 @@ if core_dir not in sys.path: sys.path.append(core_dir)
 Larry checks Notion for approved posts
 Run 2x per day: 9am and 6pm
 """
+import os
+
 import requests
+
+NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID", "")
+
 
 def check_notion():
     """Check Notion for approved/scheduled posts"""
-    NOTION_TOKEN = "ntn_s2485459680a290Y3ITe0BlnQi9A7zJclchiVclfmTW93w"
-    headers = {"Authorization": f"Bearer {NOTION_TOKEN}", "Content-Type": "application/json", "Notion-Version": "2022-06-28"}
-    
-    # Get database
-    r = requests.post("https://api.notion.com/v1/databases/30d09425-1ae0-8166-8efe-d95386f5a5d4/query",
-                     headers=headers, json={})
+    notion_token = os.getenv("NOTION_TOKEN", "")
+    if not notion_token or not NOTION_DATABASE_ID:
+        print("NOTION_TOKEN / NOTION_DATABASE_ID no configurados — omitiendo check")
+        return
+
+    headers = {
+        "Authorization": f"Bearer {notion_token}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+
+    r = requests.post(
+        f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query",
+        headers=headers,
+        json={},
+    )
     
     if r.status_code == 200:
         results = r.json().get("results", [])

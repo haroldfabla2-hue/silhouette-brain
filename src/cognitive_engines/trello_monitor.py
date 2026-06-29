@@ -9,16 +9,21 @@ if core_dir not in sys.path: sys.path.append(core_dir)
 """
 Trello Monitor - Revisa tareas cada 30 min
 """
-import requests
-import os
 from datetime import datetime
 
-API_KEY = "5998956bd378b210adf4d9907876b414"
-TOKEN = "ATTA5265b7adab6bca47d729308071db452dcae4119d3bd2b82604f147f6447d8c0b0D84EB7C"
-BOARD_ID = "698b618d53e6bf940183872d"
+import requests
+
+API_KEY = os.getenv("TRELLO_API_KEY", "")
+TOKEN = os.getenv("TRELLO_TOKEN", "")
+BOARD_ID = os.getenv("TRELLO_BOARD_ID", "")
+
 
 def check_trello():
     """Check Trello for tasks and agent progress"""
+    if not API_KEY or not TOKEN or not BOARD_ID:
+        print("TRELLO_API_KEY / TRELLO_TOKEN / TRELLO_BOARD_ID no configurados — omitiendo check")
+        return
+
     print(f"[{datetime.now().strftime('%H:%M')}] Checking Trello...")
     
     # Get lists
