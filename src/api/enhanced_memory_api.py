@@ -29,6 +29,38 @@ from memory_noise_filter import should_skip_ingestion, is_agent_heartbeat_report
 # Importar todas las funciones de memoria
 from agent_memory_readonly import get_memory_context, get_entities, get_recent
 
+# Multi-tenant client whitelist (added 2026-07-30)
+try:
+    from clients_config import is_valid_owner, get_client_config, get_view_scope, get_default_owner, list_clients
+    CLIENTS_CONFIG_AVAILABLE = True
+    print("[API] Multi-tenant clients_config loaded")
+except Exception as e:
+    CLIENTS_CONFIG_AVAILABLE = False
+    print(f"[API] clients_config not available: {e}")
+
+
+def _validate_owner_id(query_params):
+    """Validate owner_id from query params.
+
+    Returns (owner_id, error_dict, status_code).
+    - owner_id: str if valid, None otherwise
+    - error_dict: error body to send if invalid
+    - status_code: HTTP status to send if invalid (200 if valid)
+    """
+    if not CLIENTS_CONFIG_AVAILABLE:
+        return None, {"error": "Multi-tenant config not loaded"}, 503
+
+    owner_id = query_params.get('owner_id', [None])[0]
+    if not owner_id:
+        return None, {
+            "error": "owner_id required for multi-tenant brain",
+            "hint": "Pass ?owner_id=alfonso | isabella | default",
+            "valid_owners": list_clients()
+        }, 403
+    if not is_valid_owner(owner_id):
+        return None, {"error": f"Unknown owner_id: {owner_id}"}, 403
+    return owner_id, None, 200
+
 # Importar motor de razonamiento unificado
 try:
     import reasoning_engine as _reasoning_engine
@@ -139,6 +171,27 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
     
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
+        
+        # === MULTI-TENANT VALIDATION ===
+        # POST endpoints que no requieren owner_id
+        PUBLIC_POST_ENDPOINTS = set()  # todos los POST requieren owner_id
+        if parsed.path not in PUBLIC_POST_ENDPOINTS:
+            # POST no tiene query string usualmente; leemos del body
+            try:
+                content_length = int(self.headers.get('Content-Length', '0') or 0)
+                post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+                post_json = json.loads(post_data.decode('utf-8') or '{}')
+            except Exception:
+                post_json = {}
+            owner_id = post_json.get('owner_id')
+            if not owner_id or not is_valid_owner(owner_id):
+                self.send_json({
+                    "error": "owner_id required for multi-tenant brain (POST)",
+                    "hint": "Include owner_id in JSON body",
+                    "valid_owners": list_clients() if CLIENTS_CONFIG_AVAILABLE else []
+                }, 403)
+                return
+        
         if parsed.path in ['/api/reasoning/feedback', '/api/reasoning/source-feedback']:
             if not SOURCE_FEEDBACK_AVAILABLE:
                 self.send_json({"error": "Source feedback not available"}, 503)
@@ -227,6 +280,21 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+
+        # === MULTI-TENANT VALIDATION ===
+        # Endpoints que NO requieren owner_id (son metadata pública)
+        PUBLIC_ENDPOINTS = {
+            "/api/status", "/status",
+            "/api/heartbeat", "/heartbeat",
+            "/api/soul", "/soul",
+        }
+        if path not in PUBLIC_ENDPOINTS:
+            owner_id, err, status = _validate_owner_id(query)
+            if err is not None:
+                self.send_json(err, status)
+                return
+            # Store owner_id in query for downstream handlers
+            query['_validated_owner_id'] = [owner_id]
         
         # === SCRAPER DETECTION ===
         # Silent detection - we log but don't block, we inject noise instead
