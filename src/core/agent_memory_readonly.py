@@ -88,7 +88,7 @@ def get_memory_context(query: str, limit: int = 5, owner_id: str = None):
             pass
     
     # 2. Query a Neo4j (primario)
-    neo4j_results = search_neo4j(query, limit)
+    neo4j_results = search_neo4j(query, limit, owner_id=owner_id)
     if neo4j_results and not isinstance(neo4j_results, dict):
         print(f"[MEMORY] ✅ Neo4j: {len(neo4j_results)} results for: {query[:30]}...")
         return {"source": "neo4j", "results": neo4j_results}
@@ -289,8 +289,19 @@ def invalidate_cache():
             pass
 
 # === NEO4J SEARCH ===
-def search_neo4j(query: str, limit: int = 5):
-    """Buscar en Neo4j"""
+def search_neo4j(query: str, limit: int = 5, owner_id: str = None):
+    """Buscar en Neo4j con filtro multi-tenant.
+    
+    Args:
+        query: search term
+        limit: max results
+        owner_id: REQUIRED. Filter by Client via BELONGS_TO relation.
+    """
+    if owner_id is None:
+        return {"error": "owner_id required", "results": []}
+    
+    view_scope = get_view_scope(owner_id)
+    
     try:
         from neo4j import GraphDatabase
         import os
@@ -303,19 +314,21 @@ def search_neo4j(query: str, limit: int = 5):
         
         with driver.session() as session:
             result = session.run("""
-                MATCH (n)
+                MATCH (n:Semantic)-[:BELONGS_TO]->(c:Client)
                 WHERE n.content CONTAINS $search_term
-                RETURN n.content, n.importance, n.tags
+                AND c.id IN $scope
+                RETURN n.content, n.importance, n.tags, c.id as owner
                 ORDER BY n.importance DESC
                 LIMIT $limit_num
-            """, search_term=query, limit_num=limit)
+            """, search_term=query, limit_num=limit, scope=view_scope)
             
             nodes = []
             for record in result:
                 nodes.append({
                     "content": record[0],
                     "importance": record[1],
-                    "tags": record[2]
+                    "tags": record[2],
+                    "owner": record[3]
                 })
         
         driver.close()
