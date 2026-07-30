@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "description": "Multi-tenant client registry for Silhouette Brain. Add new clients here to whitelist them.",
+  "default_owner": "default",
+  "validation": {
+    "strict_mode": true,
+    "reject_unknown": true,
+    "log_rejections": true
+  },
+  "clients": {
+    "default": {
+      "name": "System (internal)",
+      "industry": "internal",
+      "description": "Default tenant for system-generated memories (curiosity, janitor, dreamer, evolution). Not visible to client tenants.",
+      "is_system": true,
+      "view_scope": ["default"],
+      "telegram_bot": null,
+      "drive_folder_id": null
+    },
+    "alfonso": {
+      "name": "Alfonso Grados",
+      "industry": "political_advisory",
+      "description": "Political advisory client",
+      "is_system": false,
+      "view_scope": ["alfonso"],
+      "telegram_bot": "@alfonso_silhouette_bot",
+      "drive_folder_id": null,
+      "contact": "alfonso.grados@example.com"
+    },
+    "isabella": {
+      "name": "Isabella Escudero",
+      "industry": "executive",
+      "description": "Executive/corporate client with extended view (can see Alfonso's data)",
+      "is_system": false,
+      "view_scope": ["isabella", "alfonso"],
+      "telegram_bot": "@isabella_silhouette_bot",
+      "drive_folder_id": null,
+      "contact": "isabella.escudero@example.com"
+    }
+  }
+}
