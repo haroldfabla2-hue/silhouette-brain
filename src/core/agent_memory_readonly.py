@@ -1,5 +1,13 @@
 import os
 import sys
+
+# Multi-tenant client whitelist
+try:
+    from clients_config import get_view_scope, get_client_config, is_system_owner
+except Exception:
+    get_view_scope = lambda x: [x]
+    get_client_config = lambda x: {}
+    is_system_owner = lambda x: False
 # Añadir el directorio raíz al path para encontrar módulos internos
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if base_dir not in sys.path: sys.path.append(base_dir)
@@ -51,12 +59,23 @@ def _cache_key(query, limit):
     """Genera clave de cache"""
     return f"memory:search:{hashlib.md5(f'{query}:{limit}'.encode()).hexdigest()}"
 
-def get_memory_context(query: str, limit: int = 5):
+def get_memory_context(query: str, limit: int = 5, owner_id: str = None):
     """
     Buscar en Neo4j (primario) con fallback a SQLite
+    
+    Args:
+        query: search query
+        limit: max results
+        owner_id: REQUIRED for multi-tenant. Returns only data visible to this client.
     """
+    if owner_id is None:
+        return {"error": "owner_id required", "results": []}
+    
+    # Determine view scope (which owners this client can see)
+    view_scope = get_view_scope(owner_id)
+    
     r = _get_redis()
-    cache_key = _cache_key(query, limit)
+    cache_key = _cache_key(f"{owner_id}:{query}", limit)
     
     # 1. Verificar cache
     if r:
@@ -84,13 +103,16 @@ def get_memory_context(query: str, limit: int = 5):
         fetch_limit = max(limit * 4, limit)
         allow_runtime_noise = is_runtime_diagnostic_query(query)
         # Búsqueda optimizada con LIMIT
-        cursor.execute("""
+        # Build dynamic IN clause for view_scope
+        scope_placeholders = ",".join("?" for _ in view_scope)
+        cursor.execute(f"""
             SELECT id, timestamp, speaker, substr(message, 1, 500) as msg
             FROM conversations 
-            WHERE message LIKE ? 
+            WHERE message LIKE ?
+            AND owner_id IN ({scope_placeholders})
             ORDER BY timestamp DESC 
             LIMIT ?
-        """, (f'%{query}%', fetch_limit))
+        """, (f'%{query}%', *view_scope, fetch_limit))
         
         results = []
         for row in cursor.fetchall():
@@ -183,12 +205,21 @@ def get_entities(entity_type: str = None, limit: int = 10):
     except Exception as e:
         return {"error": str(e)}
 
-def get_recent(hours: int = 12, limit: int = 10):
-    """Obtener conversaciones recientes - optimizado"""
+def get_recent(hours: int = 12, limit: int = 10, owner_id: str = None):
+    """Obtener conversaciones recientes - optimizado
+    
+    Args:
+        owner_id: REQUIRED for multi-tenant. Returns only data visible to this client.
+    """
     import time
     
+    if owner_id is None:
+        return {"error": "owner_id required", "conversations": []}
+    
+    view_scope = get_view_scope(owner_id)
+    
     r = _get_redis()
-    cache_key = f"memory:recent:{hours}:{limit}"
+    cache_key = f"memory:recent:{owner_id}:{hours}:{limit}"
     
     if r:
         try:
@@ -207,13 +238,15 @@ def get_recent(hours: int = 12, limit: int = 10):
         cutoff = time.time() - (hours * 3600)
         fetch_limit = max(limit * 4, limit)
         
-        cursor.execute("""
+        scope_placeholders = ",".join("?" for _ in view_scope)
+        cursor.execute(f"""
             SELECT id, timestamp, speaker, substr(message, 1, 300) as msg
             FROM conversations 
             WHERE timestamp > ?
+            AND owner_id IN ({scope_placeholders})
             ORDER BY timestamp DESC 
             LIMIT ?
-        """, (cutoff, fetch_limit))
+        """, (cutoff, *view_scope, fetch_limit))
         
         results = []
         for row in cursor.fetchall():

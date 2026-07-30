@@ -316,11 +316,12 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         if path in ['/api/memory', '/memory']:
             q = apply_synonyms(query.get('query', [''])[0])
             limit = int(query.get('limit', [10])[0])
-            if q:
-                result = get_memory_context(q, limit)
+            owner_id = query.get('_validated_owner_id', [None])[0]
+            if q and owner_id:
+                result = get_memory_context(q, limit, owner_id=owner_id)
                 self.send_json(result)
             else:
-                self.send_json({"error": "Missing query parameter"})
+                self.send_json({"error": "Missing query or owner_id"})
         
         # 2. Entidades
         elif path in ['/api/memory/entities', '/entities', '/api/entities']:
@@ -333,8 +334,12 @@ class MemoryAPIHandler(BaseHTTPRequestHandler):
         elif path in ['/api/memory/recent', '/recent']:
             hours = int(query.get('hours', [24])[0])
             limit = int(query.get('limit', [20])[0])
-            result = get_recent(hours, limit)
-            self.send_json(result)
+            owner_id = query.get('_validated_owner_id', [None])[0]
+            if owner_id:
+                result = get_recent(hours, limit, owner_id=owner_id)
+                self.send_json(result)
+            else:
+                self.send_json({"error": "owner_id required"}, 403)
         
         # 4. Búsqueda con EMBEDDINGS (semántica)
         elif path in ['/api/memory/semantic', '/semantic', '/api/semantic']:
