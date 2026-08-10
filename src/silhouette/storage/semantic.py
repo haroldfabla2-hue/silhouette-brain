@@ -7,6 +7,8 @@ corpora a dedicated vector index can be plugged in behind the same interface.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import json
 import sqlite3
 from pathlib import Path
@@ -14,6 +16,7 @@ from pathlib import Path
 from silhouette.embeddings.base import Embedder, cosine_similarity
 from silhouette.models import MemoryRecord, ScoredRecord, Tier
 from silhouette.storage.sqlite import connect, writing
+from silhouette.storage._tags import matches_tags, normalize_tags
 
 
 class SemanticStore:
@@ -61,8 +64,13 @@ class SemanticStore:
         return record
 
     def search(
-        self, query: str, limit: int = 5, min_score: float = 0.0
+        self,
+        query: str,
+        limit: int = 5,
+        min_score: float = 0.0,
+        tags: Sequence[str] | None = None,
     ) -> list[ScoredRecord]:
+        wanted = normalize_tags(tags)
         query_vec = self._embedder.embed(query)
         rows = self._conn.execute("SELECT * FROM vectors").fetchall()
         scored: list[ScoredRecord] = []
@@ -70,6 +78,8 @@ class SemanticStore:
             vec = json.loads(row["embedding"])
             score = cosine_similarity(query_vec, vec)
             if score < min_score:
+                continue
+            if wanted and not matches_tags(json.loads(row["tags"]), wanted):
                 continue
             scored.append(
                 ScoredRecord(

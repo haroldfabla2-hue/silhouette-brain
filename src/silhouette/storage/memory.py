@@ -7,6 +7,8 @@ Recall fans out across the relevant tiers.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from silhouette.config import Settings, get_settings
 from silhouette.embeddings.base import Embedder
 from silhouette.embeddings.factory import get_embedder
@@ -78,11 +80,24 @@ class MemorySystem:
                     )
 
     # -- recall ------------------------------------------------------------
-    def recall(self, query: str, *, limit: int = 5, min_score: float = 0.0) -> list[ScoredRecord]:
-        return self.semantic.search(query, limit=limit, min_score=min_score)
+    def recall(
+        self,
+        query: str,
+        *,
+        limit: int = 5,
+        min_score: float = 0.0,
+        tags: Sequence[str] | None = None,
+    ) -> list[ScoredRecord]:
+        return self.semantic.search(query, limit=limit, min_score=min_score, tags=tags)
 
-    def recent(self, *, hours: float = 24.0, limit: int = 20) -> list[MemoryRecord]:
-        return self.episodic.recent(hours=hours, limit=limit)
+    def recent(
+        self,
+        *,
+        hours: float = 24.0,
+        limit: int = 20,
+        tags: Sequence[str] | None = None,
+    ) -> list[MemoryRecord]:
+        return self.episodic.recent(hours=hours, limit=limit, tags=tags)
 
     def entities(self, *, limit: int = 50, etype: str | None = None) -> list[Entity]:
         return self.graph.entities(limit=limit, etype=etype)

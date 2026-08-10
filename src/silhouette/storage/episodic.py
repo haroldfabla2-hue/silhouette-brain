@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import json
 import sqlite3
 import time
@@ -9,6 +11,7 @@ from pathlib import Path
 
 from silhouette.models import MemoryRecord, Tier
 from silhouette.storage.sqlite import connect, writing
+from silhouette.storage._tags import matches_tags, normalize_tags
 
 
 class EpisodicStore:
@@ -76,13 +79,34 @@ class EpisodicStore:
                 ),
             )
 
-    def recent(self, hours: float = 24.0, limit: int = 20) -> list[MemoryRecord]:
+    def recent(
+        self,
+        hours: float = 24.0,
+        limit: int = 20,
+        tags: Sequence[str] | None = None,
+    ) -> list[MemoryRecord]:
         cutoff = time.time() - hours * 3600.0
+        wanted = normalize_tags(tags)
+        if not wanted:
+            rows = self._conn.execute(
+                "SELECT * FROM episodes WHERE created_at >= ? ORDER BY created_at DESC LIMIT ?",
+                (cutoff, limit),
+            ).fetchall()
+            return [self._row_to_record(r) for r in rows]
+        # Con filtro se recorre en orden y se corta al llegar al limite: el
+        # limite debe contar registros VISIBLES, no leidos.
         rows = self._conn.execute(
-            "SELECT * FROM episodes WHERE created_at >= ? ORDER BY created_at DESC LIMIT ?",
-            (cutoff, limit),
+            "SELECT * FROM episodes WHERE created_at >= ? ORDER BY created_at DESC",
+            (cutoff,),
         ).fetchall()
-        return [self._row_to_record(r) for r in rows]
+        salida: list[MemoryRecord] = []
+        for row in rows:
+            if not matches_tags(json.loads(row["tags"]), wanted):
+                continue
+            salida.append(self._row_to_record(row))
+            if len(salida) >= limit:
+                break
+        return salida
 
     def all(self, limit: int = 1000) -> list[MemoryRecord]:
         rows = self._conn.execute(

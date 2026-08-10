@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import time
 
 from silhouette.models import ContextPacket, MemoryRecord, ScoredRecord
@@ -36,12 +38,15 @@ class ContextAssembler:
         token_budget: int | None = None,
         synthesize: bool = False,
         filter_heartbeats: bool = True,
+        tags: Sequence[str] | None = None,
     ) -> ContextPacket:
         start = time.perf_counter()
         sources: list[str] = []
 
-        semantic = self.memory.recall(query, limit=sem_limit, min_score=min_score)
-        recent = self.memory.recent(hours=hours, limit=rec_limit)
+        semantic = self.memory.recall(
+            query, limit=sem_limit, min_score=min_score, tags=tags
+        )
+        recent = self.memory.recent(hours=hours, limit=rec_limit, tags=tags)
         semantic, recent = filter_heartbeat_records(
             semantic, recent, filter_heartbeats=filter_heartbeats
         )

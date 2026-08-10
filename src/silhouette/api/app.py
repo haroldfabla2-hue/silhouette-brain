@@ -18,6 +18,17 @@ from silhouette.reasoning import ContextAssembler, get_synthesizer
 from silhouette.security.injection import check_injection
 from silhouette.storage.memory import MemorySystem
 
+
+def _split_tags(raw: str | None) -> tuple[str, ...]:
+    """Parse the comma-separated ``tags`` query parameter.
+
+    Absent or empty means "no filtering", which keeps the endpoints
+    backwards compatible with callers that never send it.
+    """
+    if not raw:
+        return ()
+    return tuple(part.strip() for part in raw.split(",") if part.strip())
+
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
@@ -83,8 +94,12 @@ def create_app(memory: MemorySystem | None = None) -> FastAPI:
 
     @app.get("/api/memory/recent")
     @app.get("/api/recent")
-    def recent(hours: float = 24.0, limit: int = Query(20, ge=1, le=200)) -> dict[str, object]:
-        records = memory.recent(hours=hours, limit=limit)
+    def recent(
+        hours: float = 24.0,
+        limit: int = Query(20, ge=1, le=200),
+        tags: str | None = None,
+    ) -> dict[str, object]:
+        records = memory.recent(hours=hours, limit=limit, tags=_split_tags(tags))
         return {"count": len(records), "records": [r.model_dump() for r in records]}
 
     @app.get("/api/memory/semantic")
@@ -93,8 +108,11 @@ def create_app(memory: MemorySystem | None = None) -> FastAPI:
         query: str,
         limit: int = Query(5, ge=1, le=100),
         min_score: float = 0.0,
+        tags: str | None = None,
     ) -> dict[str, object]:
-        results = memory.recall(query, limit=limit, min_score=min_score)
+        results = memory.recall(
+            query, limit=limit, min_score=min_score, tags=_split_tags(tags)
+        )
         return {"query": query, "count": len(results), "results": [r.model_dump() for r in results]}
 
     @app.get("/api/context")
@@ -111,6 +129,7 @@ def create_app(memory: MemorySystem | None = None) -> FastAPI:
         synthesize: bool = False,
         token_budget: int | None = None,
         filter_heartbeats: bool = True,
+        tags: str | None = None,
     ) -> dict[str, object]:
         del tiers
         packet = assembler.assemble(
@@ -123,6 +142,7 @@ def create_app(memory: MemorySystem | None = None) -> FastAPI:
             synthesize=synthesize,
             token_budget=token_budget,
             filter_heartbeats=filter_heartbeats,
+            tags=_split_tags(tags),
         )
         return packet.model_dump()
 
