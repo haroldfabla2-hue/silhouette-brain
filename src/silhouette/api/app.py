@@ -146,6 +146,21 @@ def create_app(memory: MemorySystem | None = None) -> FastAPI:
         )
         return packet.model_dump()
 
+    @app.delete("/api/memory/{record_id}")
+    def forget(record_id: str) -> dict[str, object]:
+        removed = memory.forget(record_id)
+        return {"id": record_id, "deleted": removed}
+
+    @app.delete("/api/memory")
+    def forget_tagged(tags: str | None = None) -> dict[str, object]:
+        wanted = _split_tags(tags)
+        if not wanted:
+            raise HTTPException(
+                status_code=400,
+                detail="tags is required: refusing to delete without a filter",
+            )
+        return {"tags": list(wanted), "deleted": memory.forget_tagged(wanted)}
+
     @app.get("/api/entities")
     @app.get("/api/memory/entities")
     def entities(limit: int = Query(50, ge=1, le=500), type: str | None = None) -> dict[str, object]:

@@ -76,5 +76,15 @@ class WorkingMemory:
         self._evict()
         return len(self._items)
 
+    def discard(self, record_id: str) -> bool:
+        """Drop one record from the buffer. True when it was there."""
+        existed = self._items.pop(record_id, None) is not None
+        if self._redis is not None:  # pragma: no cover - optional dependency
+            try:
+                self._redis.delete(f"silhouette:working:{record_id}")
+            except Exception as exc:
+                logger.debug("Redis delete failed: %s", exc)
+        return existed
+
     def clear(self) -> None:
         self._items.clear()

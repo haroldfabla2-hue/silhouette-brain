@@ -21,6 +21,7 @@ from silhouette.storage.episodic import EpisodicStore
 from silhouette.storage.graph import GraphStore, get_graph_store
 from silhouette.storage.semantic import SemanticStore
 from silhouette.storage.working import WorkingMemory
+from silhouette.storage._tags import matches_tags, normalize_tags
 
 
 class MemorySystem:
@@ -98,6 +99,38 @@ class MemorySystem:
         tags: Sequence[str] | None = None,
     ) -> list[MemoryRecord]:
         return self.episodic.recent(hours=hours, limit=limit, tags=tags)
+
+    def forget(self, record_id: str) -> bool:
+        """Delete one memory from every tier that stores it verbatim.
+
+        Covers working, episodic and semantic. Returns True when at least one
+        tier held the record.
+
+        The graph projection is intentionally left alone: its nodes are
+        aggregated entities shared by many memories, so removing them here
+        would damage unrelated records. Use the graph API directly when an
+        entity itself must go.
+        """
+        in_working = self.working.discard(record_id)
+        in_episodic = self.episodic.delete(record_id)
+        in_semantic = self.semantic.delete(record_id)
+        return in_working or in_episodic or in_semantic
+
+    def forget_tagged(self, tags: Sequence[str], *, scan_limit: int = 10000) -> int:
+        """Delete every memory carrying at least one of ``tags``.
+
+        Returns how many were removed. An empty ``tags`` deletes nothing: a
+        blank filter must never be read as "delete everything".
+        """
+        wanted = normalize_tags(tags)
+        if not wanted:
+            return 0
+        objetivo = [
+            record.id
+            for record in self.episodic.all(limit=scan_limit)
+            if matches_tags(record.tags, wanted)
+        ]
+        return sum(1 for record_id in objetivo if self.forget(record_id))
 
     def entities(self, *, limit: int = 50, etype: str | None = None) -> list[Entity]:
         return self.graph.entities(limit=limit, etype=etype)
