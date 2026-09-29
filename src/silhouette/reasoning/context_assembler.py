@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 import time
+from collections.abc import Sequence
 
 from silhouette.models import ContextPacket, MemoryRecord, ScoredRecord
 from silhouette.reasoning.synthesizer import Synthesizer
