@@ -69,6 +69,10 @@ class SqliteGraphStore:
                 )
                 """
             )
+            # Existing graphs predate lineage. Preserve their aggregates as an
+            # unattributed legacy support rather than erasing them on forget.
+            had_lineage = self._conn.execute("""SELECT 1 FROM sqlite_master
+                WHERE type='table' AND name='entity_support'""").fetchone() is not None
             self._conn.execute("""CREATE TABLE IF NOT EXISTS entity_support (
                 episode_id TEXT NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL,
                 observed_at REAL NOT NULL, PRIMARY KEY (episode_id, name))""")
@@ -76,6 +80,11 @@ class SqliteGraphStore:
                 episode_id TEXT NOT NULL, source TEXT NOT NULL, target TEXT NOT NULL,
                 type TEXT NOT NULL, weight REAL NOT NULL,
                 PRIMARY KEY (episode_id, source, target, type))""")
+            if not had_lineage:
+                self._conn.execute("""INSERT INTO entity_support
+                    SELECT '__legacy__', name, type, first_seen FROM entities""")
+                self._conn.execute("""INSERT INTO edge_support
+                    SELECT '__legacy__', source, target, type, weight FROM relationships""")
 
     def apply_episode(self, record_id: str, entities: list[tuple[str, str]],
                       edges: list[tuple[str, str, str, float]]) -> None:
