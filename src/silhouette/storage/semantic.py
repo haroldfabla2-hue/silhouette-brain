@@ -7,16 +7,15 @@ corpora a dedicated vector index can be plugged in behind the same interface.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 import json
 import sqlite3
+from collections.abc import Sequence
 from pathlib import Path
 
 from silhouette.embeddings.base import Embedder, cosine_similarity
 from silhouette.models import MemoryRecord, ScoredRecord, Tier
-from silhouette.storage.sqlite import connect, writing
 from silhouette.storage._tags import matches_tags, normalize_tags
+from silhouette.storage.sqlite import connect, writing
 
 
 class SemanticStore:
@@ -117,6 +116,14 @@ class SemanticStore:
             "SELECT 1 FROM vectors WHERE id = ?", (record_id,)
         ).fetchone()
         return row is not None
+
+    def matches(self, record: MemoryRecord) -> bool:
+        """Read back the persisted projection, not just an in-memory success."""
+        row = self._conn.execute("SELECT content, tags, source, importance, created_at FROM vectors WHERE id=?",
+                                 (record.id,)).fetchone()
+        return row is not None and (row["content"], json.loads(row["tags"]),
+            row["source"], row["importance"], row["created_at"]) == (
+            record.content, record.tags, record.source, record.importance, record.created_at)
 
     def close(self) -> None:
         self._conn.close()
