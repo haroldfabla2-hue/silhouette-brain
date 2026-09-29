@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 
-__all__ = ["normalize_tags", "matches_tags"]
+__all__ = ["matches_tags", "normalize_tags"]
 
 
 def normalize_tags(tags: Iterable[str] | None) -> tuple[str, ...]:
