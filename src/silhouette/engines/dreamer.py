@@ -8,7 +8,6 @@ every durable episode has a semantic embedding so it is recall-able.
 from __future__ import annotations
 
 from silhouette.engines.base import CognitiveEngine
-from silhouette.models import Entity, Relationship
 from silhouette.storage.entities import extract_entities
 from silhouette.storage.memory import MemorySystem
 
@@ -30,22 +29,13 @@ class DreamerEngine(CognitiveEngine):
             if record.importance < self.min_importance:
                 continue
 
-            # Ensure semantic recall coverage.
             if not memory.semantic.has_embedding(record.id):
-                memory.semantic.add(record)
                 embedded += 1
-
+            # Rebuild from canonical episodes; never reinforce edges on replay.
+            memory.episodic.queue(record)
+            memory.reconcile()
             names = [name for name, _ in extract_entities(record.content)]
-            for name, etype in extract_entities(record.content):
-                memory.graph.upsert_entity(Entity(name=name, type=etype))
-            # Strengthen co-mention edges, weighted by importance.
-            for i, a in enumerate(names):
-                for b in names[i + 1 :]:
-                    memory.graph.add_relationship(
-                        Relationship(source=a, target=b, type="CO_MENTION",
-                                     weight=0.5 + record.importance)
-                    )
-                    edges_strengthened += 1
+            edges_strengthened += len(names) * (len(names) - 1) // 2
             consolidated += 1
 
         summary = (
