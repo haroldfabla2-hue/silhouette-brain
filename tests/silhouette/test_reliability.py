@@ -65,3 +65,24 @@ def test_janitor_retracts_duplicate_graph_support(memory):
     result = JanitorEngine(dup_threshold=0.95).run(memory)
     assert result.ok
     assert memory.graph.relationships()[0].weight == 1.0
+
+
+def test_upgrade_preserves_unattributed_legacy_graph(settings):
+    from silhouette.models import Entity, Relationship
+    from silhouette.storage.graph import SqliteGraphStore
+    path = settings.db_path("graph.db")
+    graph = SqliteGraphStore(path)
+    graph.upsert_entity(Entity(name="Ada"))
+    graph.upsert_entity(Entity(name="Lin"))
+    graph.add_relationship(Relationship(source="Ada", target="Lin", type="CO_MENTION"))
+    graph.close()
+    import sqlite3
+    with sqlite3.connect(path) as conn:
+        conn.execute("DROP TABLE entity_support")
+        conn.execute("DROP TABLE edge_support")
+    mem = MemorySystem(settings)
+    new = mem.remember("Ada and Lin build Atlas")
+    assert mem.forget(new.id)
+    assert {entity.name for entity in mem.entities()} == {"Ada", "Lin"}
+    assert len(mem.graph.relationships()) == 1
+    mem.close()
