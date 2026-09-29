@@ -32,6 +32,10 @@ class GraphStore(Protocol):
     def relationships(self, limit: int = 50) -> list[Relationship]: ...
     def entity_count(self) -> int: ...
     def relationship_count(self) -> int: ...
+    def apply_episode(self, record_id: str, entities: list[tuple[str, str]],
+                      edges: list[tuple[str, str, str, float]]) -> None: ...
+    def retract_episode(self, record_id: str) -> None: ...
+    def has_episode(self, record_id: str) -> bool: ...
     def close(self) -> None: ...
 
 
@@ -65,6 +69,59 @@ class SqliteGraphStore:
                 )
                 """
             )
+            self._conn.execute("""CREATE TABLE IF NOT EXISTS entity_support (
+                episode_id TEXT NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL,
+                observed_at REAL NOT NULL, PRIMARY KEY (episode_id, name))""")
+            self._conn.execute("""CREATE TABLE IF NOT EXISTS edge_support (
+                episode_id TEXT NOT NULL, source TEXT NOT NULL, target TEXT NOT NULL,
+                type TEXT NOT NULL, weight REAL NOT NULL,
+                PRIMARY KEY (episode_id, source, target, type))""")
+
+    def apply_episode(self, record_id: str, entities: list[tuple[str, str]],
+                      edges: list[tuple[str, str, str, float]]) -> None:
+        """Replace an episode's support idempotently, then recompute affected aggregates."""
+        with writing(self._conn):
+            old_entities = {r[0] for r in self._conn.execute(
+                "SELECT name FROM entity_support WHERE episode_id=?", (record_id,))}
+            old_edges = {(r[0], r[1], r[2]) for r in self._conn.execute(
+                "SELECT source,target,type FROM edge_support WHERE episode_id=?", (record_id,))}
+            self._conn.execute("DELETE FROM entity_support WHERE episode_id=?", (record_id,))
+            self._conn.execute("DELETE FROM edge_support WHERE episode_id=?", (record_id,))
+            now = time.time()
+            for name, etype in entities:
+                self._conn.execute("INSERT INTO entity_support VALUES (?,?,?,?)",
+                                   (record_id, name, etype, now))
+            for source, target, kind, weight in edges:
+                self._conn.execute("INSERT INTO edge_support VALUES (?,?,?,?,?)",
+                                   (record_id, source, target, kind, weight))
+            for name in old_entities | {n for n, _ in entities}:
+                count = self._conn.execute("SELECT COUNT(*) FROM entity_support WHERE name=?", (name,)).fetchone()[0]
+                if count:
+                    etype = self._conn.execute("SELECT type FROM entity_support WHERE name=? LIMIT 1", (name,)).fetchone()[0]
+                    self._conn.execute("""INSERT INTO entities VALUES (?,?,?,?,?,?)
+                        ON CONFLICT(name) DO UPDATE SET type=excluded.type,
+                        mention_count=excluded.mention_count, last_seen=excluded.last_seen""",
+                        (name, etype, count, now, now, '{}'))
+                else:
+                    self._conn.execute("DELETE FROM entities WHERE name=?", (name,))
+            for source, target, kind in old_edges | {(a,b,k) for a,b,k,_ in edges}:
+                weight = self._conn.execute("""SELECT SUM(weight) FROM edge_support
+                    WHERE source=? AND target=? AND type=?""", (source,target,kind)).fetchone()[0]
+                if weight is None:
+                    self._conn.execute("DELETE FROM relationships WHERE source=? AND target=? AND type=?", (source,target,kind))
+                else:
+                    self._conn.execute("""INSERT INTO relationships VALUES (?,?,?,?)
+                        ON CONFLICT(source,target,type) DO UPDATE SET weight=excluded.weight""",
+                        (source,target,kind,weight))
+
+    def retract_episode(self, record_id: str) -> None:
+        self.apply_episode(record_id, [], [])
+
+    def has_episode(self, record_id: str) -> bool:
+        return bool(self._conn.execute(
+            "SELECT 1 FROM entity_support WHERE episode_id=? LIMIT 1", (record_id,)).fetchone()
+            or self._conn.execute(
+            "SELECT 1 FROM edge_support WHERE episode_id=? LIMIT 1", (record_id,)).fetchone())
 
     def upsert_entity(self, entity: Entity) -> None:
         with writing(self._conn):
@@ -161,6 +218,73 @@ class Neo4jGraphStore:  # pragma: no cover - requires a live Neo4j server
 
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
         self._driver.verify_connectivity()
+
+    def apply_episode(self, record_id: str, entities: list[tuple[str, str]],
+                      edges: list[tuple[str, str, str, float]]) -> None:
+        """Neo4j support nodes tie projections to the canonical episode ID."""
+        with self._driver.session() as session:
+            session.execute_write(self._replace_support, record_id, entities, edges)
+
+    @staticmethod
+    def _replace_support(tx, record_id, entities, edges):
+        old = tx.run("""MATCH (s:EpisodeSupport {id:$id})
+            OPTIONAL MATCH (s)-[:SUPPORTS]->(e:Entity)
+            WITH s,collect(DISTINCT e.name) AS names
+            OPTIONAL MATCH (s)-[r:SUPPORTS_EDGE]->()
+            RETURN names, collect(DISTINCT [r.source,r.target,r.type]) AS edge_keys""",
+            id=record_id).single()
+        touched = set(old["names"] if old else []) | {n for n, _ in entities}
+        edge_keys = {tuple(key) for key in (old["edge_keys"] if old else []) if key[0]}
+        edge_keys |= {(a,b,k) for a,b,k,_ in edges}
+        # Retract and replace in one Neo4j transaction: replay is idempotent.
+        tx.run("MATCH (s:EpisodeSupport {id:$id}) DETACH DELETE s", id=record_id).consume()
+        if entities:
+            tx.run("MERGE (s:EpisodeSupport {id:$id})", id=record_id).consume()
+        for name, etype in entities:
+            tx.run("""MERGE (e:Entity {name:$name}) ON CREATE SET e.type=$type
+                WITH e MATCH (s:EpisodeSupport {id:$id}) MERGE (s)-[:SUPPORTS]->(e)""",
+                name=name, type=etype, id=record_id).consume()
+        for source, target, kind, weight in edges:
+            tx.run("""MATCH (a:Entity {name:$source}), (b:Entity {name:$target}),
+                (s:EpisodeSupport {id:$id})
+                MERGE (s)-[r:SUPPORTS_EDGE {source:$source,target:$target,type:$kind}]->(a)
+                SET r.weight=$weight""", source=source, target=target,
+                kind=kind, weight=weight, id=record_id).consume()
+        for source, target, kind in edge_keys:
+            row = tx.run("""MATCH (s:EpisodeSupport)-[r:SUPPORTS_EDGE
+                {source:$source,target:$target,type:$kind}]->()
+                RETURN sum(r.weight) AS weight""",
+                source=source,target=target,kind=kind).single()
+            weight = row["weight"] if row else None
+            if weight is None:
+                tx.run("""MATCH (a:Entity {name:$source})-[r:REL {type:$kind}]->
+                    (b:Entity {name:$target}) DELETE r""",
+                    source=source,target=target,kind=kind).consume()
+            else:
+                tx.run("""MATCH (a:Entity {name:$source}), (b:Entity {name:$target})
+                    MERGE (a)-[r:REL {type:$kind}]->(b) SET r.weight=$weight""",
+                    source=source,target=target,kind=kind,weight=weight).consume()
+        # Only nodes touched by this episode are eligible for removal. Existing
+        # non-projection edges/nodes are left intact.
+        for name in touched:
+            row = tx.run("""MATCH (e:Entity {name:$name})
+                OPTIONAL MATCH (s:EpisodeSupport)-[:SUPPORTS]->(e)
+                RETURN count(DISTINCT s) AS n""", name=name).single()
+            if row and row["n"]:
+                tx.run("MATCH (e:Entity {name:$name}) SET e.mention_count=$n",
+                       name=name, n=row["n"]).consume()
+            else:
+                tx.run("""MATCH (e:Entity {name:$name})
+                    WHERE NOT (e)--(:EpisodeSupport) AND NOT (e)-[:REL]-()
+                    DETACH DELETE e""", name=name).consume()
+
+    def retract_episode(self, record_id: str) -> None:
+        self.apply_episode(record_id, [], [])
+
+    def has_episode(self, record_id: str) -> bool:
+        with self._driver.session() as session:
+            return bool(session.run("MATCH (s:EpisodeSupport {id:$id}) RETURN s LIMIT 1",
+                                    id=record_id).single())
 
     def upsert_entity(self, entity: Entity) -> None:
         with self._driver.session() as session:
