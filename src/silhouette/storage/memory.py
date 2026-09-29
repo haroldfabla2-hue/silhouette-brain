@@ -118,7 +118,9 @@ class MemorySystem:
         min_score: float = 0.0,
         tags: Sequence[str] | None = None,
     ) -> list[ScoredRecord]:
-        return self.semantic.search(query, limit=limit, min_score=min_score, tags=tags)
+        # A tombstone hides stale semantic rows while retraction is pending.
+        hits = self.semantic.search(query, limit=self.semantic.count(), min_score=min_score, tags=tags)
+        return [hit for hit in hits if self.episodic.get(hit.record.id) is not None][:limit]
 
     def recent(
         self,
