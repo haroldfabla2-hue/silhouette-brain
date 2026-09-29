@@ -16,12 +16,12 @@ from silhouette.errors import MemorySkipped
 from silhouette.hooks import emit_memory_stored
 from silhouette.models import Entity, MemoryRecord, Relationship, ScoredRecord
 from silhouette.security.noise import should_skip_ingestion
+from silhouette.storage._tags import matches_tags, normalize_tags
 from silhouette.storage.entities import extract_entities
 from silhouette.storage.episodic import EpisodicStore
 from silhouette.storage.graph import GraphStore, get_graph_store
 from silhouette.storage.semantic import SemanticStore
 from silhouette.storage.working import WorkingMemory
-from silhouette.storage._tags import matches_tags, normalize_tags
 
 
 class MemorySystem:
@@ -38,6 +38,7 @@ class MemorySystem:
         self.episodic = EpisodicStore(self.settings.db_path("episodic.db"))
         self.semantic = SemanticStore(self.settings.db_path("semantic.db"), self.embedder)
         self.graph = graph or get_graph_store(self.settings)
+        self.reconcile()
 
     # -- ingestion ---------------------------------------------------------
     def remember(
@@ -61,24 +62,52 @@ class MemorySystem:
         record = MemoryRecord(
             content=content, importance=importance, tags=tags or [], source=source
         )
+        self.episodic.queue(record, link_entities=link_entities)
+        # Durable source is committed before any cache or projection is touched.
+        self.reconcile()
         self.working.put(record)
-        self.episodic.add(record)
-        self.semantic.add(record)
-        self._project_to_graph(record, link_entities=link_entities)
         emit_memory_stored(record.id, len(extract_entities(content)), source=source)
         return record
 
-    def _project_to_graph(self, record: MemoryRecord, *, link_entities: bool) -> None:
-        names = [name for name, _ in extract_entities(record.content)]
-        for name, etype in extract_entities(record.content):
-            self.graph.upsert_entity(Entity(name=name, type=etype))
-        if link_entities:
-            # Co-mention edges: every pair of entities seen together is related.
-            for i, a in enumerate(names):
-                for b in names[i + 1 :]:
-                    self.graph.add_relationship(
-                        Relationship(source=a, target=b, type="CO_MENTION")
-                    )
+    def reconcile(self) -> int:
+        """Replay unfinished projection work; safe across crashes and restarts.
+
+        A failed projection raises, leaving the source and outbox entry intact.
+        Each consumer checks its persisted result before acknowledging.
+        """
+        completed = 0
+        for job in self.episodic.pending():
+            record_id, version, operation = job["id"], job["version"], job["operation"]
+            record = self.episodic.get(record_id) if operation == "upsert" else None
+            if operation == "upsert" and (record is None or self.episodic.version(record) != version):
+                raise RuntimeError(f"Outbox/source mismatch: {record_id}")
+            if not job["semantic_done"]:
+                if record is None:
+                    self.semantic.delete(record_id)
+                    if self.semantic.has_embedding(record_id):
+                        raise RuntimeError("Semantic deletion not verified")
+                else:
+                    self.semantic.add(record)
+                    if not self.semantic.matches(record):
+                        raise RuntimeError("Semantic projection not verified")
+                self.episodic.mark_done(record_id, version, operation, "semantic")
+            if not job["graph_done"]:
+                if record is None:
+                    self.graph.retract_episode(record_id)
+                else:
+                    entities = extract_entities(record.content)
+                    names = [name for name, _ in entities]
+                    edges = ([(a, b, "CO_MENTION", 1.0)
+                              for i, a in enumerate(names) for b in names[i + 1:]]
+                             if job["link_entities"] else [])
+                    self.graph.apply_episode(record_id, entities, edges)
+                if record is None and self.graph.has_episode(record_id):
+                    raise RuntimeError("Graph retraction not verified")
+                if record is not None and extract_entities(record.content) and not self.graph.has_episode(record_id):
+                    raise RuntimeError("Graph projection not verified")
+                self.episodic.mark_done(record_id, version, operation, "graph")
+            completed += 1
+        return completed
 
     # -- recall ------------------------------------------------------------
     def recall(
@@ -101,20 +130,17 @@ class MemorySystem:
         return self.episodic.recent(hours=hours, limit=limit, tags=tags)
 
     def forget(self, record_id: str) -> bool:
-        """Delete one memory from every tier that stores it verbatim.
+        """Queue retraction before removing cached copies and return only after verification.
 
-        Covers working, episodic and semantic. Returns True when at least one
-        tier held the record.
-
-        The graph projection is intentionally left alone: its nodes are
-        aggregated entities shared by many memories, so removing them here
-        would damage unrelated records. Use the graph API directly when an
-        entity itself must go.
+        Projection failure is raised, not converted to a false success. A
+        subsequent reconcile retries pending cleanup after process restart.
         """
-        in_working = self.working.discard(record_id)
-        in_episodic = self.episodic.delete(record_id)
-        in_semantic = self.semantic.delete(record_id)
-        return in_working or in_episodic or in_semantic
+        existed = self.episodic.tombstone(record_id)
+        if not existed:
+            return False
+        self.reconcile()
+        self.working.discard(record_id)
+        return True
 
     def forget_tagged(self, tags: Sequence[str], *, scan_limit: int = 10000) -> int:
         """Delete every memory carrying at least one of ``tags``.
