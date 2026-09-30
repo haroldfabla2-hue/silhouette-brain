@@ -38,8 +38,9 @@ class MemorySystem:
         self.embedder = embedder or get_embedder(self.settings)
         self.working = WorkingMemory(self.settings)
         self.episodic = EpisodicStore(self.settings.db_path("episodic.db"))
-        self.semantic = SemanticStore(self.settings.db_path("semantic.db"), self.embedder)
-        self.knowledge = KnowledgeStore(self.settings.db_path("knowledge.db"))
+        self.semantic = SemanticStore(self.settings.db_path("semantic.db"), self.embedder, ann_shadow=self.settings.ann_shadow)
+        self.knowledge = KnowledgeStore(self.settings.db_path("knowledge.db"),
+                                        resolve_evidence=self.episodic.get)
         self.graph = graph or get_graph_store(self.settings)
         self.reconcile()
 

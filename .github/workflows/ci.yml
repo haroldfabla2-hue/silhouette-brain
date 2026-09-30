@@ -29,7 +29,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # api extra pulls FastAPI so the API tests run; dev brings the toolchain.
-          pip install -e ".[dev,api]"
+          pip install -e ".[dev,api,ann]"
 
       - name: Lint (ruff)
         run: ruff check src/silhouette tests/silhouette

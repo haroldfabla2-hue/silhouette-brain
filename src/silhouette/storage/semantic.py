@@ -11,18 +11,25 @@ import json
 import sqlite3
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from silhouette.embeddings.base import Embedder, cosine_similarity
 from silhouette.models import MemoryRecord, ScoredRecord, Tier
 from silhouette.storage._tags import matches_tags, normalize_tags
 from silhouette.storage.sqlite import connect, writing
 
+if TYPE_CHECKING:
+    from silhouette.storage.ann import ShadowIndex
+
 
 class SemanticStore:
-    def __init__(self, path: str | Path, embedder: Embedder) -> None:
+    def __init__(self, path: str | Path, embedder: Embedder, *, ann_shadow: bool = False) -> None:
         self._conn = connect(path)
         self._embedder = embedder
         self._init_schema()
+        self._ann_shadow = ann_shadow
+        self._ann: ShadowIndex | None = None
+        self._ann_generation: object = None
 
     def _init_schema(self) -> None:
         with writing(self._conn):
@@ -111,7 +118,7 @@ class SemanticStore:
                     SELECT 1 FROM vector_tags t WHERE t.id=v.id
                     AND t.tag IN ({placeholders}))""", tuple(wanted)).fetchall()
         else:
-            rows = self._conn.execute("SELECT * FROM vectors").fetchall()
+            rows = self._conn.execute("SELECT * FROM vectors ORDER BY id").fetchall()
         scored: list[ScoredRecord] = []
         for row in rows:
             vec = json.loads(row["embedding"])
@@ -129,6 +136,47 @@ class SemanticStore:
             )
         scored.sort(key=lambda s: s.score, reverse=True)
         return scored[:limit]
+
+    def ann_shadow_compare(self, query: str, limit: int = 10) -> dict[str, object]:
+        """Explicit diagnostic only. Exact retrieval is never replaced.
+
+        Index is rebuilt from persisted vectors after any local/external commit.
+        Rebuild cost is reported separately; no files or source rows are deleted.
+        """
+        from silhouette.storage.ann import ShadowIndex, clock_ms, compare_ids, rerank
+
+        if limit <= 0:
+            raise ValueError("limit must be positive")
+        if not self._ann_shadow:
+            raise RuntimeError("Enable ann_shadow explicitly for diagnostics")
+        generation = (self._conn.total_changes,
+                      self._conn.execute("PRAGMA data_version").fetchone()[0])
+        rebuild_ms = 0.0
+        if self._ann is None or generation != self._ann_generation:
+            started = clock_ms()
+            index = ShadowIndex(self._embedder.dims)
+            index.rebuild(self._conn.execute("SELECT id, embedding FROM vectors ORDER BY id").fetchall(), generation)
+            self._ann, self._ann_generation = index, generation
+            rebuild_ms = clock_ms() - started
+        started = clock_ms()
+        exact = self.search(query, limit=limit)
+        exact_ms = clock_ms() - started
+        started = clock_ms()
+        vector = self._embedder.embed(query)
+        ids = self._ann.candidates(vector, max(limit * 5, 50), generation)
+        rows = [self._conn.execute("SELECT * FROM vectors WHERE id=?", (item,)).fetchone() for item in ids]
+        ranked = rerank([row for row in rows if row is not None], vector, limit)
+        ann_ids = [row["id"] for row, _ in ranked]
+        ann_ms = clock_ms() - started
+        # Detect an external writer during the comparison rather than report stale quality.
+        current = (self._conn.total_changes, self._conn.execute("PRAGMA data_version").fetchone()[0])
+        if current != generation:
+            raise RuntimeError("Corpus changed during shadow comparison; retry")
+        exact_ids = [hit.record.id for hit in exact]
+        return {"exact_ids": exact_ids, "ann_ids": ann_ids,
+                "recall_at_k": compare_ids(exact_ids, ann_ids), "k": limit,
+                "exact_ms": exact_ms, "ann_ms": ann_ms, "rebuild_ms": rebuild_ms,
+                "corpus_size": self.count(), "embedder": self._embedder.name}
 
     def lexical_search(self, query: str, limit: int = 30,
                        tags: Sequence[str] | None = None) -> list[ScoredRecord]:
