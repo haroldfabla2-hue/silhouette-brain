@@ -27,7 +27,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Production backends / accelerators — opt in as needed.
-ann = ["hnswlib>=0.8,<0.9", "numpy>=1.26"]
+ann = ["hnswlib>=0.8,<0.9", "numpy>=1.26,<2.3"]
 embeddings = ["fastembed>=0.7,<0.9", "numpy>=1.26"]
 graph = ["neo4j>=5.14"]
 cache = ["redis>=5.0"]
