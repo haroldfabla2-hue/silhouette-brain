@@ -33,7 +33,9 @@ if TYPE_CHECKING:
     from fastapi import FastAPI
 
 
-def create_app(memory: MemorySystem | None = None) -> FastAPI:
+def create_app(memory: MemorySystem | None = None, *,
+               owner_review_token: str | None = None,
+               owner_reviewer: str | None = None) -> FastAPI:
     from fastapi import FastAPI, HTTPException, Query
 
     memory = memory or MemorySystem()
@@ -187,4 +189,12 @@ def create_app(memory: MemorySystem | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Unknown engine '{name}'")
         return engine.run(memory).model_dump()
 
+    if owner_review_token is not None:
+        from silhouette.api.review import review_router
+        from silhouette.storage.review import ReviewService
+
+        if owner_reviewer is None:
+            raise ValueError("Explicit server-side reviewer identity required")
+        app.include_router(review_router(ReviewService(memory.knowledge, owner_reviewer),
+                                         owner_review_token))
     return app
