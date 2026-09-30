@@ -161,3 +161,15 @@ def test_memory_database_rejects_persistent_mode():
     with pytest.raises(ValueError, match='on-disk'):
         store.ann_shadow_compare('Lima')
     store.close()
+
+
+def test_journal_install_is_opt_in(tmp_path):
+    path = tmp_path / 'vectors.db'
+    store = SemanticStore(path, HashingEmbedder())
+    store.add(MemoryRecord(id='a', content='Lima'))
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT 1 FROM sqlite_master WHERE name='ann_changes'").fetchone() is None
+    store.close()
+    store = open_store(tmp_path)
+    assert store.ann_shadow_compare('Lima')['ann_ids'] == ['a']
+    store.close()
