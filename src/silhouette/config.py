@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     # the system falls back to a deterministic dependency-free embedder.
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     embedding_dims: int = 384
+    ann_shadow: bool = False  # Diagnostic only; exact remains default
     use_fastembed: bool = True
 
     # --- Deep memory (Neo4j) ----------------------------------------------
