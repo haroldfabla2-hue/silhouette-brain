@@ -20,14 +20,14 @@ ID overlap with exact cosine, not semantic relevance or model accuracy.
 | Rows | Queries | Mean/min recall@10 | Exact p95 ms | ANN p95 ms | Backfill ms |
 | --- | --- | --- | --- | --- | --- |
 | 5,000 | 12 | 1.0 / 1.0 | 883.21 | 5.82 | 1,500.42 |
-| 20,000 | 5 | 1.0 / 1.0 | 2,620.06 | 4.38 | 6,150.97 |
+| 20,000 | 20 | 0.995 / 0.9 | 2,782.72 | 4.97 | 6,227.13 |
 
 p95 is nearest-rank measured wall time, including query embedding, SQLite fetch,
-and scoring/rerank, excluding backfill. Five queries are too few for a stable
+and scoring/rerank, excluding backfill. Twenty queries are still a small sample for a stable
 p95 estimate. Raw per-query results are committed in `docs/benchmarks/`.
 50,000-row attempts exceeded the local command time window and produced no
 completed measurement; no numbers are claimed for them.
-Reproduce with `python scripts/benchmark_ann.py --size 20000 --queries 5
+Reproduce with `python scripts/benchmark_ann.py --size 20000 --queries 20
 --output result.json`. CI runs actual HNSW tests using the optional extra.
 
 ## Critic and review
