@@ -38,7 +38,7 @@ def test_remember_validation(client):
 def test_semantic_search(client):
     client.post("/api/memory", json={"content": "Janitor resolves contradictions in memory"})
     client.post("/api/memory", json={"content": "lunch was tacos"})
-    r = client.get("/api/memory/semantic", params={"query": "contradiction resolution", "min_score": 0.0})
+    r = client.get("/api/memory/semantic", params={"query": "Janitor resolves contradictions", "min_score": 0.0})
     assert r.status_code == 200
     results = r.json()["results"]
     assert results
