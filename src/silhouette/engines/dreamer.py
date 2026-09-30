@@ -50,8 +50,8 @@ class DreamerEngine(CognitiveEngine):
                 embedded += 1
             memory.episodic.queue(record)
             memory.reconcile()
-            names = [name for name, _ in extract_entities(record.content)]
-            edges_replayed += len(names) * (len(names) - 1) // 2
+            projected_names = [name for name, _ in extract_entities(record.content)]
+            edges_replayed += len(projected_names) * (len(projected_names) - 1) // 2
             consolidated += 1
 
         summary = f"Replayed {consolidated} episodes; embedded {embedded} new"
