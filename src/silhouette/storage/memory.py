@@ -17,9 +17,11 @@ from silhouette.hooks import emit_memory_stored
 from silhouette.models import Entity, MemoryRecord, Relationship, ScoredRecord
 from silhouette.security.noise import should_skip_ingestion
 from silhouette.storage._tags import matches_tags, normalize_tags
+from silhouette.storage.activation import activation_score
 from silhouette.storage.entities import extract_entities
 from silhouette.storage.episodic import EpisodicStore
 from silhouette.storage.graph import GraphStore, get_graph_store
+from silhouette.storage.knowledge import KnowledgeStore
 from silhouette.storage.semantic import SemanticStore
 from silhouette.storage.working import WorkingMemory
 
@@ -37,6 +39,7 @@ class MemorySystem:
         self.working = WorkingMemory(self.settings)
         self.episodic = EpisodicStore(self.settings.db_path("episodic.db"))
         self.semantic = SemanticStore(self.settings.db_path("semantic.db"), self.embedder)
+        self.knowledge = KnowledgeStore(self.settings.db_path("knowledge.db"))
         self.graph = graph or get_graph_store(self.settings)
         self.reconcile()
 
@@ -122,6 +125,15 @@ class MemorySystem:
         hits = self.semantic.search(query, limit=self.semantic.count(), min_score=min_score, tags=tags)
         return [hit for hit in hits if self.episodic.get(hit.record.id) is not None][:limit]
 
+    def explain_activation(self, record_id: str, *, now: float | None = None) -> dict[str, float | bool] | None:
+        """Explain an episode's retrieval priority without changing it."""
+        record = self.episodic.get(record_id)
+        if record is None:
+            return None
+        protected = bool(set(record.tags) & {"identity", "safety", "confirmed_preference", "obligation"})
+        return activation_score(record.created_at, self.episodic.access_history(record_id),
+                                now=now, importance=record.importance, protected=protected)
+
     def recent(
         self,
         *,
@@ -141,6 +153,7 @@ class MemorySystem:
         if not existed:
             return False
         self.reconcile()
+        self.knowledge.retract_evidence(record_id)
         self.working.discard(record_id)
         return True
 
@@ -180,4 +193,5 @@ class MemorySystem:
     def close(self) -> None:
         self.episodic.close()
         self.semantic.close()
+        self.knowledge.close()
         self.graph.close()

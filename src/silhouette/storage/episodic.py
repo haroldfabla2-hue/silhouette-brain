@@ -43,6 +43,9 @@ class EpisodicStore:
             self._conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_episodes_created ON episodes(created_at)"
             )
+            self._conn.execute("""CREATE TABLE IF NOT EXISTS meaningful_access (
+                episode_id TEXT NOT NULL, access_day INTEGER NOT NULL,
+                observed_at REAL NOT NULL, PRIMARY KEY (episode_id, access_day))""")
             self._conn.execute("""CREATE TABLE IF NOT EXISTS projection_outbox (
                 id TEXT PRIMARY KEY, version TEXT NOT NULL,
                 operation TEXT NOT NULL, link_entities INTEGER NOT NULL,
@@ -118,6 +121,7 @@ class EpisodicStore:
             if complete:
                 if operation == "delete":
                     self._conn.execute("DELETE FROM episodes WHERE id=? AND deleted=1", (record_id,))
+                    self._conn.execute("DELETE FROM meaningful_access WHERE episode_id=?", (record_id,))
                 self._conn.execute("DELETE FROM projection_outbox WHERE id=?", (record_id,))
 
     def tombstone(self, record_id: str) -> bool:
@@ -199,9 +203,31 @@ class EpisodicStore:
         ).fetchone()
         return self._row_to_record(row) if row else None
 
+    def record_meaningful_access(self, record_id: str, *, at: float | None = None) -> bool:
+        """Explicit reinforcement, at most once per UTC day for a live episode."""
+        stamp = time.time() if at is None else at
+        with writing(self._conn):
+            if self.get(record_id) is None:
+                return False
+            self._conn.execute("""INSERT INTO meaningful_access VALUES (?, ?, ?)
+                ON CONFLICT(episode_id, access_day) DO UPDATE SET
+                observed_at=max(observed_at, excluded.observed_at)""",
+                (record_id, int(stamp // 86400), stamp))
+        return True
+
+    def access_history(self, record_id: str) -> list[float]:
+        rows = self._conn.execute("""SELECT observed_at FROM meaningful_access
+            WHERE episode_id=? ORDER BY access_day""", (record_id,)).fetchall()
+        return [float(row[0]) for row in rows]
+
+    def reset_access_history(self, record_id: str) -> None:
+        with writing(self._conn):
+            self._conn.execute("DELETE FROM meaningful_access WHERE episode_id=?", (record_id,))
+
     def delete(self, record_id: str) -> bool:
         with writing(self._conn):
             cur = self._conn.execute("DELETE FROM episodes WHERE id = ?", (record_id,))
+            self._conn.execute("DELETE FROM meaningful_access WHERE episode_id=?", (record_id,))
         return cur.rowcount > 0
 
     def count(self) -> int:
