@@ -68,9 +68,8 @@ class JanitorEngine(CognitiveEngine):
                 sim = cosine_similarity(vectors[a.id], vectors[b.id])
                 if sim >= self.dup_threshold:
                     loser = self._pick_loser(a, b)
-                    memory.episodic.delete(loser.id)
-                    memory.semantic.delete(loser.id)
-                    removed.append(loser.id)
+                    if memory.forget(loser.id):
+                        removed.append(loser.id)
                     continue
                 overlap = _jaccard(tokens[a.id], tokens[b.id])
                 if overlap >= self.overlap_threshold and (
