@@ -153,3 +153,11 @@ def test_schema_migration_and_cache_identity(tmp_path):
     assert report['incremental']['rebuild']
     assert report['ann_ids'] == ['other']
     new.close()
+
+
+def test_memory_database_rejects_persistent_mode():
+    store = SemanticStore(':memory:', HashingEmbedder(), ann_shadow=True,
+                          ann_cache_path='unused-ann-cache.db')
+    with pytest.raises(ValueError, match='on-disk'):
+        store.ann_shadow_compare('Lima')
+    store.close()
