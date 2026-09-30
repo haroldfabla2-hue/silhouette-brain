@@ -39,6 +39,31 @@ class SemanticStore:
                 )
                 """
             )
+            # FTS5 is a rebuildable projection. It never replaces canonical vectors.
+            self._conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS vectors_fts
+                USING fts5(id UNINDEXED, content, tokenize='unicode61')""")
+            self._conn.execute("""CREATE TABLE IF NOT EXISTS vector_tags (
+                id TEXT NOT NULL, tag TEXT NOT NULL,
+                PRIMARY KEY (id, tag))""")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_vector_tags_tag ON vector_tags(tag, id)")
+        # Rebuild only if the projection is missing rows (legacy database).
+        # The vector and lexical writes below share one SQLite transaction.
+        vector_count = self.count()
+        indexed_count = self._conn.execute("SELECT count(*) FROM vectors_fts").fetchone()[0]
+        tag_count = self._conn.execute("SELECT count(*) FROM vector_tags").fetchone()[0]
+        has_tags = self._conn.execute("SELECT 1 FROM vectors WHERE tags NOT IN ('[]', '[ ]') LIMIT 1").fetchone()
+        if vector_count != indexed_count or (has_tags and not tag_count):
+            self.rebuild_lexical_index()
+
+    def rebuild_lexical_index(self) -> None:
+        """Idempotently repair old databases or interrupted projection writes."""
+        with writing(self._conn):
+            self._conn.execute("DELETE FROM vectors_fts")
+            self._conn.execute("DELETE FROM vector_tags")
+            self._conn.execute("INSERT INTO vectors_fts (id, content) SELECT id, content FROM vectors")
+            for row in self._conn.execute("SELECT id, tags FROM vectors"):
+                self._conn.executemany("INSERT OR IGNORE INTO vector_tags VALUES (?, ?)",
+                    ((row["id"], tag) for tag in normalize_tags(json.loads(row["tags"]))))
 
     def add(self, record: MemoryRecord) -> MemoryRecord:
         embedding = record.embedding or self._embedder.embed(record.content)
@@ -60,6 +85,12 @@ class SemanticStore:
                     json.dumps(embedding),
                 ),
             )
+            self._conn.execute("DELETE FROM vectors_fts WHERE id=?", (record.id,))
+            self._conn.execute("INSERT INTO vectors_fts (id, content) VALUES (?, ?)",
+                               (record.id, record.content))
+            self._conn.execute("DELETE FROM vector_tags WHERE id=?", (record.id,))
+            self._conn.executemany("INSERT OR IGNORE INTO vector_tags VALUES (?, ?)",
+                ((record.id, tag) for tag in normalize_tags(record.tags)))
         return record
 
     def search(
@@ -71,7 +102,16 @@ class SemanticStore:
     ) -> list[ScoredRecord]:
         wanted = normalize_tags(tags)
         query_vec = self._embedder.embed(query)
-        rows = self._conn.execute("SELECT * FROM vectors").fetchall()
+        # Exact cosine remains the default until ANN passes a measured shadow
+        # comparison on real, labeled data. Apply tag filtering in SQLite first.
+        if wanted:
+            placeholders = ",".join("?" for _ in wanted)
+            rows = self._conn.execute(
+                f"""SELECT v.* FROM vectors v WHERE EXISTS (
+                    SELECT 1 FROM vector_tags t WHERE t.id=v.id
+                    AND t.tag IN ({placeholders}))""", tuple(wanted)).fetchall()
+        else:
+            rows = self._conn.execute("SELECT * FROM vectors").fetchall()
         scored: list[ScoredRecord] = []
         for row in rows:
             vec = json.loads(row["embedding"])
@@ -90,6 +130,54 @@ class SemanticStore:
         scored.sort(key=lambda s: s.score, reverse=True)
         return scored[:limit]
 
+    def lexical_search(self, query: str, limit: int = 30,
+                       tags: Sequence[str] | None = None) -> list[ScoredRecord]:
+        """Indexed lexical candidates; FTS5 syntax is never passed through raw."""
+        import re
+
+        words = re.findall(r"[^\W_]+", query, flags=re.UNICODE)
+        if not words or limit <= 0:
+            return []
+        expression = " OR ".join('"' + word.replace('"', '""') + '"' for word in words)
+        wanted = normalize_tags(tags)
+        where = ""
+        params: list[object] = [expression]
+        if wanted:
+            where = f" AND EXISTS (SELECT 1 FROM vector_tags t WHERE t.id=v.id AND t.tag IN ({','.join('?' for _ in wanted)}))"
+            params.extend(wanted)
+        params.append(limit)
+        rows = self._conn.execute(
+            f"""SELECT v.*, bm25(vectors_fts) AS rank FROM vectors_fts
+                JOIN vectors v ON v.id=vectors_fts.id
+                WHERE vectors_fts MATCH ? {where}
+                ORDER BY rank, v.id LIMIT ?""", params).fetchall()
+        return [ScoredRecord(record=self._row_to_record(row),
+                             score=1.0 / (1.0 + max(0.0, row["rank"])),
+                             origin="lexical") for row in rows]
+
+    def hybrid_search(self, query: str, limit: int = 5, *,
+                      tags: Sequence[str] | None = None,
+                      candidate_limit: int = 50) -> list[ScoredRecord]:
+        """Fuse exact semantic and FTS5 ranks; a small-corpus, opt-in path.
+
+        ANN cannot be substituted safely until recall and p95 are measured on
+        a representative labeled corpus. Score thresholds do not apply to RRF.
+        """
+        if limit <= 0:
+            return []
+        size = max(limit, candidate_limit)
+        semantic = self.search(query, limit=size, tags=tags)
+        lexical = self.lexical_search(query, limit=size, tags=tags)
+        ranks: dict[str, float] = {}
+        records: dict[str, MemoryRecord] = {}
+        for stream in (semantic, lexical):
+            for index, hit in enumerate(stream):
+                ranks[hit.record.id] = ranks.get(hit.record.id, 0.0) + 1.0 / (60 + index + 1)
+                records[hit.record.id] = hit.record
+        ids = sorted(ranks, key=lambda record_id: (-ranks[record_id], record_id))[:limit]
+        return [ScoredRecord(record=records[record_id], score=ranks[record_id],
+                             origin="hybrid") for record_id in ids]
+
     @staticmethod
     def _row_to_record(row: sqlite3.Row) -> MemoryRecord:
         return MemoryRecord(
@@ -106,6 +194,8 @@ class SemanticStore:
     def delete(self, record_id: str) -> bool:
         with writing(self._conn):
             cur = self._conn.execute("DELETE FROM vectors WHERE id = ?", (record_id,))
+            self._conn.execute("DELETE FROM vectors_fts WHERE id = ?", (record_id,))
+            self._conn.execute("DELETE FROM vector_tags WHERE id = ?", (record_id,))
         return cur.rowcount > 0
 
     def count(self) -> int:
