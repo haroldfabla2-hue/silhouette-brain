@@ -166,6 +166,8 @@ class SemanticStore:
             from silhouette.storage.ann_persistent import PersistentShadowIndex
 
             if self._ann is None:
+                if str(self._path) == ":memory:":
+                    raise ValueError("Persistent ANN requires an on-disk canonical database")
                 self._ann = PersistentShadowIndex(self._path, self._ann_cache_path,
                     self._embedder.dims, self._embedder.name, ef=self._ann_ef)
             assert isinstance(self._ann, PersistentShadowIndex)
