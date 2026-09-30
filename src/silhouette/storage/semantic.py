@@ -28,11 +28,11 @@ class SemanticStore:
                  ann_cache_path: str | Path | None = None, ann_ef: int = 500) -> None:
         self._conn = connect(path)
         self._embedder = embedder
+        self._ann_cache_path = ann_cache_path
         self._init_schema()
         self._ann_shadow = ann_shadow
         self._ann: ShadowIndex | PersistentShadowIndex | None = None
         self._ann_ef = ann_ef
-        self._ann_cache_path = ann_cache_path
         self._path = path
         self._ann_generation: object = None
 
@@ -51,9 +51,10 @@ class SemanticStore:
                 )
                 """
             )
-            from silhouette.storage.ann_persistent import install_journal
+            if self._ann_cache_path is not None:
+                from silhouette.storage.ann_persistent import install_journal
 
-            install_journal(self._conn)
+                install_journal(self._conn)
             # FTS5 is a rebuildable projection. It never replaces canonical vectors.
             self._conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS vectors_fts
                 USING fts5(id UNINDEXED, content, tokenize='unicode61')""")
