@@ -20,15 +20,20 @@ from silhouette.storage.sqlite import connect, writing
 
 if TYPE_CHECKING:
     from silhouette.storage.ann import ShadowIndex
+    from silhouette.storage.ann_persistent import PersistentShadowIndex
 
 
 class SemanticStore:
-    def __init__(self, path: str | Path, embedder: Embedder, *, ann_shadow: bool = False) -> None:
+    def __init__(self, path: str | Path, embedder: Embedder, *, ann_shadow: bool = False,
+                 ann_cache_path: str | Path | None = None, ann_ef: int = 500) -> None:
         self._conn = connect(path)
         self._embedder = embedder
         self._init_schema()
         self._ann_shadow = ann_shadow
-        self._ann: ShadowIndex | None = None
+        self._ann: ShadowIndex | PersistentShadowIndex | None = None
+        self._ann_ef = ann_ef
+        self._ann_cache_path = ann_cache_path
+        self._path = path
         self._ann_generation: object = None
 
     def _init_schema(self) -> None:
@@ -46,6 +51,9 @@ class SemanticStore:
                 )
                 """
             )
+            from silhouette.storage.ann_persistent import install_journal
+
+            install_journal(self._conn)
             # FTS5 is a rebuildable projection. It never replaces canonical vectors.
             self._conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS vectors_fts
                 USING fts5(id UNINDEXED, content, tokenize='unicode61')""")
@@ -140,8 +148,8 @@ class SemanticStore:
     def ann_shadow_compare(self, query: str, limit: int = 10) -> dict[str, object]:
         """Explicit diagnostic only. Exact retrieval is never replaced.
 
-        Index is rebuilt from persisted vectors after any local/external commit.
-        Rebuild cost is reported separately; no files or source rows are deleted.
+        Default shadow indexes rebuild after commits. An explicit ann_cache_path
+        enables incremental persistent replay. Exact search remains unchanged.
         """
         from silhouette.storage.ann import ShadowIndex, clock_ms, compare_ids, rerank
 
@@ -152,9 +160,22 @@ class SemanticStore:
         generation = (self._conn.total_changes,
                       self._conn.execute("PRAGMA data_version").fetchone()[0])
         rebuild_ms = 0.0
-        if self._ann is None or generation != self._ann_generation:
+        sync_report: dict[str, object] | None = None
+        sync_ms = 0.0
+        if self._ann_cache_path is not None:
+            from silhouette.storage.ann_persistent import PersistentShadowIndex
+
+            if self._ann is None:
+                self._ann = PersistentShadowIndex(self._path, self._ann_cache_path,
+                    self._embedder.dims, self._embedder.name, ef=self._ann_ef)
+            assert isinstance(self._ann, PersistentShadowIndex)
             started = clock_ms()
-            index = ShadowIndex(self._embedder.dims)
+            sync_report = self._ann.sync()
+            sync_ms = clock_ms() - started
+            rebuild_ms = sync_ms if sync_report["rebuild"] else 0.0
+        elif self._ann is None or generation != self._ann_generation:
+            started = clock_ms()
+            index = ShadowIndex(self._embedder.dims, ef=self._ann_ef)
             index.rebuild(self._conn.execute("SELECT id, embedding FROM vectors ORDER BY id").fetchall(), generation)
             self._ann, self._ann_generation = index, generation
             rebuild_ms = clock_ms() - started
@@ -176,7 +197,8 @@ class SemanticStore:
         return {"exact_ids": exact_ids, "ann_ids": ann_ids,
                 "recall_at_k": compare_ids(exact_ids, ann_ids), "k": limit,
                 "exact_ms": exact_ms, "ann_ms": ann_ms, "rebuild_ms": rebuild_ms,
-                "corpus_size": self.count(), "embedder": self._embedder.name}
+                "corpus_size": self.count(), "embedder": self._embedder.name,
+                "sync_ms": sync_ms, "incremental": sync_report}
 
     def lexical_search(self, query: str, limit: int = 30,
                        tags: Sequence[str] | None = None) -> list[ScoredRecord]:
