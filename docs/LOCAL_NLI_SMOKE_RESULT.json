@@ -1,0 +1,140 @@
+{
+ "provider": {
+  "model_file": "onnx/model_quint8_avx2.onnx",
+  "name": "cross-encoder/nli-MiniLM2-L6-H768",
+  "revision": "b95119ce93d3e065de6214e38cd4a97b0f2f2c6d",
+  "model_sha256": "44391a5241a62e0083c1a8899a71e69a092b95aea5ba89e14062925468eceac7",
+  "tokenizer_sha256": "82139106e603ee4e1d5bc99d056ccbed5a92bc24848b1b5a7137c26e00d0dbf6",
+  "config_sha256": "8b0e41caff7567c0f53e6983f35591c3dec59507c9173ab125c5823394fb57f3"
+ },
+ "python": "3.10.12",
+ "cases_sha256": "5a88ac19de4d20b6d109deff45ceecced15d993d71f4976ff98050ac01716930",
+ "load_ms": 493.91115700001365,
+ "count": 12,
+ "correct": 11,
+ "median_ms": 9.391176500002985,
+ "rows": [
+  {
+   "case_index": 0,
+   "prediction": "entailment",
+   "scores": {
+    "entailment": 0.9868721702767825,
+    "contradiction": 0.0005275527752848947,
+    "neutral": 0.012600276947932587
+   },
+   "ms": 11.002324000003227
+  },
+  {
+   "case_index": 1,
+   "prediction": "contradiction",
+   "scores": {
+    "entailment": 0.00047064246926782275,
+    "contradiction": 0.9981388910891702,
+    "neutral": 0.001390466441562037
+   },
+   "ms": 9.673227999996925
+  },
+  {
+   "case_index": 2,
+   "prediction": "neutral",
+   "scores": {
+    "entailment": 0.005485624842904029,
+    "contradiction": 0.00597082646115603,
+    "neutral": 0.9885435486959399
+   },
+   "ms": 7.682212999981175
+  },
+  {
+   "case_index": 3,
+   "prediction": "entailment",
+   "scores": {
+    "entailment": 0.7069679717639169,
+    "contradiction": 0.17040177709985269,
+    "neutral": 0.12263025113623048
+   },
+   "ms": 9.412846000003583
+  },
+  {
+   "case_index": 4,
+   "prediction": "contradiction",
+   "scores": {
+    "entailment": 0.0003974317730179498,
+    "contradiction": 0.9982229506986617,
+    "neutral": 0.0013796175283202754
+   },
+   "ms": 13.655308000011246
+  },
+  {
+   "case_index": 5,
+   "prediction": "contradiction",
+   "scores": {
+    "entailment": 0.0626627274814558,
+    "contradiction": 0.7678353218500485,
+    "neutral": 0.16950195066849558
+   },
+   "ms": 13.427976000002673
+  },
+  {
+   "case_index": 6,
+   "prediction": "entailment",
+   "scores": {
+    "entailment": 0.9908608091076462,
+    "contradiction": 0.0010339904345932362,
+    "neutral": 0.008105200457760713
+   },
+   "ms": 7.914873000004263
+  },
+  {
+   "case_index": 7,
+   "prediction": "contradiction",
+   "scores": {
+    "entailment": 0.0003261728778619797,
+    "contradiction": 0.9987382009906283,
+    "neutral": 0.0009356261315097144
+   },
+   "ms": 7.2055880000050365
+  },
+  {
+   "case_index": 8,
+   "prediction": "neutral",
+   "scores": {
+    "entailment": 0.0015189394394299258,
+    "contradiction": 0.005100374249431571,
+    "neutral": 0.9933806863111384
+   },
+   "ms": 6.6412689999992836
+  },
+  {
+   "case_index": 9,
+   "prediction": "entailment",
+   "scores": {
+    "entailment": 0.9851590771060016,
+    "contradiction": 0.0027036909948257764,
+    "neutral": 0.012137231899172573
+   },
+   "ms": 8.498035000002346
+  },
+  {
+   "case_index": 10,
+   "prediction": "contradiction",
+   "scores": {
+    "entailment": 0.0003662584698556524,
+    "contradiction": 0.998460617025092,
+    "neutral": 0.0011731245050523597
+   },
+   "ms": 9.369507000002386
+  },
+  {
+   "case_index": 11,
+   "prediction": "neutral",
+   "scores": {
+    "entailment": 0.008583917317863354,
+    "contradiction": 0.1754447111161398,
+    "neutral": 0.8159713715659968
+   },
+   "ms": 9.831102999982022
+  }
+ ],
+ "limits": "Hand-authored smoke cases, not held-out labeled quality; no automatic approvals.",
+ "case_index_note": "Zero-based rows reference LOCAL_NLI_SMOKE_CASES.json; raw measured probabilities and latencies."
+}
