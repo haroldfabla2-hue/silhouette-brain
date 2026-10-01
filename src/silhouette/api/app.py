@@ -191,10 +191,12 @@ def create_app(memory: MemorySystem | None = None, *,
 
     if owner_review_token is not None:
         from silhouette.api.review import review_router
+        from silhouette.api.review_ui import owner_review_ui_router
         from silhouette.storage.review import ReviewService
 
         if owner_reviewer is None:
             raise ValueError("Explicit server-side reviewer identity required")
         app.include_router(review_router(ReviewService(memory.knowledge, owner_reviewer),
                                          owner_review_token))
+        app.include_router(owner_review_ui_router())
     return app
