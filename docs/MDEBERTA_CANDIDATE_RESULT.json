@@ -1,0 +1,106 @@
+{
+  "status": "EXPERIMENTAL_NOT_ACTIVATED",
+  "manifest": {
+    "model_file": "onnx/model_quantized.onnx",
+    "name": "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli",
+    "revision": "8adb042d524ecd5c26d3e3ba0e3fbcf7e2d0864c",
+    "model_sha256": "27c39e884c14b03cf46cfc5485971b6db70ff330220d93dfe729c63fde43af0e",
+    "tokenizer_sha256": "3aca3ce69a0a35aeb144a52c4f1d41c4246b8785f8f398315cc8fb6b24057810",
+    "config_sha256": "4e4430c95100d613df80fa01276f231931e1b535557cf62fbb3cc50323e50cca"
+  },
+  "calibration": "NONE: validation trained checkpoint; fresh domain calibration and untouched holdout still required",
+  "languages": {
+    "en": {
+      "metrics": {
+        "scored": 500,
+        "correct": 317,
+        "accuracy": 0.634,
+        "nll": 0.835374139763219,
+        "brier": 0.5252789059957225,
+        "ece_10_bins": 0.2170924489082555,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            62,
+            104,
+            0
+          ],
+          [
+            0,
+            167,
+            0
+          ],
+          [
+            2,
+            77,
+            88
+          ]
+        ]
+      },
+      "p50_ms": 50.12035000004289,
+      "p95_ms": 81.83816600012506,
+      "load_ms_runs": [
+        2600.316819999989,
+        2181.4870960001826
+      ],
+      "peak_rss_kib": 1078408,
+      "failures": 0,
+      "parquet_sha256": "8f0fd1e105091e0f11cd37f9b2bc382f16de9949aa9471e1366b2605ba037167"
+    },
+    "es": {
+      "metrics": {
+        "scored": 500,
+        "correct": 291,
+        "accuracy": 0.582,
+        "nll": 1.3485451684923269,
+        "brier": 0.6730706879571746,
+        "ece_10_bins": 0.32917338682356373,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            60,
+            106,
+            0
+          ],
+          [
+            2,
+            165,
+            0
+          ],
+          [
+            4,
+            97,
+            66
+          ]
+        ]
+      },
+      "p50_ms": 52.855482000040865,
+      "p95_ms": 80.34005099989372,
+      "load_ms_runs": [
+        2162.841508999918,
+        2152.3558330000014
+      ],
+      "peak_rss_kib": 1079068,
+      "failures": 0,
+      "parquet_sha256": "c0159c9a734d7d0683d20a9850adcf3e214a49179b6517fea5868744bfd99886"
+    }
+  },
+  "fp32": {
+    "bytes": 1116115065,
+    "sha256": "7d39629484bdad052176a0cff26ffe408d8c2b69c7abd242716fee320badd661",
+    "status": "UNVERIFIED_PARITY_MEMORY_BLOCKER",
+    "limited_attempt": "RLIMIT_AS1700MiB std::bad_alloc",
+    "larger_attempt": "RLIMIT_AS2400MiB killed in 2GiB environment"
+  },
+  "tokenizer": "Local AutoTokenizer input_ids/attention_mask parity on probe, not full parity",
+  "dataset_revision": "b8dd5d7af51114dbda02c0e3f6133f332186418e",
+  "method": "First 500 consecutive XNLI test rows each language; exploratory, not domain qualification"
+}
