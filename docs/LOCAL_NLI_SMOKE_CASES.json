@@ -1,0 +1,74 @@
+[
+  {
+    "language": "en",
+    "premise": "The worker lives in a blue house.",
+    "hypothesis": "The worker has a home.",
+    "label": "entailment"
+  },
+  {
+    "language": "en",
+    "premise": "The worker lives in a blue house.",
+    "hypothesis": "The worker does not live in a blue house.",
+    "label": "contradiction"
+  },
+  {
+    "language": "en",
+    "premise": "The worker lives in a blue house.",
+    "hypothesis": "The worker enjoys music.",
+    "label": "neutral"
+  },
+  {
+    "language": "es",
+    "premise": "La persona vive en una casa azul.",
+    "hypothesis": "La persona tiene un hogar.",
+    "label": "entailment"
+  },
+  {
+    "language": "es",
+    "premise": "La persona vive en una casa azul.",
+    "hypothesis": "La persona no vive en una casa azul.",
+    "label": "contradiction"
+  },
+  {
+    "language": "es",
+    "premise": "La persona vive en una casa azul.",
+    "hypothesis": "La persona disfruta la música.",
+    "label": "neutral"
+  },
+  {
+    "language": "en",
+    "premise": "The delivery arrived on Monday.",
+    "hypothesis": "The delivery arrived.",
+    "label": "entailment"
+  },
+  {
+    "language": "en",
+    "premise": "The delivery arrived on Monday.",
+    "hypothesis": "The delivery never arrived.",
+    "label": "contradiction"
+  },
+  {
+    "language": "en",
+    "premise": "The delivery arrived on Monday.",
+    "hypothesis": "The delivery cost ten dollars.",
+    "label": "neutral"
+  },
+  {
+    "language": "es",
+    "premise": "La entrega llegó el lunes.",
+    "hypothesis": "La entrega llegó.",
+    "label": "entailment"
+  },
+  {
+    "language": "es",
+    "premise": "La entrega llegó el lunes.",
+    "hypothesis": "La entrega nunca llegó.",
+    "label": "contradiction"
+  },
+  {
+    "language": "es",
+    "premise": "La entrega llegó el lunes.",
+    "hypothesis": "La entrega costó diez dólares.",
+    "label": "neutral"
+  }
+]
