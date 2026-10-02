@@ -5,7 +5,6 @@ formats. It validates server logic only; no hardware key or browser ceremony is 
 """
 import hashlib
 import json
-import os
 import secrets
 import struct
 
@@ -131,7 +130,7 @@ def test_binding_to_exact_decision_reason_and_target(env):
     enroll(client, headers, auth)
     route, body, ch = start(client, headers, target)
     assert client.post(route, headers=headers, json={**body, 'reason': 'different', **auth.assertion(ch)}).status_code == 403
-    route2, body2, ch2 = start(client, headers, target)
+    _, body2, ch2 = start(client, headers, target)
     other_route = f'/api/owner-review/claim/{other}'
     other_snap = client.get(other_route, headers=headers).json()['snapshot_sha256']
     forged = {**body2, 'snapshot_sha256': other_snap, **auth.assertion(ch2)}

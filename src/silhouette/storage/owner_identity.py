@@ -31,7 +31,7 @@ def b64u(data: bytes) -> str:
 def unb64u(text: str) -> bytes:
     try:
         return base64.urlsafe_b64decode(text + '=' * (-len(text) % 4))
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise IdentityError('Malformed base64url') from exc
 
 
@@ -86,7 +86,7 @@ class IdentityConfig:
             raise ValueError('rp_id and at least one origin required')
 
     @classmethod
-    def from_env(cls, env: dict[str, str] | None = None) -> 'IdentityConfig':
+    def from_env(cls, env: dict[str, str] | None = None) -> IdentityConfig:
         """SILHOUETTE_REVIEW_RP_ID and SILHOUETTE_REVIEW_ORIGINS (comma separated). No defaults on purpose."""
         import os
         source = os.environ if env is None else env

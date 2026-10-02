@@ -32,11 +32,13 @@ def _split_tags(raw: str | None) -> tuple[str, ...]:
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
+    from silhouette.storage.owner_identity import IdentityConfig
+
 
 def create_app(memory: MemorySystem | None = None, *,
                owner_review_token: str | None = None,
                owner_reviewer: str | None = None,
-               owner_identity: 'IdentityConfig | None' = None) -> FastAPI:
+               owner_identity: IdentityConfig | None = None) -> FastAPI:
     from fastapi import FastAPI, HTTPException, Query
 
     memory = memory or MemorySystem()
