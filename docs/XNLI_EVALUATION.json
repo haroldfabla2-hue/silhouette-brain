@@ -1,0 +1,229 @@
+{
+  "model": {
+    "model_file": "onnx/model_quint8_avx2.onnx",
+    "name": "cross-encoder/nli-MiniLM2-L6-H768",
+    "revision": "b95119ce93d3e065de6214e38cd4a97b0f2f2c6d",
+    "model_sha256": "44391a5241a62e0083c1a8899a71e69a092b95aea5ba89e14062925468eceac7",
+    "tokenizer_sha256": "82139106e603ee4e1d5bc99d056ccbed5a92bc24848b1b5a7137c26e00d0dbf6",
+    "config_sha256": "8b0e41caff7567c0f53e6983f35591c3dec59507c9173ab125c5823394fb57f3"
+  },
+  "dataset": "facebook/xnli",
+  "dataset_revision": "b8dd5d7af51114dbda02c0e3f6133f332186418e",
+  "method": "All en/es validation/test rows. Temperature selected per language only on validation NLL. Test never selects settings. No automated approval.",
+  "results": {
+    "en": {
+      "parquet_sha256": {
+        "validation": "42961a7b66dee147da655d78db8cbaac97b3dbcf898009acffec6cda2d80f2bf",
+        "test": "8f0fd1e105091e0f11cd37f9b2bc382f16de9949aa9471e1366b2605ba037167"
+      },
+      "temperature_grid": [
+        0.5,
+        0.75,
+        1,
+        1.25,
+        1.5,
+        2,
+        3,
+        4
+      ],
+      "selected_temperature": 1.25,
+      "validation_raw": {
+        "scored": 2490,
+        "correct": 2167,
+        "accuracy": 0.870281124497992,
+        "nll": 0.3595773211431177,
+        "brier": 0.19964919929555092,
+        "ece_10_bins": 0.044119036113166185,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            710,
+            95,
+            25
+          ],
+          [
+            57,
+            708,
+            65
+          ],
+          [
+            14,
+            67,
+            749
+          ]
+        ]
+      },
+      "test_raw": {
+        "scored": 5010,
+        "correct": 4320,
+        "accuracy": 0.8622754491017964,
+        "nll": 0.36991520480440065,
+        "brier": 0.2015421204970563,
+        "ece_10_bins": 0.04342462042084615,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            1387,
+            220,
+            63
+          ],
+          [
+            104,
+            1450,
+            116
+          ],
+          [
+            38,
+            149,
+            1483
+          ]
+        ]
+      },
+      "test_calibrated": {
+        "scored": 5010,
+        "correct": 4320,
+        "accuracy": 0.8622754491017964,
+        "nll": 0.3555811893829332,
+        "brier": 0.1972898997448021,
+        "ece_10_bins": 0.014599953825901934,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            1387,
+            220,
+            63
+          ],
+          [
+            104,
+            1450,
+            116
+          ],
+          [
+            38,
+            149,
+            1483
+          ]
+        ]
+      }
+    },
+    "es": {
+      "parquet_sha256": {
+        "validation": "1913c1256f5b8761fba3f734e260d0b5e228a02ee31a8651ee915261cdf7c631",
+        "test": "c0159c9a734d7d0683d20a9850adcf3e214a49179b6517fea5868744bfd99886"
+      },
+      "temperature_grid": [
+        0.5,
+        0.75,
+        1,
+        1.25,
+        1.5,
+        2,
+        3,
+        4
+      ],
+      "selected_temperature": 2,
+      "validation_raw": {
+        "scored": 2490,
+        "correct": 1608,
+        "accuracy": 0.6457831325301204,
+        "nll": 0.9335026278488985,
+        "brier": 0.5084074830519404,
+        "ece_10_bins": 0.15074479113698214,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            556,
+            128,
+            146
+          ],
+          [
+            141,
+            478,
+            211
+          ],
+          [
+            112,
+            144,
+            574
+          ]
+        ]
+      },
+      "test_raw": {
+        "scored": 5010,
+        "correct": 3285,
+        "accuracy": 0.655688622754491,
+        "nll": 0.8972587076011982,
+        "brier": 0.4916999666602805,
+        "ece_10_bins": 0.1420571121866384,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            1097,
+            267,
+            306
+          ],
+          [
+            263,
+            1005,
+            402
+          ],
+          [
+            252,
+            235,
+            1183
+          ]
+        ]
+      },
+      "test_calibrated": {
+        "scored": 5010,
+        "correct": 3285,
+        "accuracy": 0.655688622754491,
+        "nll": 0.7854643302010389,
+        "brier": 0.45623812516795714,
+        "ece_10_bins": 0.013167097456071747,
+        "confusion_labels": [
+          "entailment",
+          "neutral",
+          "contradiction"
+        ],
+        "confusion_matrix": [
+          [
+            1097,
+            267,
+            306
+          ],
+          [
+            263,
+            1005,
+            402
+          ],
+          [
+            252,
+            235,
+            1183
+          ]
+        ]
+      }
+    }
+  }
+}

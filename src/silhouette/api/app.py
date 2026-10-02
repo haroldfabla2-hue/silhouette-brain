@@ -32,8 +32,13 @@ def _split_tags(raw: str | None) -> tuple[str, ...]:
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
+    from silhouette.storage.owner_identity import IdentityConfig
 
-def create_app(memory: MemorySystem | None = None) -> FastAPI:
+
+def create_app(memory: MemorySystem | None = None, *,
+               owner_review_token: str | None = None,
+               owner_reviewer: str | None = None,
+               owner_identity: IdentityConfig | None = None) -> FastAPI:
     from fastapi import FastAPI, HTTPException, Query
 
     memory = memory or MemorySystem()
@@ -187,4 +192,18 @@ def create_app(memory: MemorySystem | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Unknown engine '{name}'")
         return engine.run(memory).model_dump()
 
+    if owner_review_token is not None:
+        from silhouette.api.review import review_router
+        from silhouette.api.review_ui import owner_review_ui_router
+        from silhouette.storage.review import ReviewService
+
+        if owner_reviewer is None:
+            raise ValueError("Explicit server-side reviewer identity required")
+        identity = None
+        if owner_identity is not None:
+            from silhouette.storage.owner_identity import OwnerIdentity
+            identity = OwnerIdentity(memory.knowledge._conn, owner_identity)
+        app.include_router(review_router(ReviewService(memory.knowledge, owner_reviewer),
+                                         owner_review_token, identity))
+        app.include_router(owner_review_ui_router())
     return app

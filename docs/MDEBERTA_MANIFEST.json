@@ -1,0 +1,8 @@
+{
+  "model_file": "onnx/model_quantized.onnx",
+  "name": "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli",
+  "revision": "8adb042d524ecd5c26d3e3ba0e3fbcf7e2d0864c",
+  "model_sha256": "27c39e884c14b03cf46cfc5485971b6db70ff330220d93dfe729c63fde43af0e",
+  "tokenizer_sha256": "3aca3ce69a0a35aeb144a52c4f1d41c4246b8785f8f398315cc8fb6b24057810",
+  "config_sha256": "4e4430c95100d613df80fa01276f231931e1b535557cf62fbb3cc50323e50cca"
+}
