@@ -35,7 +35,8 @@ if TYPE_CHECKING:
 
 def create_app(memory: MemorySystem | None = None, *,
                owner_review_token: str | None = None,
-               owner_reviewer: str | None = None) -> FastAPI:
+               owner_reviewer: str | None = None,
+               owner_identity: 'IdentityConfig | None' = None) -> FastAPI:
     from fastapi import FastAPI, HTTPException, Query
 
     memory = memory or MemorySystem()
@@ -196,7 +197,11 @@ def create_app(memory: MemorySystem | None = None, *,
 
         if owner_reviewer is None:
             raise ValueError("Explicit server-side reviewer identity required")
+        identity = None
+        if owner_identity is not None:
+            from silhouette.storage.owner_identity import OwnerIdentity
+            identity = OwnerIdentity(memory.knowledge._conn, owner_identity)
         app.include_router(review_router(ReviewService(memory.knowledge, owner_reviewer),
-                                         owner_review_token))
+                                         owner_review_token, identity))
         app.include_router(owner_review_ui_router())
     return app

@@ -39,3 +39,25 @@ Still not a complete human-authentication product: bearer possession binds one
 configured reviewer, it does not prove a physical human. No claim of authenticated
 biometric user presence, tenant isolation or hostile-code execution. Those require
 separate reviewed deployment architecture rather than claiming a UI solves them.
+
+## Owner identity: WebAuthn (opt-in, extra `review-auth`)
+
+`create_app(memory, owner_review_token=..., owner_reviewer=..., owner_identity=IdentityConfig(rp_id, origins))`
+(or `IdentityConfig.from_env()`: `SILHOUETTE_REVIEW_RP_ID`, `SILHOUETTE_REVIEW_ORIGINS`
+comma separated; there are no defaults). Local use: rp_id `localhost`, origin
+`http://localhost:<port>`. For a server later, set the HTTPS host and origin; nothing else changes.
+Install: `pip install -e ".[api,review-auth]"` (adds `cryptography`).
+
+With identity configured the bearer token can read but cannot approve or revoke (403).
+Flow: `POST /api/owner-review/{kind}/{id}/challenge` returns a single-use challenge bound to
+kind, id, exact snapshot hash, decision and reason; the UI shows that exact data, the
+authenticator signs, and `POST /api/owner-review/{kind}/{id}` carries the assertion.
+Checks: ceremony type, challenge, allowed origin, rpIdHash, user presence AND verification,
+ES256 signature, strictly increasing counter. The challenge is consumed atomically before
+verification, so a failed try burns it. The first credential is enrolled with
+`identity/enroll/begin|finish` (needs the token); once one exists, further enrollment is refused.
+
+Limits: tests use a SOFTWARE authenticator (real P-256/ECDSA, exact WebAuthn byte formats);
+no hardware key or real browser ceremony has been exercised. Attestation "none": proves a key
+and user verification, not the device model. No credential removal or recovery, one reviewer,
+no quorum. Browsers require HTTPS or localhost for WebAuthn.
