@@ -1,7 +1,9 @@
 """Pure helpers for the offline NLI candidate comparison. No models, network or approval."""
 from __future__ import annotations
 
+import csv
 import hashlib
+import io
 import math
 from pathlib import Path
 
@@ -71,3 +73,31 @@ def percentile(values: list[float], fraction: float) -> float:
     if not ordered:
         raise ValueError('No values')
     return ordered[max(0, math.ceil(len(ordered) * fraction) - 1)]
+
+
+ESXNLI_LABELS = {'entailment': 0, 'neutral': 1, 'contradiction': 2}
+
+
+def parse_esxnli(text: str, language: str) -> list[dict]:
+    """Parse the esXNLI TSV (XNLI file format) into the row shape the XNLI parquet loader returns.
+
+    esXNLI is originally annotated in Spanish and professionally translated into English
+    (Artetxe, Labaka & Agirre 2020); it is not part of XNLI train/dev/test, so a candidate
+    trained or validated on XNLI has not seen these rows. Closed label set: an unknown
+    label is an error, never a silently dropped row.
+    """
+    reader = csv.reader(io.StringIO(text), delimiter='	')
+    header = next(reader, None)
+    if header is None or len(header) < 8 or header[0] != 'language' or header[1] != 'gold_label' \
+            or header[6] != 'sentence1' or header[7] != 'sentence2':
+        raise ValueError('Unexpected esXNLI header (expected XNLI TSV format)')
+    rows = []
+    for record in reader:
+        if not record or record[0] != language:
+            continue
+        if record[1] not in ESXNLI_LABELS:
+            raise ValueError(f'Unexpected esXNLI label: {record[1]!r}')
+        rows.append({'premise': record[6], 'hypothesis': record[7], 'label': ESXNLI_LABELS[record[1]]})
+    if not rows:
+        raise ValueError(f'No esXNLI rows for language {language!r}')
+    return rows

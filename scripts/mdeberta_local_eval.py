@@ -4,6 +4,12 @@ Question it answers: on the SAME public Spanish (and optionally English) XNLI te
 rows, does an mDeBERTa variant that actually fits the target machine beat the
 current model, and is the INT8 export faithful to the original weights?
 
+Datasets (--datasets, default xnli):
+  xnli    facebook/xnli test split, es config is the machine-translated XNLI Spanish (CC BY-NC 4.0)
+  esxnli  artetxem/esxnli: 2,490 pairs per language ORIGINALLY annotated in Spanish and
+          professionally translated (not part of XNLI train/dev/test, so the candidate has
+          not seen them; no explicit license file, the repo requests academic citation)
+
 Variants (all scored on identical rows, never tuned, no calibration, no thresholds):
   baseline_minilm_int8     current model (cross-encoder/nli-MiniLM2-L6-H768, quantized ONNX)
   mdeberta_pytorch_fp32    original weights in PyTorch: the reference for "is the export faithful"
@@ -34,6 +40,7 @@ from pathlib import Path
 
 from silhouette.storage.nli_candidate_eval import (
     paired,
+    parse_esxnli,
     percentile,
     verify_artifact,
     wilson_interval,
@@ -43,6 +50,9 @@ from silhouette.storage.nli_evaluation import LABELS, metrics
 DATASET = 'facebook/xnli'
 DATASET_REVISION = 'b8dd5d7af51114dbda02c0e3f6133f332186418e'
 DATA_HASH = {'es': 'c0159c9a734d7d0683d20a9850adcf3e214a49179b6517fea5868744bfd99886'}
+ESXNLI_REVISION = 'b03a5a4d4db700deaa7dd6cf5d4d2d179696905c'
+ESXNLI_URL = f'https://raw.githubusercontent.com/artetxem/esxnli/{ESXNLI_REVISION}/esxnli.tsv'
+ESXNLI_SHA256 = 'e5a4ac15738511c8d021f66046234482bf57013b861ae536a86d08bef4ac3ffd'
 MD = 'MoritzLaurer/mDeBERTa-v3-base-mnli-xnli'
 MD_REV = '8adb042d524ecd5c26d3e3ba0e3fbcf7e2d0864c'
 MD_FILES = {
@@ -100,6 +110,25 @@ def load_rows(workdir: Path, language: str, limit: int | None) -> list[dict]:
     return rows[:limit] if limit else rows
 
 
+def load_esxnli_rows(workdir: Path, language: str, limit: int | None) -> list[dict]:
+    import urllib.request
+    target = workdir / 'esxnli' / 'esxnli.tsv'
+    if not target.exists():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        print('downloading', ESXNLI_URL, flush=True)
+        with urllib.request.urlopen(ESXNLI_URL, timeout=120) as response:
+            target.write_bytes(response.read())
+    verify_artifact(target, ESXNLI_SHA256)
+    rows = parse_esxnli(target.read_text(), language)
+    return rows[:limit] if limit else rows
+
+
+def load_dataset_rows(workdir: Path, dataset: str, language: str, limit: int | None) -> list[dict]:
+    if dataset == 'esxnli':
+        return load_esxnli_rows(workdir, language, limit)
+    return load_rows(workdir, language, limit)
+
+
 def make_scorer(variant: str, paths: dict, threads: int, device: str):
     """Return score(premise, hypothesis) -> dict label->probability. Fails on over-budget pairs."""
     if variant.startswith('baseline') or 'onnx' in variant:
@@ -148,7 +177,7 @@ def make_scorer(variant: str, paths: dict, threads: int, device: str):
 def run_variant(args) -> None:
     workdir = Path(args.workdir).expanduser()
     paths = {'md': workdir / 'md', 'mini': workdir / 'mini'}
-    rows = load_rows(workdir, args.language, args.limit)
+    rows = load_dataset_rows(workdir, args.dataset, args.language, args.limit)
     start = time.perf_counter()
     score = make_scorer(args.run_variant, paths, args.threads, args.device)
     load_ms = (time.perf_counter() - start) * 1000
@@ -166,7 +195,8 @@ def run_variant(args) -> None:
         if index % 250 == 249:
             print(args.run_variant, args.language, index + 1, '/', len(rows), flush=True)
     times = [r['ms'] for r in scored]
-    out = {'variant': args.run_variant, 'language': args.language, 'dataset_revision': DATASET_REVISION,
+    out = {'variant': args.run_variant, 'language': args.language, 'dataset': args.dataset,
+           'dataset_revision': ESXNLI_REVISION if args.dataset == 'esxnli' else DATASET_REVISION,
            'rows_requested': len(rows), 'limit': args.limit, 'threads': args.threads,
            'device': args.device if args.run_variant == 'mdeberta_pytorch_fp32' else 'cpu',
            'load_ms': load_ms, 'p50_ms': statistics.median(times), 'p95_ms': percentile(times, .95),
@@ -192,13 +222,22 @@ def tokenizer_parity(workdir: Path, rows: list[dict]) -> dict:
     return {'rows': len(rows), 'mismatching_rows': len(mismatches), 'first_mismatches': mismatches[:10]}
 
 
-def report(workdir: Path, language: str, caches: dict, parity: dict | None) -> None:
-    lines = [f'# NLI candidate comparison, XNLI {language} test', '',
-             f'Dataset {DATASET}@{DATASET_REVISION}. Same rows for every variant. No calibration, no tuned thresholds.',
+def report(workdir: Path, language: str, dataset: str, caches: dict, parity: dict | None) -> None:
+    if dataset == 'esxnli':
+        heading = f'# NLI candidate comparison, esXNLI {language}'
+        provenance = (f'Dataset artetxem/esxnli@{ESXNLI_REVISION} (originally annotated in Spanish, '
+                      'professionally translated; NOT part of XNLI train/dev/test). Same rows for every '
+                      'variant. No calibration, no tuned thresholds.')
+    else:
+        heading = f'# NLI candidate comparison, XNLI {language} test'
+        provenance = f'Dataset {DATASET}@{DATASET_REVISION}. Same rows for every variant. No calibration, no tuned thresholds.'
+    lines = [heading, '', provenance,
              f'Machine: {platform.platform()}, Python {platform.python_version()}.', '',
              '| Variant | Rows scored | Rejected | Accuracy | 95% CI (Wilson) | p50 ms | p95 ms | Peak RSS MiB |',
              '| --- | --- | --- | --- | --- | --- | --- | --- |']
-    summary = {'language': language, 'dataset_revision': DATASET_REVISION, 'variants': {}, 'paired_vs': {}}
+    summary = {'language': language, 'dataset': dataset,
+               'dataset_revision': ESXNLI_REVISION if dataset == 'esxnli' else DATASET_REVISION,
+               'variants': {}, 'paired_vs': {}}
     for name, c in caches.items():
         m = c['metrics']
         lo, hi = wilson_interval(m['correct'], m['scored'])
@@ -207,8 +246,9 @@ def report(workdir: Path, language: str, caches: dict, parity: dict | None) -> N
         summary['variants'][name] = {k: c[k] for k in ['rows_requested', 'limit', 'threads', 'device', 'load_ms',
                                                         'p50_ms', 'p95_ms', 'peak_rss_mib', 'metrics']}
         summary['variants'][name]['rejected'] = len(c['failures'])
-    lines += ['', f'Author-reported mDeBERTa {language} accuracy on this test set: '
-              f'{AUTHOR_REPORTED_ES_ACCURACY} (model card, NOT measured here).' if language == 'es' else '']
+    if dataset == 'xnli' and language == 'es':
+        lines += ['', f'Author-reported mDeBERTa es accuracy on this test set: '
+                  f'{AUTHOR_REPORTED_ES_ACCURACY} (model card, NOT measured here).']
     for ref_name, others in [('mdeberta_pytorch_fp32', ['mdeberta_onnx_fp32', 'mdeberta_onnx_int8']),
                              ('baseline_minilm_int8', ['mdeberta_pytorch_fp32', 'mdeberta_onnx_fp32',
                                                        'mdeberta_onnx_int8'])]:
@@ -237,8 +277,9 @@ def report(workdir: Path, language: str, caches: dict, parity: dict | None) -> N
               '- A swap only makes sense if a variant that fits the target machine beats baseline_minilm_int8 with '
               'non-overlapping confidence intervals AND is faithful to PyTorch FP32.',
               '- Public XNLI test is a benchmark, not your memory domain. It does not authorize automatic acceptance.']
-    (workdir / f'report-{language}.md').write_text('\n'.join(lines) + '\n')
-    (workdir / f'report-{language}.json').write_text(json.dumps(summary, indent=2) + '\n')
+    prefix = 'report' if dataset == 'xnli' else f'report-{dataset}'
+    (workdir / f'{prefix}-{language}.md').write_text('\n'.join(lines) + '\n')
+    (workdir / f'{prefix}-{language}.json').write_text(json.dumps(summary, indent=2) + '\n')
     print('\n'.join(lines))
 
 
@@ -246,6 +287,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--workdir', default='~/silhouette-nli-eval')
     parser.add_argument('--languages', default='es', help='comma list from: es, en')
+    parser.add_argument('--datasets', default='xnli', help='comma list from: xnli, esxnli')
+    parser.add_argument('--dataset', default='xnli', help=argparse.SUPPRESS)
     parser.add_argument('--limit', type=int, default=None, help='first N rows only (quick check, labeled as such)')
     parser.add_argument('--threads', type=int, default=min(4, os.cpu_count() or 1))
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cpu',
@@ -261,30 +304,35 @@ def main() -> None:
     workdir = Path(args.workdir).expanduser()
     workdir.mkdir(parents=True, exist_ok=True)
     fetch(workdir)
-    for language in args.languages.split(','):
-        if language not in ('es', 'en'):
-            raise SystemExit('languages must be es and/or en')
-        rows = load_rows(workdir, language, args.limit)
-        caches = {}
-        for variant in args.variants.split(','):
-            if variant not in VARIANTS:
-                raise SystemExit(f'unknown variant {variant}')
-            cache = workdir / f'{variant}-{language}-{args.limit or "full"}-t{args.threads}-{args.device}.json'
-            if not cache.exists():
-                code = subprocess.call([sys.executable, __file__, '--workdir', str(workdir), '--run-variant',
-                                        variant, '--language', language, '--cache-file', str(cache),
-                                        '--threads', str(args.threads), '--device', args.device]
-                                       + (['--limit', str(args.limit)] if args.limit else []))
-                if code != 0:
-                    print(f'VARIANT FAILED: {variant} (exit {code}). Reported as failed, not skipped silently.')
-                    continue
-            caches[variant] = json.loads(cache.read_text())
-        parity = None
-        try:
-            parity = tokenizer_parity(workdir, rows)
-        except ImportError:
-            print('transformers not installed: tokenizer parity not measured')
-        report(workdir, language, caches, parity)
+    for dataset in args.datasets.split(','):
+        if dataset not in ('xnli', 'esxnli'):
+            raise SystemExit('datasets must be xnli and/or esxnli')
+        for language in args.languages.split(','):
+            if language not in ('es', 'en'):
+                raise SystemExit('languages must be es and/or en')
+            rows = load_dataset_rows(workdir, dataset, language, args.limit)
+            caches = {}
+            for variant in args.variants.split(','):
+                if variant not in VARIANTS:
+                    raise SystemExit(f'unknown variant {variant}')
+                stem = f'{variant}-{language}' if dataset == 'xnli' else f'{dataset}-{variant}-{language}'
+                cache = workdir / f'{stem}-{args.limit or "full"}-t{args.threads}-{args.device}.json'
+                if not cache.exists():
+                    code = subprocess.call([sys.executable, __file__, '--workdir', str(workdir), '--run-variant',
+                                            variant, '--language', language, '--dataset', dataset,
+                                            '--cache-file', str(cache),
+                                            '--threads', str(args.threads), '--device', args.device]
+                                           + (['--limit', str(args.limit)] if args.limit else []))
+                    if code != 0:
+                        print(f'VARIANT FAILED: {variant} {dataset}/{language} (exit {code}). Reported as failed, not skipped silently.')
+                        continue
+                caches[variant] = json.loads(cache.read_text())
+            parity = None
+            try:
+                parity = tokenizer_parity(workdir, rows)
+            except ImportError:
+                print('transformers not installed: tokenizer parity not measured')
+            report(workdir, language, dataset, caches, parity)
 
 
 if __name__ == '__main__':

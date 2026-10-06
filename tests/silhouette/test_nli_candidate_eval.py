@@ -3,6 +3,7 @@ import pytest
 
 from silhouette.storage.nli_candidate_eval import (
     paired,
+    parse_esxnli,
     percentile,
     sha256_file,
     verify_artifact,
@@ -52,3 +53,29 @@ def test_checksum_gate(tmp_path):
 def test_percentile_nearest_rank():
     assert percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], .95) == 10
     assert percentile([5.0], .5) == 5.0
+
+
+ESXNLI_FIXTURE = (
+    'language\tgold_label\ts1bp\ts2bp\ts1p\ts2p\tsentence1\tsentence2\tpromptID\tpairID\tgenre\tl1\tl2\tl3\tl4\tl5\ts1t\ts2t\tmatch\n'
+    'es\tentailment\t\t\t\t\tTodo el mundo estaba en la plaza.\tLa plaza estaba llena.\t1\t1\tnewspaper\tentailment\t-\t-\t-\t-\t\t\t\n'
+    'es\tcontradiction\t\t\t\t\tEl tren sale a las ocho.\tEl tren no sale hoy.\t1\t2\tnewspaper\tcontradiction\t-\t-\t-\t-\t\t\t\n'
+    'en\tneutral\t\t\t\t\tEveryone was in the square.\tIt rained on Monday.\t1\t3\tnewspaper\tneutral\t-\t-\t-\t-\t\t\t\n'
+)
+
+
+def test_parse_esxnli_maps_labels_and_filters_language():
+    rows = parse_esxnli(ESXNLI_FIXTURE, 'es')
+    assert rows == [
+        {'premise': 'Todo el mundo estaba en la plaza.', 'hypothesis': 'La plaza estaba llena.', 'label': 0},
+        {'premise': 'El tren sale a las ocho.', 'hypothesis': 'El tren no sale hoy.', 'label': 2},
+    ]
+
+
+def test_parse_esxnli_rejects_unknown_label_and_bad_header():
+    bad_label = ESXNLI_FIXTURE.replace('es\tentailment', 'es\tunknown', 1)
+    with pytest.raises(ValueError, match='Unexpected esXNLI label'):
+        parse_esxnli(bad_label, 'es')
+    with pytest.raises(ValueError, match='Unexpected esXNLI header'):
+        parse_esxnli('a\tb\tc\n', 'es')
+    with pytest.raises(ValueError, match='No esXNLI rows'):
+        parse_esxnli(ESXNLI_FIXTURE, 'fr')

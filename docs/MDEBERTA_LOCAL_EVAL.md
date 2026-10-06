@@ -59,6 +59,24 @@ The XNLI validation split is deliberately not used: the candidate was trained on
   against real weights until you run it. If one fails on your machine the report says
   so explicitly.
 
+## esXNLI: native Spanish rows (optional, recommended)
+
+`--datasets xnli,esxnli` also scores every variant on esXNLI
+(`artetxem/esxnli@b03a5a4d4db700deaa7dd6cf5d4d2d179696905c`, 2,490 es and 2,490 en pairs,
+pinned SHA-256 verified before use). esXNLI was ORIGINALLY annotated in Spanish and
+professionally translated into English (Artetxe, Labaka & Agirre 2020,
+https://arxiv.org/pdf/2004.04721.pdf), so it has no translation artifacts and, unlike the
+XNLI test split, is not the language the candidate was trained toward: these rows are not
+part of XNLI train/dev/test at all. That makes it the cleaner Spanish signal of the two.
+
+Known limits, stated plainly:
+- The esXNLI repository ships no LICENSE file; the README requests academic citation.
+  Treat redistribution as not licensed. XNLI itself is CC BY-NC 4.0 (non-commercial).
+- 2,490 rows give a Wilson interval of roughly ±1.7 points at 50%: small differences
+  between variants are not decisions.
+- Output files carry the dataset name (`report-esxnli-es.md/json`, caches prefixed
+  `esxnli-`); XNLI file names are unchanged so previous runs still resume.
+
 ## How to read the result (inputs to a decision, not a decision)
 
 - PyTorch FP32 far below 84.5%: suspect the setup (tokenizer, label order, runtime), not the export.
