@@ -149,10 +149,8 @@ def make_scorer(variant: str, paths: dict, threads: int, device: str):
                                     config_sha256=MD_FILES['config.json'], name=MD,
                                     revision=MD_REV, max_tokens=MAX_TOKENS, threads=threads)
         return lambda p, h: asdict(provider.score(p, h))
-    import torch
-    from transformers import AutoModelForSequenceClassification, AutoTokenizer
-    torch.set_num_threads(threads)
     if variant == 'mdeberta_finetuned_local':
+        # Fail closed before importing heavy deps: no silent download, clear next step.
         ft_dir = paths['finetuned']
         if not (ft_dir / 'config.json').exists():
             raise FileNotFoundError(
@@ -160,6 +158,9 @@ def make_scorer(variant: str, paths: dict, threads: int, device: str):
         directory = str(ft_dir)
     else:
         directory = str(paths['md'])
+    import torch
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+    torch.set_num_threads(threads)
     tokenizer = AutoTokenizer.from_pretrained(directory)
     model = AutoModelForSequenceClassification.from_pretrained(directory, torch_dtype=torch.float32)
     if device == 'cuda':
