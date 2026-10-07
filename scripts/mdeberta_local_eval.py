@@ -74,6 +74,9 @@ MINI_FILES = {
     'onnx/model_quint8_avx2.onnx': '44391a5241a62e0083c1a8899a71e69a092b95aea5ba89e14062925468eceac7',
 }
 VARIANTS = ['baseline_minilm_int8', 'mdeberta_pytorch_fp32', 'mdeberta_onnx_fp32', 'mdeberta_onnx_int8']
+# Local fine-tuned model at <workdir>/finetuned (run scripts/mnli_finetune.py first). Not part of
+# the default variant set: it only works after a local training run produced the directory.
+LOCAL_VARIANTS = ['mdeberta_finetuned_local']
 MAX_TOKENS = 512
 # Published by the model author, NOT measured here. Shown only so a reader can see the gap.
 AUTHOR_REPORTED_ES_ACCURACY = 0.845
@@ -146,10 +149,18 @@ def make_scorer(variant: str, paths: dict, threads: int, device: str):
                                     config_sha256=MD_FILES['config.json'], name=MD,
                                     revision=MD_REV, max_tokens=MAX_TOKENS, threads=threads)
         return lambda p, h: asdict(provider.score(p, h))
+    if variant == 'mdeberta_finetuned_local':
+        # Fail closed before importing heavy deps: no silent download, clear next step.
+        ft_dir = paths['finetuned']
+        if not (ft_dir / 'config.json').exists():
+            raise FileNotFoundError(
+                f'Fine-tuned model not found at {ft_dir} - run scripts/mnli_finetune.py first')
+        directory = str(ft_dir)
+    else:
+        directory = str(paths['md'])
     import torch
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
     torch.set_num_threads(threads)
-    directory = str(paths['md'])
     tokenizer = AutoTokenizer.from_pretrained(directory)
     model = AutoModelForSequenceClassification.from_pretrained(directory, torch_dtype=torch.float32)
     if device == 'cuda':
@@ -176,7 +187,7 @@ def make_scorer(variant: str, paths: dict, threads: int, device: str):
 
 def run_variant(args) -> None:
     workdir = Path(args.workdir).expanduser()
-    paths = {'md': workdir / 'md', 'mini': workdir / 'mini'}
+    paths = {'md': workdir / 'md', 'mini': workdir / 'mini', 'finetuned': workdir / 'finetuned'}
     rows = load_dataset_rows(workdir, args.dataset, args.language, args.limit)
     start = time.perf_counter()
     score = make_scorer(args.run_variant, paths, args.threads, args.device)
@@ -198,7 +209,7 @@ def run_variant(args) -> None:
     out = {'variant': args.run_variant, 'language': args.language, 'dataset': args.dataset,
            'dataset_revision': ESXNLI_REVISION if args.dataset == 'esxnli' else DATASET_REVISION,
            'rows_requested': len(rows), 'limit': args.limit, 'threads': args.threads,
-           'device': args.device if args.run_variant == 'mdeberta_pytorch_fp32' else 'cpu',
+           'device': args.device if args.run_variant in ('mdeberta_pytorch_fp32', 'mdeberta_finetuned_local') else 'cpu',
            'load_ms': load_ms, 'p50_ms': statistics.median(times), 'p95_ms': percentile(times, .95),
            'peak_rss_mib': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
            'failures': failures, 'metrics': metrics(scored),
@@ -293,7 +304,8 @@ def main() -> None:
     parser.add_argument('--threads', type=int, default=min(4, os.cpu_count() or 1))
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cpu',
                         help='PyTorch variant only; ONNX variants always run on CPU')
-    parser.add_argument('--variants', default=','.join(VARIANTS))
+    parser.add_argument('--variants', default=','.join(VARIANTS),
+                        help='comma list from VARIANTS plus mdeberta_finetuned_local (needs a local model)')
     parser.add_argument('--run-variant', help=argparse.SUPPRESS)
     parser.add_argument('--language', help=argparse.SUPPRESS)
     parser.add_argument('--cache-file', help=argparse.SUPPRESS)
@@ -313,7 +325,7 @@ def main() -> None:
             rows = load_dataset_rows(workdir, dataset, language, args.limit)
             caches = {}
             for variant in args.variants.split(','):
-                if variant not in VARIANTS:
+                if variant not in VARIANTS + LOCAL_VARIANTS:
                     raise SystemExit(f'unknown variant {variant}')
                 stem = f'{variant}-{language}' if dataset == 'xnli' else f'{dataset}-{variant}-{language}'
                 cache = workdir / f'{stem}-{args.limit or "full"}-t{args.threads}-{args.device}.json'

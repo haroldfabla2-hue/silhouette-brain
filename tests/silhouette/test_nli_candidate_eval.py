@@ -79,3 +79,20 @@ def test_parse_esxnli_rejects_unknown_label_and_bad_header():
         parse_esxnli('a\tb\tc\n', 'es')
     with pytest.raises(ValueError, match='No esXNLI rows'):
         parse_esxnli(ESXNLI_FIXTURE, 'fr')
+
+
+def test_finetuned_local_variant_fails_closed_without_model(tmp_path):
+    """The local fine-tuned variant must fail with instructions, not silently download."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "mdeberta_local_eval", "scripts/mdeberta_local_eval.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    try:
+        module.make_scorer("mdeberta_finetuned_local", {"finetuned": tmp_path}, 1, "cpu")
+    except FileNotFoundError as error:
+        assert "mnli_finetune" in str(error)
+    else:
+        raise AssertionError("expected FileNotFoundError for missing fine-tuned model")
