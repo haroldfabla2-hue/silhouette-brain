@@ -59,3 +59,62 @@ def test_assemble_with_graph(memory):
 def test_get_synthesizer_defaults_to_extractive(settings):
     syn = get_synthesizer(settings)
     assert isinstance(syn, ExtractiveSynthesizer)
+
+
+def test_assemble_dedupes_semantic_and_recent(memory):
+    memory.remember("Unique fact about the Quasar engine design")
+    asm = ContextAssembler(memory)
+    packet = asm.assemble("Quasar engine", sem_limit=5, rec_limit=5, min_score=0.0)
+    ids = [s.record.id for s in packet.semantic] + [r.id for r in packet.recent]
+    assert len(ids) == len(set(ids))
+
+
+def test_entities_are_query_relevant(memory):
+    memory.remember("Alberto works with Silhouette on the Brain")
+    asm = ContextAssembler(memory)
+    unrelated = asm.assemble("pasta dinner tonight", min_score=0.0)
+    assert unrelated.entities == []
+    related = asm.assemble("Alberto", min_score=0.0)
+    assert any(e.name == "Alberto" for e in related.entities)
+
+
+def test_entity_matching_uses_word_boundaries(memory):
+    memory.remember("Ai is a short project codename")
+    asm = ContextAssembler(memory)
+    packet = asm.assemble("what was said in the meeting", min_score=0.0)
+    assert packet.entities == []
+
+
+def test_graph_skips_arbitrary_fallback(memory):
+    memory.remember("Alberto works with Silhouette on the Brain")
+    asm = ContextAssembler(memory)
+    packet = asm.assemble("zzz lowercase query", include_graph=True, min_score=0.0)
+    assert packet.graph == []
+    related = asm.assemble("Alberto", include_graph=True, min_score=0.0)
+    assert len(related.graph) > 0
+
+
+def test_token_budget_covers_entities_and_graph(memory):
+    for name in ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]:
+        memory.remember(f"{name} is part of the Constellation project")
+    asm = ContextAssembler(memory)
+    packet = asm.assemble(
+        "Alpha Beta Gamma Delta Epsilon",
+        min_score=0.0,
+        token_budget=8,
+        budget_split=(0.0, 0.0, 1.0),
+    )
+    # Only the entities+graph share (8 tokens) is available: bounded.
+    assert packet.semantic == []
+    assert packet.recent == []
+    assert packet.token_estimate <= 8
+    assert len(packet.entities) < 5
+
+
+def test_budget_split_is_validated(memory):
+    asm = ContextAssembler(memory)
+    try:
+        asm.assemble("x", token_budget=10, budget_split=(0.0, 0.0, 0.0))
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError for zero budget_split")
