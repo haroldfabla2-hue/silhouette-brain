@@ -13,8 +13,8 @@ services:
       - NEO4J_AUTH=${SILHOUETTE_NEO4J_USER:-neo4j}/${SILHOUETTE_NEO4J_PASSWORD:-changeme}
       - NEO4J_PLUGINS=["apoc"]
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
     volumes:
       - neo4j_data:/data
     restart: unless-stopped
@@ -23,7 +23,7 @@ services:
     image: redis:7.2-alpine
     container_name: brain-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6380:6379"  # server-local: host redis owns 6379 (uncommitted deploy edit)
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -33,7 +33,7 @@ services:
     container_name: brain-api
     command: ["silhouette", "serve"]
     ports:
-      - "9876:9876"
+      - "127.0.0.1:9876:9876"
     environment:
       - SILHOUETTE_API_HOST=0.0.0.0
       - SILHOUETTE_DATA_DIR=/data
